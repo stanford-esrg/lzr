@@ -1,7 +1,7 @@
 package main
 
 import (
-    "fmt"
+    //"fmt"
     "github.com/google/gopacket"
     "github.com/google/gopacket/pcap"
     "github.com/google/gopacket/layers"
@@ -9,7 +9,8 @@ import (
     "time"
     "net/http"
     "net/http/httputil"
-    //"net"
+    "io"
+    "fmt"
 )
 
 var (
@@ -83,9 +84,8 @@ func constructAck( ip *layers.IPv4, tcp *layers.TCP, ethernet *layers.Ethernet )
         log.Fatal(err)
     }
 
-    fmt.Println(buffer)
-
     outPacket := buffer.Bytes()
+    //fmt.Println(outPacket)
     //packet := gopacket.NewPacket(outPacket, layers.LayerTypeEthernet, gopacket.Default)
     return outPacket
 
@@ -94,7 +94,7 @@ func constructAck( ip *layers.IPv4, tcp *layers.TCP, ethernet *layers.Ethernet )
 
 func main() {
     // Open device
-    handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, timeout)
+    handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, 0) //timeout
     if err != nil {
         log.Fatal(err)
     }
@@ -102,7 +102,15 @@ func main() {
 
     // Use the handle as a packet source to process all packets
     packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-    for packet := range packetSource.Packets() {
+    for {
+        packet, err := packetSource.NextPacket()
+	if err == io.EOF {
+	    break
+	} else if err != nil {
+	    log.Println("Error:", err)
+	    continue
+        }
+
 	tcpLayer := packet.Layer(layers.LayerTypeTCP)
 	if tcpLayer != nil {
 	    tcp, _ := tcpLayer.(*layers.TCP)
@@ -121,9 +129,14 @@ func main() {
             }
 
 	    //for every ack received, mark as accepting data
-	    if !tcp.SYN && tcp.ACK {
+	    if (!tcp.SYN) && tcp.ACK {
 
-	       
+	       //TODO: do something with data
+	       fmt.Println(tcp.Payload)
+	       fmt.Println("acked")
+	       //Immediate TODO: Need to close connection....
+	       //RST ok?
+
 
 	    }
 
