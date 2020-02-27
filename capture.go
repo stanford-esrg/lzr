@@ -1,7 +1,6 @@
 package main
 
 import (
-    //"fmt"
     "github.com/google/gopacket"
     "github.com/google/gopacket/pcap"
     "github.com/google/gopacket/layers"
@@ -10,7 +9,11 @@ import (
     "net/http"
     "net/http/httputil"
     "io"
+    "bufio"
+    "os"
     "fmt"
+	"encoding/json"
+	"net"
 )
 
 var (
@@ -23,6 +26,19 @@ var (
     buffer       gopacket.SerializeBuffer
 )
 
+type packet_metadata struct {
+
+	Saddr		string	`json:"saddr"`
+	Daddr		string	`json:"daddr"`
+	Sport		int		`json:"sport"`
+	Dport		int		`json:"dport"`
+	Seqnum		int		`json:"seqnum"`
+	Acknum		int		`json:"acknum"`
+	Window		int		`json:"window"`
+}
+
+
+/* FUNCS */
 
 func getData( dst string ) []byte {
 
@@ -37,8 +53,8 @@ func getData( dst string ) []byte {
 
 }
 
-
-func constructAck( ip *layers.IPv4, tcp *layers.TCP, ethernet *layers.Ethernet ) []byte {
+//TODO: replace with making layers into synack packet_metadata and then pass into constructAck
+func constructAckFromStream( ip *layers.IPv4, tcp *layers.TCP, ethernet *layers.Ethernet ) []byte {
 
 
     //data := []byte("\n")
@@ -52,13 +68,12 @@ func constructAck( ip *layers.IPv4, tcp *layers.TCP, ethernet *layers.Ethernet )
 	Version: 4,
     }
 
-    ethernetLayer := &layers.Ethernet{
+    /*ethernetLayer := &layers.Ethernet{
         SrcMAC: ethernet.DstMAC,
         DstMAC: ethernet.SrcMAC,
 	EthernetType: layers.EthernetTypeIPv4,
-    }
+    }*/
 
-    //SEq and Ack not working
     tcpLayer := &layers.TCP{
         SrcPort: tcp.DstPort,
         DstPort: tcp.SrcPort,
@@ -76,7 +91,7 @@ func constructAck( ip *layers.IPv4, tcp *layers.TCP, ethernet *layers.Ethernet )
     tcpLayer.SetNetworkLayerForChecksum(ipLayer)
     // And create the packet with the layers
     if err := gopacket.SerializeLayers(buffer, options,
-        ethernetLayer,
+    //    ethernetLayer,
         ipLayer,
         tcpLayer,
         gopacket.Payload(data),
@@ -90,9 +105,107 @@ func constructAck( ip *layers.IPv4, tcp *layers.TCP, ethernet *layers.Ethernet )
     return outPacket
 
 }
+func constructAck( synack packet_metadata ) []byte {
+
+    //data := []byte("\n")
+    data := getData(string(synack.Saddr))
+
+    ipLayer := &layers.IPv4{
+        SrcIP: net.ParseIP(synack.Daddr),
+        DstIP: net.ParseIP(synack.Saddr),
+    TTL : 64,
+    Protocol: layers.IPProtocolTCP,
+    Version: 4,
+    }
+
+    tcpLayer := &layers.TCP{
+        SrcPort: layers.TCPPort(synack.Dport),
+        DstPort: layers.TCPPort(synack.Sport),
+    Seq: uint32(synack.Acknum),
+    Ack: uint32(synack.Seqnum+1),
+    Window: 8192,
+    ACK: true,
+    }
+
+    buffer = gopacket.NewSerializeBuffer()
+    options := gopacket.SerializeOptions{
+        ComputeChecksums: true,
+        FixLengths:       true,
+    }
+    tcpLayer.SetNetworkLayerForChecksum(ipLayer)
+    // And create the packet with the layers
+    if err := gopacket.SerializeLayers(buffer, options,
+        ipLayer,
+        tcpLayer,
+        gopacket.Payload(data),
+    ); err != nil {
+        log.Fatal(err)
+
+	}
+
+    outPacket := buffer.Bytes()
+    return outPacket
+
+}
+
+
+
+func  windowZero(synack packet_metadata) bool {
+
+
+	if synack.Window == 0 {
+		return true
+	}
+	return false
+
+}
 
 
 func main() {
+
+    //read in config 
+    //port := parse()
+    //fmt.Println("%s",port)
+
+    //read in s/a sent in by zmap
+	_, err := os.Stdin.Stat()
+	if err != nil {
+		panic(err)
+	}
+
+	//read in from ZMap
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		input, err := reader.ReadString(byte('\n'))
+		if err != nil && err == io.EOF {
+			break
+		}
+		fmt.Println(input)
+
+        var synack packet_metadata
+		//expecting ip,sequence number, acknumber,windowsize
+		err = json.Unmarshal( []byte(input),&synack)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		//TODO: check that ip_metadata contains what we want (saddr,seq,ack,window)
+
+		if windowZero(synack) {
+			//not a real s/a
+			continue
+		}
+
+		//Send Ack with Data
+        outPacket := constructAck(synack)
+        err = handle.WritePacketData(outPacket)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	} //end of zmap input
+
+    /*	
     // Open device
     handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, 0) //timeout
     if err != nil {
@@ -142,4 +255,5 @@ func main() {
 
         }
     }
+    */
 }
