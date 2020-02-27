@@ -149,6 +149,46 @@ func constructAck( synack packet_metadata ) []byte {
 }
 
 
+func constructRST( ack packet_metadata ) []byte {
+
+
+    ipLayer := &layers.IPv4{
+        SrcIP: net.ParseIP(ack.Daddr),
+        DstIP: net.ParseIP(ack.Saddr),
+    TTL : 64,
+    Protocol: layers.IPProtocolTCP,
+    Version: 4,
+    }
+
+    tcpLayer := &layers.TCP{
+        SrcPort: layers.TCPPort(ack.Dport),
+        DstPort: layers.TCPPort(ack.Sport),
+    Seq: uint32(ack.Acknum), //NOT SURE
+    Ack: 0,
+    Window: 0,
+    RST: true,
+    }
+
+    buffer = gopacket.NewSerializeBuffer()
+    options := gopacket.SerializeOptions{
+        ComputeChecksums: true,
+        FixLengths:       true,
+    }
+    tcpLayer.SetNetworkLayerForChecksum(ipLayer)
+    // And create the packet with the layers
+    if err := gopacket.SerializeLayers(buffer, options,
+        ipLayer,
+        tcpLayer,
+    ); err != nil {
+        log.Fatal(err)
+
+    }
+    outPacket := buffer.Bytes()
+    return outPacket
+
+
+}
+
 
 func  windowZero(synack packet_metadata) bool {
 
@@ -160,6 +200,19 @@ func  windowZero(synack packet_metadata) bool {
 
 }
 
+func getPacketMetadata( ip *layers.IPv4, tcp *layers.TCP ) packet_metadata {
+
+	var packet packet_metadata
+	packet.Saddr = ip.SrcIP.String()
+	packet.Daddr = ip.DstIP.String()
+	packet.Sport = int(tcp.SrcPort)
+	packet.Dport = int(tcp.DstPort)
+	packet.Seqnum = int(tcp.Seq)
+	packet.Acknum = int(tcp.Ack)
+	packet.Window = int(tcp.Window)
+
+	return packet
+}
 
 func main() {
 
@@ -175,7 +228,20 @@ func main() {
 
 	//read in from ZMap
 	reader := bufio.NewReader(os.Stdin)
+
+    // Open device
+    handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, 0) //timeout
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer handle.Close()
+
+    // Use the handle as a packet source to process all packets
+    packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+
 	for {
+
+		//Read from ZMap
 		input, err := reader.ReadString(byte('\n'))
 		if err != nil && err == io.EOF {
 			break
@@ -197,10 +263,38 @@ func main() {
 		}
 
 		//Send Ack with Data
-        outPacket := constructAck(synack)
-        err = handle.WritePacketData(outPacket)
+        ack := constructAck(synack)
+        err = handle.WritePacketData(ack)
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		//Read from pcap
+        packet, err := packetSource.NextPacket()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			log.Println("Error:", err)
+			continue
+		}
+
+		tcpLayer := packet.Layer(layers.LayerTypeTCP)
+		if tcpLayer != nil {
+			tcp, _ := tcpLayer.(*layers.TCP)
+			ipLayer := packet.Layer(layers.LayerTypeIPv4)
+			ip, _ := ipLayer.(*layers.IPv4)
+
+			packet := getPacketMetadata(ip,tcp)
+
+			//for every ack received, mark as accepting data
+			if (!tcp.SYN) && tcp.ACK {
+				//TODO: do something with data
+				fmt.Println(tcp.Payload)
+				fmt.Println("acked")
+				//close connection
+				rst := constructRST(packet)
+				err = handle.WritePacketData(rst)
+			}
 		}
 
 	} //end of zmap input
