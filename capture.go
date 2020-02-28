@@ -14,6 +14,7 @@ import (
     "fmt"
 	"encoding/json"
 	"net"
+	"bytes"
 )
 
 var (
@@ -105,10 +106,46 @@ func constructAckFromStream( ip *layers.IPv4, tcp *layers.TCP, ethernet *layers.
     return outPacket
 
 }
+
+func getSourceMacAddr() (addr net.HardwareAddr) {
+	interfaces, err := net.Interfaces()
+	fmt.Println(interfaces)
+	if err == nil {
+		for _, i := range interfaces {
+			if i.Flags&net.FlagUp != 0 && bytes.Compare(i.HardwareAddr, nil) != 0 {
+				// Don't use random as we have a real address
+				addr = i.HardwareAddr
+				//break
+			}
+		}
+	}
+	return
+}
+
+func getHostMacAddr() (addr net.HardwareAddr) {
+	return net.HardwareAddr{0xa8, 0x1e, 0x84, 0xce, 0x64, 0x5f}
+}
+
+func constructEthLayer() (eth *layers.Ethernet) {
+
+    ethernetLayer := &layers.Ethernet{
+        SrcMAC: getSourceMacAddr(),
+        DstMAC: getHostMacAddr(),
+        //EthernetType: layers.EthernetTypeARP,
+        EthernetType: layers.EthernetTypeIPv4,
+    }
+
+	return ethernetLayer
+
+}
+
+
 func constructAck( synack packet_metadata ) []byte {
 
     //data := []byte("\n")
     data := getData(string(synack.Saddr))
+
+	ethernetLayer := constructEthLayer()
 
     ipLayer := &layers.IPv4{
         SrcIP: net.ParseIP(synack.Daddr),
@@ -135,6 +172,7 @@ func constructAck( synack packet_metadata ) []byte {
     tcpLayer.SetNetworkLayerForChecksum(ipLayer)
     // And create the packet with the layers
     if err := gopacket.SerializeLayers(buffer, options,
+		ethernetLayer,
         ipLayer,
         tcpLayer,
         gopacket.Payload(data),
@@ -142,7 +180,10 @@ func constructAck( synack packet_metadata ) []byte {
         log.Fatal(err)
 
 	}
-
+	fmt.Println(ethernetLayer)
+	fmt.Println(ipLayer)
+	fmt.Println(tcpLayer)
+	fmt.Println(buffer)
     outPacket := buffer.Bytes()
     return outPacket
 
@@ -151,6 +192,7 @@ func constructAck( synack packet_metadata ) []byte {
 
 func constructRST( ack packet_metadata ) []byte {
 
+	ethernetLayer := constructEthLayer()
 
     ipLayer := &layers.IPv4{
         SrcIP: net.ParseIP(ack.Daddr),
@@ -177,6 +219,7 @@ func constructRST( ack packet_metadata ) []byte {
     tcpLayer.SetNetworkLayerForChecksum(ipLayer)
     // And create the packet with the layers
     if err := gopacket.SerializeLayers(buffer, options,
+		ethernetLayer,
         ipLayer,
         tcpLayer,
     ); err != nil {
@@ -214,6 +257,38 @@ func getPacketMetadata( ip *layers.IPv4, tcp *layers.TCP ) packet_metadata {
 	return packet
 }
 
+
+
+func ackZMap(input string) {
+
+        fmt.Println(input)
+
+        var synack packet_metadata
+        //expecting ip,sequence number, acknumber,windowsize
+        err = json.Unmarshal( []byte(input),&synack)
+        if err != nil {
+            log.Fatal(err)
+        }
+
+        //TODO: check that ip_metadata contains what we want (saddr,seq,ack,window)
+
+        if windowZero(synack) {
+            //not a real s/a
+            return
+        }
+
+        //Send Ack with Data
+        ack := constructAck(synack)
+        fmt.Println("Constructed ack...")
+        err = handle.WritePacketData(ack)
+        if err != nil {
+            log.Fatal(err)
+        }
+		return
+
+}
+
+
 func main() {
 
     //read in config 
@@ -246,31 +321,14 @@ func main() {
 		if err != nil && err == io.EOF {
 			break
 		}
-		fmt.Println(input)
 
-        var synack packet_metadata
-		//expecting ip,sequence number, acknumber,windowsize
-		err = json.Unmarshal( []byte(input),&synack)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		//TODO: check that ip_metadata contains what we want (saddr,seq,ack,window)
-
-		if windowZero(synack) {
-			//not a real s/a
-			continue
-		}
-
-		//Send Ack with Data
-        ack := constructAck(synack)
-        err = handle.WritePacketData(ack)
-		if err != nil {
-			log.Fatal(err)
-		}
+		ackZMap(input)
 
 		//Read from pcap
         packet, err := packetSource.NextPacket()
+
+		fmt.Println(packet)
+
 		if err == io.EOF {
 			break
 		} else if err != nil {
