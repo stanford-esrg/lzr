@@ -101,15 +101,12 @@ func constructAckFromStream( ip *layers.IPv4, tcp *layers.TCP, ethernet *layers.
     }
 
     outPacket := buffer.Bytes()
-    //fmt.Println(outPacket)
-    //packet := gopacket.NewPacket(outPacket, layers.LayerTypeEthernet, gopacket.Default)
     return outPacket
 
 }
 
 func getSourceMacAddr() (addr net.HardwareAddr) {
 	interfaces, err := net.Interfaces()
-	fmt.Println(interfaces)
 	if err == nil {
 		for _, i := range interfaces {
 			if i.Flags&net.FlagUp != 0 && bytes.Compare(i.HardwareAddr, nil) != 0 {
@@ -180,10 +177,6 @@ func constructAck( synack packet_metadata ) []byte {
         log.Fatal(err)
 
 	}
-	fmt.Println(ethernetLayer)
-	fmt.Println(ipLayer)
-	fmt.Println(tcpLayer)
-	fmt.Println(buffer)
     outPacket := buffer.Bytes()
     return outPacket
 
@@ -288,6 +281,32 @@ func ackZMap(input string) {
 
 }
 
+func handlePcap(packet gopacket.Packet) {
+
+
+        tcpLayer := packet.Layer(layers.LayerTypeTCP)
+        if tcpLayer != nil {
+            tcp, _ := tcpLayer.(*layers.TCP)
+            ipLayer := packet.Layer(layers.LayerTypeIPv4)
+            ip, _ := ipLayer.(*layers.IPv4)
+
+			fmt.Println(packet)
+            packet := getPacketMetadata(ip,tcp)
+
+            //for every ack received, mark as accepting data
+            if (!tcp.SYN) && tcp.ACK {
+                //TODO: do something with data
+                fmt.Println(tcp.Payload)
+                fmt.Println("acked")
+                //close connection
+                rst := constructRST(packet)
+                err = handle.WritePacketData(rst)
+            }
+        }
+
+
+}
+
 
 func main() {
 
@@ -301,111 +320,58 @@ func main() {
 		panic(err)
 	}
 
-	//read in from ZMap
-	reader := bufio.NewReader(os.Stdin)
+	//routine to read in from ZMap
+	zmapIncoming := make(chan string)
+	go func() {
+		reader := bufio.NewReader(os.Stdin)
+		for {
 
-    // Open device
-    handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, 0) //timeout
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer handle.Close()
-
-    // Use the handle as a packet source to process all packets
-    packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-
-	for {
-
-		//Read from ZMap
-		input, err := reader.ReadString(byte('\n'))
-		if err != nil && err == io.EOF {
-			break
-		}
-
-		ackZMap(input)
-
-		//Read from pcap
-        packet, err := packetSource.NextPacket()
-
-		fmt.Println(packet)
-
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			log.Println("Error:", err)
-			continue
-		}
-
-		tcpLayer := packet.Layer(layers.LayerTypeTCP)
-		if tcpLayer != nil {
-			tcp, _ := tcpLayer.(*layers.TCP)
-			ipLayer := packet.Layer(layers.LayerTypeIPv4)
-			ip, _ := ipLayer.(*layers.IPv4)
-
-			packet := getPacketMetadata(ip,tcp)
-
-			//for every ack received, mark as accepting data
-			if (!tcp.SYN) && tcp.ACK {
-				//TODO: do something with data
-				fmt.Println(tcp.Payload)
-				fmt.Println("acked")
-				//close connection
-				rst := constructRST(packet)
-				err = handle.WritePacketData(rst)
+			//Read from ZMap
+			input, err := reader.ReadString(byte('\n'))
+			if err != nil && err == io.EOF {
+				return
 			}
+			zmapIncoming <- input
 		}
 
-	} //end of zmap input
-
-    /*	
-    // Open device
-    handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, 0) //timeout
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer handle.Close()
-
-    // Use the handle as a packet source to process all packets
-    packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-    for {
-        packet, err := packetSource.NextPacket()
-	if err == io.EOF {
-	    break
-	} else if err != nil {
-	    log.Println("Error:", err)
-	    continue
-        }
-
-	tcpLayer := packet.Layer(layers.LayerTypeTCP)
-	if tcpLayer != nil {
-	    tcp, _ := tcpLayer.(*layers.TCP)
-	    ipLayer := packet.Layer(layers.LayerTypeIPv4)
-            ip, _ := ipLayer.(*layers.IPv4)
-	    ethernetLayer := packet.Layer(layers.LayerTypeEthernet)
-	    ethernet, _ := ethernetLayer.(*layers.Ethernet)
-
-	    //for every s/a send an ack with data
-	    if tcp.SYN && tcp.ACK {
-		outPacket := constructAck(ip,tcp,ethernet)
-                err = handle.WritePacketData(outPacket)
-                if err != nil {
-                    log.Fatal(err)
-                }
-            }
-
-	    //for every ack received, mark as accepting data
-	    if (!tcp.SYN) && tcp.ACK {
-
-	       //TODO: do something with data
-	       fmt.Println(tcp.Payload)
-	       fmt.Println("acked")
-	       //Immediate TODO: Need to close connection....
-	       //RST ok?
+	}()
 
 
-	    }
+	//routine to read in from pcap
+	pcapIncoming := make(chan gopacket.Packet)
+	go func() {
+		// Open device
+		handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, 0) //timeout
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer handle.Close()
+		// Use the handle as a packet source to process all packets
+		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
-        }
-    }
-    */
-}
+		for {
+
+			//Read from pcap
+			packet, err := packetSource.NextPacket()
+			if err == io.EOF {
+				return
+			} else if err != nil {
+				log.Println("Error:", err)
+				continue
+			}
+			pcapIncoming <- packet
+		}
+
+	}()
+
+	//read from both zmap and pcap
+	for {
+		select {
+			case input := <-zmapIncoming:
+				ackZMap(input)
+			case input := <-pcapIncoming:
+				handlePcap(input)
+		}
+	}
+
+} //end of main
