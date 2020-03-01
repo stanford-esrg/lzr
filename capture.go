@@ -17,16 +17,6 @@ import (
 	"bytes"
 )
 
-var (
-    device       string = "ens8"
-    snapshot_len int32  = 1024
-    promiscuous  bool   = false
-    err          error
-    timeout      time.Duration = 5 * time.Second
-    handle       *pcap.Handle
-    buffer       gopacket.SerializeBuffer
-)
-
 type packet_metadata struct {
 
 	Saddr		string	`json:"saddr"`
@@ -36,7 +26,23 @@ type packet_metadata struct {
 	Seqnum		int		`json:"seqnum"`
 	Acknum		int		`json:"acknum"`
 	Window		int		`json:"window"`
+	State		string
 }
+
+
+var (
+    device       string = "ens8"
+    snapshot_len int32  = 1024
+    promiscuous  bool   = false
+    err          error
+    timeout      time.Duration = 5 * time.Second
+    handle       *pcap.Handle
+    buffer       gopacket.SerializeBuffer
+	ACK			string = "ack"
+	SYN_ACK		string = "sa"
+	DATA		string = "data"
+)
+
 
 
 /* FUNCS */
@@ -252,7 +258,7 @@ func getPacketMetadata( ip *layers.IPv4, tcp *layers.TCP ) packet_metadata {
 
 
 
-func ackZMap(input string) {
+func ackZMap(input string, ipMeta * map[string]packet_metadata) {
 
         fmt.Println(input)
 
@@ -277,12 +283,35 @@ func ackZMap(input string) {
         if err != nil {
             log.Fatal(err)
         }
+
+		//add to map
+		synack.State = ACK
+		(*ipMeta)[synack.Saddr] = synack
 		return
 
 }
 
-func handlePcap(packet gopacket.Packet) {
 
+func verifyScanningIP( pRecv packet_metadata, ipMeta * map[string]packet_metadata  ) bool {
+
+
+	//first check that IP itself is being scanned
+	pSent, ok := (*ipMeta)[pRecv.Saddr]
+	if !ok {
+		return false
+	}
+	//second check that 4-tuple matches
+	if (( pSent.Saddr == pRecv.Daddr ) && (pSent.Dport == pRecv.Sport) &&
+		(pSent.Sport == pRecv.Dport)) {
+		return true
+	}
+	//TODO: check seq & ack and check state that we expect(?)
+
+	return false
+
+}
+
+func handlePcap(packet gopacket.Packet, ipMeta * map[string]packet_metadata) {
 
         tcpLayer := packet.Layer(layers.LayerTypeTCP)
         if tcpLayer != nil {
@@ -290,8 +319,12 @@ func handlePcap(packet gopacket.Packet) {
             ipLayer := packet.Layer(layers.LayerTypeIPv4)
             ip, _ := ipLayer.(*layers.IPv4)
 
-			fmt.Println(packet)
             packet := getPacketMetadata(ip,tcp)
+			//verify 
+			if !verifyScanningIP( packet, ipMeta ) {
+				return
+			}
+			fmt.Println(packet)
 
             //for every ack received, mark as accepting data
             if (!tcp.SYN) && tcp.ACK {
@@ -310,6 +343,8 @@ func handlePcap(packet gopacket.Packet) {
 
 func main() {
 
+	//initalize
+	ipMeta := make( map[string]packet_metadata )
     //read in config 
     //port := parse()
     //fmt.Println("%s",port)
@@ -368,9 +403,11 @@ func main() {
 	for {
 		select {
 			case input := <-zmapIncoming:
-				ackZMap(input)
+				ackZMap( input, &ipMeta )
 			case input := <-pcapIncoming:
-				handlePcap(input)
+				handlePcap( input, &ipMeta )
+			default:
+				//continue to non-blocking poll
 		}
 	}
 
