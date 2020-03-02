@@ -2,6 +2,7 @@ package main
 
 import (
     "github.com/google/gopacket/layers"
+    "time"
 )
 
 
@@ -15,7 +16,8 @@ type packet_metadata struct {
 	Seqnum		int		`json:"seqnum"`
 	Acknum		int		`json:"acknum"`
 	Window		int		`json:"window"`
-	State		string
+	Timestamp	time.Time
+	ExpectedR	string
 
 }
 
@@ -30,7 +32,7 @@ func NewPacket( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
         Seqnum: int(tcp.Seq),
         Acknum: int(tcp.Ack),
         Window: int(tcp.Window),
-        State: "",
+        ExpectedR: "",
     }
 	return packet
 }
@@ -47,13 +49,13 @@ func ( pRecv *packet_metadata ) verifyScanningIP(ipMeta * map[string]packet_meta
 
 
 	//first check that IP itself is being scanned
-	pSent, ok := (*ipMeta)[pRecv.Saddr]
+	pZMap, ok := (*ipMeta)[pRecv.Saddr]
 	if !ok {
 		return false
 	}
 	//second check that 4-tuple matches
-	if (( pSent.Saddr == pRecv.Daddr ) && (pSent.Dport == pRecv.Sport) &&
-		(pSent.Sport == pRecv.Dport)) {
+	if (( pZMap.Saddr == pRecv.Saddr ) && (pZMap.Dport == pRecv.Dport) &&
+		(pZMap.Sport == pRecv.Sport)) {
 		return true
 	}
 	//TODO: check seq & ack and check state that we expect(?)
