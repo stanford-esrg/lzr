@@ -65,15 +65,19 @@ func constructPcapRoutine() chan gopacket.Packet {
 
 }
 
+func constructPacketStateMap() map[string]packet_metadata {
 
+	ipMeta := make( map[string]packet_metadata )
+    return ipMeta
+}
 
 func main() {
 
 	//initalize
-	ipMeta := make( map[string]packet_metadata )
+	ipMeta := constructPacketStateMap()
 
     //read in config 
-    //port := parse()
+    //options := parse()
 
     zmapIncoming := constructZMapRoutine()
     pcapIncoming := constructPcapRoutine()
