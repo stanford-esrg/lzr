@@ -10,19 +10,8 @@ import (
 )
 
 
-func main() {
+func constructZMapRoutine() chan string {
 
-	//initalize
-	ipMeta := make( map[string]packet_metadata )
-    //read in config 
-    //port := parse()
-    //fmt.Println("%s",port)
-
-    //read in s/a sent in by zmap
-	_, err := os.Stdin.Stat()
-	if err != nil {
-		panic(err)
-	}
 
 	//routine to read in from ZMap
 	zmapIncoming := make(chan string)
@@ -40,6 +29,10 @@ func main() {
 
 	}()
 
+    return zmapIncoming
+}
+
+func constructPcapRoutine() chan gopacket.Packet {
 
 	//routine to read in from pcap
 	pcapIncoming := make(chan gopacket.Packet)
@@ -67,6 +60,23 @@ func main() {
 		}
 
 	}()
+
+    return pcapIncoming
+
+}
+
+
+
+func main() {
+
+	//initalize
+	ipMeta := make( map[string]packet_metadata )
+
+    //read in config 
+    //port := parse()
+
+    zmapIncoming := constructZMapRoutine()
+    pcapIncoming := constructPcapRoutine()
 
 	//read from both zmap and pcap
 	for {

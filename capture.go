@@ -68,9 +68,9 @@ func handlePcap(packet gopacket.Packet, ipMeta * map[string]packet_metadata) {
             ipLayer := packet.Layer(layers.LayerTypeIPv4)
             ip, _ := ipLayer.(*layers.IPv4)
 
-            packet := getPacketMetadata(ip,tcp)
+            packet := *NewPacket(ip,tcp)
 			//verify 
-			if !verifyScanningIP( packet, ipMeta ) {
+			if !(packet.verifyScanningIP( ipMeta )) {
 				return
 			}
 			fmt.Println(packet)
