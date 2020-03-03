@@ -8,6 +8,7 @@ import (
     "bufio"
     "os"
     "time"
+    "fmt"
 )
 
 //TODO: move vars to appropriate places
@@ -19,9 +20,6 @@ var (
     timeout      time.Duration = 5 * time.Second
     handle       *pcap.Handle
     buffer       gopacket.SerializeBuffer
-	ACK			string = "ack"
-	SYN_ACK		string = "sa"
-	DATA		string = "data"
 )
 
 func constructZMapRoutine() chan string {
@@ -81,38 +79,41 @@ func constructPcapRoutine() chan gopacket.Packet {
 
 
 
-func pollTimeoutRoutine( ipMeta * map[string]packet_metadata, timeoutQueue chan packet_metadata ) chan packet_metadata {
+func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata ) chan packet_metadata {
 
-    TIMEOUT := 1*time.Second
+    TIMEOUT := 5*time.Second
 
 	timeoutIncoming := make(chan packet_metadata)
-
+    //timeoutReQ := make(chan packet_metadata) //to avoid deadlock need 
     //return from timeout when packet has expired
-    //go func() {
+    go func() {
         for {
             packet := <-timeoutQueue
-            //select {
-            //    case packet := <-timeoutQueue:
-                    //if timeout has reached, return packet.
-                    //else, check that the state has updated in the meanwhile
-                    //if not, put the packet back in timeoutQueue
-                    if ( ((time.Now()).Sub( packet.Timestamp ) ) > TIMEOUT) {
-                        timeoutIncoming <-packet
-                    } else {
-	                    p, ok := (*ipMeta)[packet.Saddr]
-	                    if !ok {
-                            continue
-                        }
-                        //if state hasnt changed
-                        if p.ExpectedR != packet.ExpectedR {
-                            continue
-                        } else {
-                            timeoutQueue <-packet
-                        }
-                    }
-            //    default:
-         }
-    //}()
+            //if timeout has reached, return packet.
+            //else, check that the state has updated in the meanwhile
+            //if not, put the packet back in timeoutQueue
+            if ( ((time.Now()).Sub( packet.Timestamp ) ) < TIMEOUT) {
+                go func() { //must be its own routine to avoid deadlock
+                    timeoutQueue <-packet
+                }()
+            } else {
+	            p, ok := (*ipMeta).IPmap[packet.Saddr]
+	            if !ok {
+                    fmt.Println("removed from timeoutQ b/c out of meta map")
+                    continue
+                }
+                //if state hasnt changed
+                if p.ExpectedR != packet.ExpectedR {
+                    fmt.Println("removed from timeoutQ b/c of state change")
+                    continue
+                } else {
+                    go func() { //must be its own routine to avoid deadlock
+                        timeoutQueue <-packet
+                    }()
+                }
+            }
+        }
+    }()
     return timeoutIncoming
 
 }
@@ -125,26 +126,13 @@ func constructTimeoutQueue() chan packet_metadata {
 }
 
 
-//TODO: move the ipStateMap stuff to own file
 
-/* keeps state by storing the packet that was sent 
- * and within the packet stores the expected response */
-func constructPacketStateMap() map[string]packet_metadata {
+func constructIncomingChan() chan packet_metadata {
 
-	ipMeta := make( map[string]packet_metadata )
-    return ipMeta
+    incomingChan := make(chan packet_metadata)
+    return incomingChan
+
 }
-
-
-func metaContains(p * packet_metadata, ipMeta *map[string]packet_metadata) bool {
-	_, ok := (*ipMeta)[p.Saddr]
-	if !ok {
-		return false
-	}
-    return true
-}
-
-
 
 func main() {
 
@@ -155,6 +143,8 @@ func main() {
     //read in config 
     //options := parse()
 
+    //TODO: merge all channels into one?
+    //incomingChan := constructIncomingChan()
     zmapIncoming := constructZMapRoutine()
     pcapIncoming := constructPcapRoutine()
     timeoutIncoming := pollTimeoutRoutine( &ipMeta,timeoutQueue )
@@ -168,6 +158,8 @@ func main() {
 				handlePcap( input, &ipMeta, &timeoutQueue )
             case input := <-timeoutIncoming:
                 //TODO
+                fmt.Println("out of timeoutQ")
+                fmt.Println(input)
 
 			default:
 				//continue to non-blocking poll

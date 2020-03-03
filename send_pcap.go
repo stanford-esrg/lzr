@@ -10,7 +10,7 @@ import (
 
 
 
-func handlePcap( packet gopacket.Packet, ipMeta * map[string]packet_metadata, timeoutQueue * chan packet_metadata ) {
+func handlePcap( packet gopacket.Packet, ipMeta * pState, timeoutQueue * chan packet_metadata ) {
 
         tcpLayer := packet.Layer(layers.LayerTypeTCP)
         if tcpLayer != nil {
@@ -20,19 +20,36 @@ func handlePcap( packet gopacket.Packet, ipMeta * map[string]packet_metadata, ti
 
             packet := *NewPacket(ip,tcp)
 			//verify 
-			if !(packet.verifyScanningIP( ipMeta )) {
+			if !(ipMeta.verifyScanningIP( &packet )) {
 				return
 			}
 			fmt.Println(packet)
 
             //for every ack received, mark as accepting data
             if (!tcp.SYN) && tcp.ACK {
-                //TODO: do something with data
-                fmt.Println(tcp.Payload)
-                fmt.Println("acked")
-                //close connection
-                rst := constructRST(packet)
-                err = handle.WritePacketData(rst)
+
+                //exit condition
+                if len(tcp.Payload) > 0 {
+
+                    //remove from state, we are done now
+                    ipMeta.remove(packet)
+                    //TODO: do something with data
+                    fmt.Println(tcp.Payload)
+                    //close connection
+                    rst := constructRST(packet)
+                    err = handle.WritePacketData(rst)
+                    return
+
+                }
+
+		        //add to map
+		        packet.updateState(DATA)
+		        packet.updateTimestamp()
+		        ipMeta.update(packet)
+
+		        //add to map
+                *timeoutQueue <-packet
+
             }
         }
 

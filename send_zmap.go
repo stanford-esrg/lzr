@@ -8,7 +8,7 @@ import (
 
 
 
-func ackZMap(input string, ipMeta * map[string]packet_metadata, timeoutQueue * chan packet_metadata ) {
+func ackZMap(input string, ipMeta * pState, timeoutQueue * chan packet_metadata ) {
 
         fmt.Println(input)
 
@@ -31,14 +31,15 @@ func ackZMap(input string, ipMeta * map[string]packet_metadata, timeoutQueue * c
         fmt.Println("Constructed ack...")
 
 		//add to map
-		synack.ExpectedR = ACK
-		(*ipMeta)[synack.Saddr] = synack
+		synack.updateState(ACK)
+		synack.updateTimestamp()
+		ipMeta.update(synack)
 
         err = handle.WritePacketData(ack)
         if err != nil {
             log.Fatal(err)
         }
-
+        *timeoutQueue <-synack
 		return
 
 }

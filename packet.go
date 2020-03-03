@@ -5,7 +5,13 @@ import (
     "time"
 )
 
+var (
 
+	ACK			string = "ack"
+	SYN_ACK		string = "sa"
+	DATA		string = "data"
+
+)
 
 type packet_metadata struct {
 
@@ -18,6 +24,7 @@ type packet_metadata struct {
 	Window		int		`json:"window"`
 	Timestamp	time.Time
 	ExpectedR	string
+	SourceQ     string
 
 }
 
@@ -45,22 +52,17 @@ func (synack *packet_metadata) windowZero() bool {
 }
 
 
-func ( pRecv *packet_metadata ) verifyScanningIP(ipMeta * map[string]packet_metadata  ) bool {
+func (packet * packet_metadata) updateState( state string ) {
 
+    //add to map
+	packet.ExpectedR = state
 
-	//first check that IP itself is being scanned
-	pZMap, ok := (*ipMeta)[pRecv.Saddr]
-	if !ok {
-		return false
-	}
-	//second check that 4-tuple matches
-	if (( pZMap.Saddr == pRecv.Saddr ) && (pZMap.Dport == pRecv.Dport) &&
-		(pZMap.Sport == pRecv.Sport)) {
-		return true
-	}
-	//TODO: check seq & ack and check state that we expect(?)
+}
 
-	return false
+func (packet * packet_metadata) updateTimestamp() {
+
+    //add to map
+	packet.Timestamp = time.Now()
 
 }
 
