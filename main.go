@@ -81,7 +81,7 @@ func constructPcapRoutine() chan gopacket.Packet {
 
 func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata ) chan packet_metadata {
 
-    TIMEOUT := 5*time.Second
+    TIMEOUT := 2*time.Second
 
 	timeoutIncoming := make(chan packet_metadata)
     //timeoutReQ := make(chan packet_metadata) //to avoid deadlock need 
@@ -98,17 +98,17 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata ) ch
                 }()
             } else {
 	            p, ok := (*ipMeta).IPmap[packet.Saddr]
+                //if no longer in map
 	            if !ok {
-                    fmt.Println("removed from timeoutQ b/c out of meta map")
+                    //fmt.Println("no longer in map: " + string(packet.Saddr))
                     continue
                 }
                 //if state hasnt changed
                 if p.ExpectedR != packet.ExpectedR {
-                    fmt.Println("removed from timeoutQ b/c of state change")
                     continue
                 } else {
                     go func() { //must be its own routine to avoid deadlock
-                        timeoutQueue <-packet
+                        timeoutIncoming <-packet
                     }()
                 }
             }
@@ -136,12 +136,13 @@ func constructIncomingChan() chan packet_metadata {
 
 func main() {
 
+    //read in config 
+    options := parse()
+
 	//initalize
 	ipMeta := constructPacketStateMap()
     timeoutQueue := constructTimeoutQueue()
-
-    //read in config 
-    //options := parse()
+    f := initFile( options.Filename )
 
     //TODO: merge all channels into one?
     //incomingChan := constructIncomingChan()
@@ -155,14 +156,11 @@ func main() {
 			case input := <-zmapIncoming:
 				ackZMap( input, &ipMeta, &timeoutQueue )
 			case input := <-pcapIncoming:
-				handlePcap( input, &ipMeta, &timeoutQueue )
+				handlePcap( input, &ipMeta, &timeoutQueue, f )
             case input := <-timeoutIncoming:
-                //TODO
-                fmt.Println("out of timeoutQ")
-                fmt.Println(input)
-
+                handleTimeout( input, &ipMeta, &timeoutQueue, f )
 			default:
-				//continue to non-blocking poll
+                continue
 		}
 	}
 

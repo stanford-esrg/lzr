@@ -2,20 +2,35 @@ package main
 import (
   "flag"
   "fmt"
+  "time"
 )
 
 var (
-  port *int
+
+    filename    *string
 )
+
+type options struct {
+
+    Filename   string
+
+}
+
 
 // Basic flag declarations are available for string, integer, and boolean options.
 func init() {
-  port = flag.Int("port", 3000, "an int")
+  //port = flag.Int("port", 3000, "port number")
+  fname := "default_"+string(time.Now().Format("20060102150405"))+".json"
+  filename = flag.String("f", fname , "json file name")
 }
 
-func parse() int {
+func parse() *options {
 
     flag.Parse()
-    fmt.Println("port:", *port)
-    return *port
+    opt := &options{
+        Filename: *filename,
+    }
+    fmt.Println("writing results to file ", *filename)
+    //fmt.Println("port:", *port)
+    return opt
 }
