@@ -8,7 +8,7 @@ import (
     "bufio"
     "os"
     "time"
-    "fmt"
+    //"fmt"
 )
 
 //TODO: move vars to appropriate places

@@ -43,7 +43,7 @@ func constructEthLayer() (eth *layers.Ethernet) {
 }
 
 
-func constructAck( synack packet_metadata ) []byte {
+func constructData( synack packet_metadata, ack bool, push bool) []byte {
 
     //data := []byte("\n")
     data := getData(string(synack.Saddr))
@@ -64,7 +64,8 @@ func constructAck( synack packet_metadata ) []byte {
     Seq: uint32(synack.Acknum),
     Ack: uint32(synack.Seqnum+1),
     Window: 8192,
-    ACK: true,
+    ACK: ack,
+    PSH: push,
     }
 
     buffer = gopacket.NewSerializeBuffer()

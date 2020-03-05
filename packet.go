@@ -22,10 +22,12 @@ type packet_metadata struct {
 	Seqnum		int		`json:"seqnum"`
 	Acknum		int		`json:"acknum"`
 	Window		int		`json:"window"`
+	Counter		int
     ACK         bool
     SYN         bool
     RST         bool
-    DATA        string
+    FIN         bool
+    PUSH         bool
 
 	Timestamp	time.Time
 	ExpectedR	string
@@ -48,8 +50,11 @@ func NewPacket( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
         ACK: tcp.ACK,
         SYN: tcp.SYN,
         RST: tcp.RST,
-        DATA: string(tcp.Payload),
+        FIN: tcp.FIN,
+        PUSH: tcp.PSH,
+        Data: string(tcp.Payload),
         ExpectedR: "",
+        Counter: 0,
     }
 	return packet
 }
@@ -65,6 +70,12 @@ func (synack *packet_metadata) windowZero() bool {
 func (packet * packet_metadata) updateState( state string ) {
 
 	packet.ExpectedR = state
+
+}
+
+func (packet * packet_metadata) incrementCounter() {
+
+    packet.Counter += 1
 
 }
 

@@ -27,10 +27,10 @@ func ackZMap(input string, ipMeta * pState, timeoutQueue * chan packet_metadata 
         }
 
         //Send Ack with Data
-        ack := constructAck(synack)
+        ack := constructData(synack, true, false)
 
 		//add to map
-		synack.updateState(DATA)
+		synack.updateState(ACK)
 		synack.updateTimestamp()
 		ipMeta.update(synack)
 
