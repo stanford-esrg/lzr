@@ -59,14 +59,14 @@ func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 
 	//first check that IP itself is being scanned
     ipMeta.MLock.RLock()
-	pZMap, ok := ipMeta.IPmap[pRecv.Saddr]
+	pMap, ok := ipMeta.IPmap[pRecv.Saddr]
     ipMeta.MLock.RUnlock()
 	if !ok {
 		return false
 	}
 	//second check that 4-tuple matches
-	if (( pZMap.Saddr == pRecv.Saddr ) && (pZMap.Dport == pRecv.Dport) &&
-		(pZMap.Sport == pRecv.Sport)) {
+	if (( pMap.Saddr == pRecv.Saddr ) && (pMap.Dport == pRecv.Dport) &&
+		(pMap.Sport == pRecv.Sport)) {
 		return true
 	}
 	//TODO: check seq & ack and check state that we expect(?)

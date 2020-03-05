@@ -4,6 +4,7 @@ import (
     "github.com/google/gopacket"
     "github.com/google/gopacket/layers"
     //"fmt"
+    "log"
 )
 
 
@@ -23,6 +24,19 @@ func handlePcap( packet gopacket.Packet, ipMeta * pState, timeoutQueue * chan pa
 			if !(ipMeta.verifyScanningIP( &packet )) {
 				return
 			}
+            //for every closed connection, record
+            if packet.RST || packet.FIN {
+
+                ipMeta.remove(packet)
+                f.record(packet)
+                //close connection
+                if packet.FIN {
+                    rst := constructRST(packet)
+                    err = handle.WritePacketData(rst)
+                }
+                return
+
+            }
             //for every ack received, mark as accepting data
             if (!packet.SYN) && packet.ACK {
 
@@ -37,6 +51,9 @@ func handlePcap( packet gopacket.Packet, ipMeta * pState, timeoutQueue * chan pa
                     //close connection
                     rst := constructRST(packet)
                     err = handle.WritePacketData(rst)
+                    if err != nil {
+                       log.Fatal(err)
+                    }
                     return
 
                 }
@@ -48,19 +65,6 @@ func handlePcap( packet gopacket.Packet, ipMeta * pState, timeoutQueue * chan pa
 
 		        //add to map
                 *timeoutQueue <-packet
-
-            }
-            //for every closed connection, record
-            if packet.RST || packet.FIN {
-
-                ipMeta.remove(packet)
-                f.record(packet)
-                //close connection
-                if packet.FIN {
-                    rst := constructRST(packet)
-                    err = handle.WritePacketData(rst)
-                }
-                return
 
             }
 

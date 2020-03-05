@@ -53,6 +53,7 @@ func NewPacket( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
         FIN: tcp.FIN,
         PUSH: tcp.PSH,
         Data: string(tcp.Payload),
+        Timestamp: time.Now(),
         ExpectedR: "",
         Counter: 0,
     }

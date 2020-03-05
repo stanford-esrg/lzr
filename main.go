@@ -19,7 +19,6 @@ var (
     err          error
     timeout      time.Duration = 5 * time.Second
     handle       *pcap.Handle
-    buffer       gopacket.SerializeBuffer
 )
 
 func constructZMapRoutine( workers int ) chan string {
@@ -152,11 +151,17 @@ func main() {
 	for {
 		select {
 			case input := <-zmapIncoming:
+                go func() { 
 				    ackZMap( input, &ipMeta, &timeoutQueue )
+                }()
 			case input := <-pcapIncoming:
+                go func() { 
 				    handlePcap( input, &ipMeta, &timeoutQueue, f )
+                }()
             case input := <-timeoutIncoming:
+                go func() { 
                     handleTimeout( input, &ipMeta, &timeoutQueue, f )
+                }()
 			default:
                 continue
 		}

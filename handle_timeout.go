@@ -29,6 +29,7 @@ func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan
                 log.Fatal(err)
             }
 		    packet.updateTimestamp()
+		    ipMeta.update(packet)
             *timeoutQueue <- packet
             return
         }

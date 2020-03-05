@@ -6,6 +6,7 @@ import (
     "log"
 	"net"
 	"bytes"
+    //"fmt"
 )
 
 
@@ -68,7 +69,7 @@ func constructData( synack packet_metadata, ack bool, push bool) []byte {
     PSH: push,
     }
 
-    buffer = gopacket.NewSerializeBuffer()
+    buffer := gopacket.NewSerializeBuffer()
     options := gopacket.SerializeOptions{
         ComputeChecksums: true,
         FixLengths:       true,
@@ -111,7 +112,7 @@ func constructRST( ack packet_metadata ) []byte {
     RST: true,
     }
 
-    buffer = gopacket.NewSerializeBuffer()
+    buffer := gopacket.NewSerializeBuffer()
     options := gopacket.SerializeOptions{
         ComputeChecksums: true,
         FixLengths:       true,
