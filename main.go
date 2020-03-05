@@ -22,11 +22,11 @@ var (
     buffer       gopacket.SerializeBuffer
 )
 
-func constructZMapRoutine() chan string {
+func constructZMapRoutine( workers int ) chan string {
 
 
 	//routine to read in from ZMap
-	zmapIncoming := make(chan string)
+	zmapIncoming := make(chan string, workers)
 	go func() {
 		reader := bufio.NewReader(os.Stdin)
 		for {
@@ -44,10 +44,10 @@ func constructZMapRoutine() chan string {
     return zmapIncoming
 }
 
-func constructPcapRoutine() chan gopacket.Packet {
+func constructPcapRoutine( workers int ) chan gopacket.Packet {
 
 	//routine to read in from pcap
-	pcapIncoming := make(chan gopacket.Packet)
+	pcapIncoming := make(chan gopacket.Packet, workers)
 	go func() {
 		// Open device
 		handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, 0) //timeout
@@ -79,11 +79,11 @@ func constructPcapRoutine() chan gopacket.Packet {
 
 
 
-func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata ) chan packet_metadata {
+func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, workers int ) chan packet_metadata {
 
     TIMEOUT := 2*time.Second
 
-	timeoutIncoming := make(chan packet_metadata)
+	timeoutIncoming := make(chan packet_metadata, workers)
     //timeoutReQ := make(chan packet_metadata) //to avoid deadlock need 
     //return from timeout when packet has expired
     go func() {
@@ -97,7 +97,7 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata ) ch
                     timeoutQueue <-packet
                 }()
             } else {
-	            p, ok := (*ipMeta).IPmap[packet.Saddr]
+	            p, ok := ipMeta.find( &packet )
                 //if no longer in map
 	            if !ok {
                     //fmt.Println("no longer in map: " + string(packet.Saddr))
@@ -119,20 +119,20 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata ) ch
 }
 
 // TimeoutQueueStuff TODO:need to move
-func constructTimeoutQueue() chan packet_metadata {
+func constructTimeoutQueue( workers int ) chan packet_metadata {
 
-    timeoutQueue := make(chan packet_metadata)
+    timeoutQueue := make(chan packet_metadata, workers)
     return timeoutQueue
 }
 
 
 
-func constructIncomingChan() chan packet_metadata {
+/*func constructIncomingChan() chan packet_metadata {
 
     incomingChan := make(chan packet_metadata)
     return incomingChan
 
-}
+}*/
 
 func main() {
 
@@ -141,24 +141,22 @@ func main() {
 
 	//initalize
 	ipMeta := constructPacketStateMap()
-    timeoutQueue := constructTimeoutQueue()
     f := initFile( options.Filename )
 
-    //TODO: merge all channels into one?
-    //incomingChan := constructIncomingChan()
-    zmapIncoming := constructZMapRoutine()
-    pcapIncoming := constructPcapRoutine()
-    timeoutIncoming := pollTimeoutRoutine( &ipMeta,timeoutQueue )
+    zmapIncoming := constructZMapRoutine( options.Workers )
+    pcapIncoming := constructPcapRoutine( options.Workers )
+    timeoutQueue := constructTimeoutQueue( options.Workers )
+    timeoutIncoming := pollTimeoutRoutine( &ipMeta,timeoutQueue, options.Workers )
 
 	//read from both zmap and pcap
 	for {
 		select {
 			case input := <-zmapIncoming:
-				ackZMap( input, &ipMeta, &timeoutQueue )
+				    ackZMap( input, &ipMeta, &timeoutQueue )
 			case input := <-pcapIncoming:
-				handlePcap( input, &ipMeta, &timeoutQueue, f )
+				    handlePcap( input, &ipMeta, &timeoutQueue, f )
             case input := <-timeoutIncoming:
-                handleTimeout( input, &ipMeta, &timeoutQueue, f )
+                    handleTimeout( input, &ipMeta, &timeoutQueue, f )
 			default:
                 continue
 		}

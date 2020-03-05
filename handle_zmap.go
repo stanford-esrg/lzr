@@ -2,15 +2,13 @@ package main
 
 import (
     "log"
-    "fmt"
+    //"fmt"
 	"encoding/json"
 )
 
 
 
 func ackZMap(input string, ipMeta * pState, timeoutQueue * chan packet_metadata ) {
-
-        fmt.Println(input)
 
         var synack packet_metadata
         //expecting ip,sequence number, acknumber,windowsize

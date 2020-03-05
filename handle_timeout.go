@@ -1,7 +1,7 @@
 package main
 
 import (
-    "fmt"
+    //"fmt"
     "log"
 )
 
@@ -20,12 +20,10 @@ func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan
     //and do not requeue...will requeue later...
 
     //send again with just data no ack
-    fmt.Println(packet)
     if packet.ExpectedR == ACK {
         if packet.Counter < 1 {
             packet.incrementCounter()
             data := constructData(packet,true,true)
-            fmt.Println(data)
             err = handle.WritePacketData(data)
             if err != nil {
                 log.Fatal(err)

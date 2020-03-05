@@ -1,8 +1,13 @@
 package main
 
+import (
+    "sync"
+)
+
 type pState struct {
 
 	IPmap	map[string]packet_metadata
+    MLock    sync.RWMutex
 
 }
 
@@ -14,38 +19,48 @@ func constructPacketStateMap() pState {
 
 	ipMeta := pState{
         IPmap: make( map[string]packet_metadata ),
+        MLock: sync.RWMutex{},
     }
     return ipMeta
 }
 
 
 func (ipMeta * pState) metaContains(p * packet_metadata) bool {
-	_, ok := (*ipMeta).IPmap[p.Saddr]
+    ipMeta.MLock.RLock()
+	_, ok := ipMeta.IPmap[p.Saddr]
+    ipMeta.MLock.RUnlock()
 	if !ok {
 		return false
 	}
     return true
 }
 
+func (ipMeta * pState) find(p * packet_metadata) ( *packet_metadata, bool ) {
+    ipMeta.MLock.RLock()
+	p_out, ok := ipMeta.IPmap[p.Saddr]
+    ipMeta.MLock.RUnlock()
+    return &p_out, ok
+}
 func (ipMeta * pState) update( packet packet_metadata ) {
-
-	(*ipMeta).IPmap[packet.Saddr] = packet
-
+    ipMeta.MLock.Lock()
+	ipMeta.IPmap[packet.Saddr] = packet
+    ipMeta.MLock.Unlock()
 }
 
-func (ipMeta * pState) add( packet packet_metadata) {
-        (*ipMeta).IPmap[packet.Saddr] = packet
-}
 
 func (ipMeta * pState) remove( packet packet_metadata) {
-        delete( (*ipMeta).IPmap, packet.Saddr )
+    ipMeta.MLock.Lock()
+    delete( ipMeta.IPmap, packet.Saddr )
+    ipMeta.MLock.Unlock()
 }
 
 func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 
 
 	//first check that IP itself is being scanned
-	pZMap, ok := (*ipMeta).IPmap[pRecv.Saddr]
+    ipMeta.MLock.RLock()
+	pZMap, ok := ipMeta.IPmap[pRecv.Saddr]
+    ipMeta.MLock.RUnlock()
 	if !ok {
 		return false
 	}
