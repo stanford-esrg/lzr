@@ -9,12 +9,14 @@ var (
 
     filename    *string
     workers     *int
+    timeout     *int
 )
 
 type options struct {
 
     Filename   string
     Workers    int
+    Timeout    int
 }
 
 
@@ -24,6 +26,7 @@ func init() {
   fname := "default_"+string(time.Now().Format("20060102150405"))+".json"
   filename = flag.String("f", fname , "json file name")
   workers = flag.Int("w", 1000 , "number of worker threads for each channel")
+  timeout = flag.Int("t", 1 , "number of seconds to wait in timeout queue")
 }
 
 func parse() *options {
@@ -32,9 +35,11 @@ func parse() *options {
     opt := &options{
         Filename: *filename,
         Workers: *workers,
+        Timeout: *timeout,
     }
     fmt.Println("Writing results to file: ", *filename)
-    fmt.Println("Number of worker threads for each channel: ", *workers)
+    fmt.Println("Worker threads: ", *workers)
+    fmt.Println("Timeout: ", *timeout)
     //fmt.Println("port:", *port)
     return opt
 }

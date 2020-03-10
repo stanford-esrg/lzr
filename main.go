@@ -8,8 +8,11 @@ import (
     "bufio"
     "os"
     "time"
+    "context"
+    "golang.org/x/sync/semaphore"
     //"fmt"
 )
+
 
 //TODO: move vars to appropriate places
 var (
@@ -17,7 +20,6 @@ var (
     snapshot_len int32  = 1024
     promiscuous  bool   = false
     err          error
-    timeout      time.Duration = 5 * time.Second
     handle       *pcap.Handle
 )
 
@@ -78,9 +80,9 @@ func constructPcapRoutine( workers int ) chan gopacket.Packet {
 
 
 
-func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, workers int ) chan packet_metadata {
+func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, workers int, timeout int ) chan packet_metadata {
 
-    TIMEOUT := 2*time.Second
+    TIMEOUT := time.Duration(timeout)*time.Second
 
 	timeoutIncoming := make(chan packet_metadata, workers)
     //timeoutReQ := make(chan packet_metadata) //to avoid deadlock need 
@@ -135,36 +137,72 @@ func constructTimeoutQueue( workers int ) chan packet_metadata {
 
 func main() {
 
+    ctx := context.TODO()
+
     //read in config 
     options := parse()
 
 	//initalize
 	ipMeta := constructPacketStateMap()
     f := initFile( options.Filename )
+    sem := semaphore.NewWeighted( int64(options.Workers) )
 
     zmapIncoming := constructZMapRoutine( options.Workers )
     pcapIncoming := constructPcapRoutine( options.Workers )
     timeoutQueue := constructTimeoutQueue( options.Workers )
-    timeoutIncoming := pollTimeoutRoutine( &ipMeta,timeoutQueue, options.Workers )
+    timeoutIncoming := pollTimeoutRoutine( &ipMeta,timeoutQueue, options.Workers, options.Timeout )
 
 	//read from both zmap and pcap
 	for {
 		select {
 			case input := <-zmapIncoming:
-                go func() { 
+                if err := sem.Acquire(ctx, 1); err != nil {
+                    continue
+                }
+                go func() {
+                    defer sem.Release(1)
 				    ackZMap( input, &ipMeta, &timeoutQueue )
                 }()
 			case input := <-pcapIncoming:
-                go func() { 
+                if err := sem.Acquire(ctx, 1); err != nil {
+                    continue
+                }
+                go func() {
+                    defer sem.Release(1)
 				    handlePcap( input, &ipMeta, &timeoutQueue, f )
                 }()
             case input := <-timeoutIncoming:
-                go func() { 
+                if err := sem.Acquire(ctx, 1); err != nil {
+                    continue
+                }
+                go func() {
+                    defer sem.Release(1)
                     handleTimeout( input, &ipMeta, &timeoutQueue, f )
                 }()
 			default:
                 continue
 		}
 	}
+    /*
+    for i := 0; i < options.Workers; i++ {
+		go func( i int ) {
+	        for {
+	            //read from both zmap and pcap and timeout
+		        select {
+			        case input := <-zmapIncoming:
+				        ackZMap( input, &ipMeta, &timeoutQueue )
+			        case input := <-pcapIncoming:
+				        handlePcap( input, &ipMeta, &timeoutQueue, f )
+                    case input := <-timeoutIncoming:
+                        handleTimeout( input, &ipMeta, &timeoutQueue, f )
+			        default:
+                        continue
+                }
+            }
+		}( i )
+	}
 
+    //temp solution to wait forever
+    select{}
+    */
 } //end of main
