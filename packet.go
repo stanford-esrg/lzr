@@ -27,13 +27,14 @@ type packet_metadata struct {
     SYN         bool
     RST         bool
     FIN         bool
-    PUSH         bool
+    PUSH        bool
 
 	Timestamp	time.Time
 	ExpectedR	string
 	//SourceQ     string  //might not need this
     Data        string
-
+    //Closed      bool    //might not need: 
+                        //to see if connection has been closed in general
 }
 
 

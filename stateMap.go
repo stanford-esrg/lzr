@@ -13,8 +13,11 @@ type pState struct {
 
 //TODO: move the ipStateMap stuff to own file
 
-/* keeps state by storing the packet that was sent 
- * and within the packet stores the expected response */
+/* keeps state by storing the packet that was received 
+ * and within the packet stores the expected response 
+ * storing received as to what was sent b/c want to know
+ * perhaps need to wait some more 
+ */
 func constructPacketStateMap() pState {
 
 	ipMeta := pState{
@@ -66,7 +69,7 @@ func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 	}
 	//second check that 4-tuple matches
 	if (( pMap.Saddr == pRecv.Saddr ) && (pMap.Dport == pRecv.Dport) &&
-		(pMap.Sport == pRecv.Sport)) {
+    (pMap.Sport == pRecv.Sport) ) { // && (pRecv.Acknum == pMap.Seqnum + 1)) {
 		return true
 	}
 	//TODO: check seq & ack and check state that we expect(?)

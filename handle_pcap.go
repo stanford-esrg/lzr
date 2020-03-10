@@ -27,7 +27,8 @@ func handlePcap( packet gopacket.Packet, ipMeta * pState, timeoutQueue * chan pa
             //for every closed connection, record
             if packet.RST || packet.FIN {
 
-                ipMeta.remove(packet)
+                // do not remove packet due to race condition
+                //ipMeta.remove(packet)
                 f.record(packet)
                 //close connection
                 if packet.FIN {

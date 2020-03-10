@@ -8,7 +8,7 @@ import (
 
 
 
-func ackZMap(input string, ipMeta * pState, timeoutQueue * chan packet_metadata ) {
+func ackZMap(input string, ipMeta * pState, timeoutQueue * chan packet_metadata, f *output_file ) {
 
         var synack packet_metadata
         //expecting ip,sequence number, acknumber,windowsize
@@ -21,6 +21,7 @@ func ackZMap(input string, ipMeta * pState, timeoutQueue * chan packet_metadata 
 
         if synack.windowZero() {
             //not a real s/a
+            f.record( synack )
             return
         }
 

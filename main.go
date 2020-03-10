@@ -161,7 +161,7 @@ func main() {
                 }
                 go func() {
                     defer sem.Release(1)
-				    ackZMap( input, &ipMeta, &timeoutQueue )
+				    ackZMap( input, &ipMeta, &timeoutQueue, f )
                 }()
 			case input := <-pcapIncoming:
                 if err := sem.Acquire(ctx, 1); err != nil {
@@ -183,26 +183,4 @@ func main() {
                 continue
 		}
 	}
-    /*
-    for i := 0; i < options.Workers; i++ {
-		go func( i int ) {
-	        for {
-	            //read from both zmap and pcap and timeout
-		        select {
-			        case input := <-zmapIncoming:
-				        ackZMap( input, &ipMeta, &timeoutQueue )
-			        case input := <-pcapIncoming:
-				        handlePcap( input, &ipMeta, &timeoutQueue, f )
-                    case input := <-timeoutIncoming:
-                        handleTimeout( input, &ipMeta, &timeoutQueue, f )
-			        default:
-                        continue
-                }
-            }
-		}( i )
-	}
-
-    //temp solution to wait forever
-    select{}
-    */
 } //end of main
