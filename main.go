@@ -35,6 +35,7 @@ func constructZMapRoutine( workers int ) chan string {
 			//Read from ZMap
 			input, err := reader.ReadString(byte('\n'))
 			if err != nil && err == io.EOF {
+                close(zmapIncoming)
 				return
 			}
 			zmapIncoming <- input
@@ -155,9 +156,13 @@ func main() {
 	//read from both zmap and pcap
 	for {
 		select {
-			case input := <-zmapIncoming:
+			case input, ok := <-zmapIncoming:
                 if err := sem.Acquire(ctx, 1); err != nil {
                     continue
+                }
+                //done reading from zmap (channel closed)
+                if !ok {
+                    return
                 }
                 go func() {
                     defer sem.Release(1)
