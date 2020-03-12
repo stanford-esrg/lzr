@@ -30,10 +30,9 @@ func ackZMap(input string, ipMeta * pState, timeoutQueue * chan packet_metadata,
         ack := constructData( synack, data, true, false )
 
 		//add to map
-		synack.updateResponse( ACK )
-        synack.updateResponseL( data )
+		synack.updateResponse(ACK)
 		synack.updateTimestamp()
-		ipMeta.update( synack )
+		ipMeta.update(synack)
 
         err = handle.WritePacketData(ack)
         if err != nil {
@@ -43,3 +42,5 @@ func ackZMap(input string, ipMeta * pState, timeoutQueue * chan packet_metadata,
 		return
 
 }
+
+
