@@ -30,6 +30,7 @@ type packet_metadata struct {
     PUSH        bool
 
 	Timestamp	time.Time
+    ResponseL   int
 	ExpectedR	string
 	//SourceQ     string  //might not need this
     Data        string
@@ -69,12 +70,17 @@ func (synack *packet_metadata) windowZero() bool {
 }
 
 
-func (packet * packet_metadata) updateState( state string ) {
+func (packet * packet_metadata) updateResponse( state string ) {
 
 	packet.ExpectedR = state
 
 }
 
+func (packet * packet_metadata) updateResponseL( data []byte ) {
+
+	packet.ResponseL = len( data )
+
+}
 func (packet * packet_metadata) incrementCounter() {
 
     packet.Counter += 1

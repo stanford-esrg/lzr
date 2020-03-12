@@ -44,10 +44,9 @@ func constructEthLayer() (eth *layers.Ethernet) {
 }
 
 
-func constructData( synack packet_metadata, ack bool, push bool) []byte {
+func constructData( synack packet_metadata, data []byte,ack bool, push bool) []byte {
 
     //data := []byte("\n")
-    data := getData(string(synack.Saddr))
 
 	ethernetLayer := constructEthLayer()
 

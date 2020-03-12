@@ -21,9 +21,17 @@ func handlePcap( packet gopacket.Packet, ipMeta * pState, timeoutQueue * chan pa
 
             packet := *NewPacket(ip,tcp)
 			//verify 
-			if !(ipMeta.verifyScanningIP( &packet )) {
+            inscope,correctnum := ipMeta.verifyScanningIP( &packet )
+            //figure out how many times to requeue correctnum
+			if !(inscope) {
 				return
 			}
+            if !(correctnum) {
+		        packet.updateTimestamp()
+		        ipMeta.update(packet)
+                *timeoutQueue <-packet
+            }
+
             //for every closed connection, record
             if packet.RST || packet.FIN {
 
@@ -60,7 +68,7 @@ func handlePcap( packet gopacket.Packet, ipMeta * pState, timeoutQueue * chan pa
                 }
 
 		        //add to map
-		        packet.updateState(DATA)
+		        packet.updateResponse(DATA)
 		        packet.updateTimestamp()
 		        ipMeta.update(packet)
 

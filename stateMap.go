@@ -2,6 +2,7 @@ package main
 
 import (
     "sync"
+    "fmt"
 )
 
 type pState struct {
@@ -57,7 +58,8 @@ func (ipMeta * pState) remove( packet packet_metadata) {
     ipMeta.MLock.Unlock()
 }
 
-func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
+//returns if its an ip totally not worth considering or potentially just out of order
+func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) (bool,bool) {
 
 
 	//first check that IP itself is being scanned
@@ -65,16 +67,28 @@ func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 	pMap, ok := ipMeta.IPmap[pRecv.Saddr]
     ipMeta.MLock.RUnlock()
 	if !ok {
-		return false
+		return false,false
 	}
 	//second check that 4-tuple matches
-	if (( pMap.Saddr == pRecv.Saddr ) && (pMap.Dport == pRecv.Dport) &&
-    (pMap.Sport == pRecv.Sport) ) { // && (pRecv.Acknum == pMap.Seqnum + 1)) {
-		return true
+	if ( ( pMap.Saddr == pRecv.Saddr ) && ( pMap.Dport == pRecv.Dport ) &&
+    ( pMap.Sport == pRecv.Sport ) ) {
+        if ( pMap.ResponseL > 0 ) {
+            fmt.Println("recv ack num:", pRecv.Acknum)
+            fmt.Println("stored seqnum: ", pMap.Seqnum)
+            fmt.Println("stored response length: ",pMap.ResponseL)
+            if ( pRecv.Acknum == ( pMap.Acknum + pMap.ResponseL ) ) {
+                fmt.Println("TRUE_ RESPONSE")
+		        return true,true
+            }
+        } else {
+            if ( pRecv.Acknum == ( pMap.Acknum ) ) {
+                fmt.Println("TRUE_SEQ+1")
+                return true,true
+            }
+        }
 	}
-	//TODO: check seq & ack and check state that we expect(?)
-
-	return false
+    //seq and ack dont _totally_ match up
+	return false,true
 
 }
 
