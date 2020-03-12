@@ -4,19 +4,24 @@ import (
     "encoding/json"
     "log"
     "os"
+    "sync"
 )
 
 type output_file struct {
 
     F    *os.File
+    MLock    sync.RWMutex
 
 }
+
 
 func ( f *output_file ) record( packet packet_metadata ) {
 
     out, _ := json.Marshal( packet )
+    f.MLock.Lock()
     _,err = (f.F).WriteString( string(out) )
     _,err = (f.F).WriteString( "\n" )
+    f.MLock.Unlock()
     if err != nil {
         f.F.Close()
 		log.Fatal(err)
@@ -34,6 +39,7 @@ func initFile( fname string ) *output_file {
 
     o := &output_file{
         F: f,
+        MLock: sync.RWMutex{},
     }
 
     return o
