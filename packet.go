@@ -29,6 +29,7 @@ type packet_metadata struct {
     FIN         bool
     PUSH        bool
 
+    Fingerprint string
 	Timestamp	time.Time
     ResponseL   int
 	ExpectedR	string
@@ -98,3 +99,11 @@ func (packet * packet_metadata) updateData( payload string ) {
 	packet.Data = payload
 
 }
+
+func (packet * packet_metadata) fingerprintData() {
+
+    //return fingerprintResponse( payload )
+    packet.Fingerprint = fingerprintResponse( packet.Data )
+
+}
+

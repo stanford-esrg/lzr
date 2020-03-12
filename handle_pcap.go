@@ -46,8 +46,7 @@ func handlePcap( packet gopacket.Packet, ipMeta * pState, timeoutQueue * chan pa
 
                     //remove from state, we are done now
                     ipMeta.remove(packet)
-                    //TODO: do something with data
-                    //like fingerprint
+                    packet.fingerprintData()
                     f.record(packet)
                     //close connection
                     rst := constructRST(packet)
