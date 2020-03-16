@@ -23,11 +23,18 @@ var (
     handle       *pcap.Handle
 )
 
+
+func constructWritingQueue( workers int ) chan packet_metadata {
+
+    writingQueue := make(chan packet_metadata)//, workers)
+    return writingQueue
+}
+
 func constructZMapRoutine( workers int ) chan string {
 
 
 	//routine to read in from ZMap
-	zmapIncoming := make(chan string, workers)
+	zmapIncoming := make(chan string) //, workers)
 	go func() {
 		reader := bufio.NewReader(os.Stdin)
 		for {
@@ -49,7 +56,7 @@ func constructZMapRoutine( workers int ) chan string {
 func constructPcapRoutine( workers int ) chan gopacket.Packet {
 
 	//routine to read in from pcap
-	pcapIncoming := make(chan gopacket.Packet, workers)
+	pcapIncoming := make(chan gopacket.Packet) //, workers)
 	go func() {
 		// Open device
 		handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, 0) //timeout
@@ -85,7 +92,7 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
 
     TIMEOUT := time.Duration(timeout)*time.Second
 
-	timeoutIncoming := make(chan packet_metadata, workers)
+	timeoutIncoming := make(chan packet_metadata)//, workers)
     //timeoutReQ := make(chan packet_metadata) //to avoid deadlock need 
     //return from timeout when packet has expired
     go func() {
@@ -123,7 +130,7 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
 // TimeoutQueueStuff TODO:need to move
 func constructTimeoutQueue( workers int ) chan packet_metadata {
 
-    timeoutQueue := make(chan packet_metadata, workers)
+    timeoutQueue := make(chan packet_metadata)//, workers)
     return timeoutQueue
 }
 
@@ -148,10 +155,25 @@ func main() {
     f := initFile( options.Filename )
     sem := semaphore.NewWeighted( int64(options.Workers) )
 
+    writingQueue := constructWritingQueue( options.Workers )
     zmapIncoming := constructZMapRoutine( options.Workers )
     pcapIncoming := constructPcapRoutine( options.Workers )
     timeoutQueue := constructTimeoutQueue( options.Workers )
     timeoutIncoming := pollTimeoutRoutine( &ipMeta,timeoutQueue, options.Workers, options.Timeout )
+
+
+    // record to file
+    go func() {
+        for {
+            select {
+                case input := <-writingQueue:
+                    f.record( input )
+                default:
+                    continue
+                }
+        }
+    }()
+
 
 	//read from both zmap and pcap
 	for {
@@ -166,7 +188,7 @@ func main() {
                 }
                 go func() {
                     defer sem.Release(1)
-				    ackZMap( input, &ipMeta, &timeoutQueue, f )
+				    ackZMap( input, &ipMeta, &timeoutQueue, &writingQueue, f )
                 }()
 			case input := <-pcapIncoming:
                 if err := sem.Acquire(ctx, 1); err != nil {
@@ -174,7 +196,7 @@ func main() {
                 }
                 go func() {
                     defer sem.Release(1)
-				    handlePcap( input, &ipMeta, &timeoutQueue, f )
+				    handlePcap( input, &ipMeta, &timeoutQueue, &writingQueue, f )
                 }()
             case input := <-timeoutIncoming:
                 if err := sem.Acquire(ctx, 1); err != nil {
@@ -182,8 +204,9 @@ func main() {
                 }
                 go func() {
                     defer sem.Release(1)
-                    handleTimeout( input, &ipMeta, &timeoutQueue, f )
+                    handleTimeout( input, &ipMeta, &timeoutQueue, &writingQueue,f )
                 }()
+
 			default:
                 continue
 		}

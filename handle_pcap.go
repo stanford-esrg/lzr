@@ -11,7 +11,8 @@ import (
 
 
 
-func handlePcap( packet gopacket.Packet, ipMeta * pState, timeoutQueue * chan packet_metadata, f *output_file ) {
+func handlePcap( packet gopacket.Packet, ipMeta * pState, timeoutQueue * chan packet_metadata, 
+    writingQueue * chan packet_metadata, f *output_file ) {
 
         tcpLayer := packet.Layer(layers.LayerTypeTCP)
         if tcpLayer != nil {
@@ -29,7 +30,7 @@ func handlePcap( packet gopacket.Packet, ipMeta * pState, timeoutQueue * chan pa
 
                 // do not remove packet due to race condition
                 //ipMeta.remove(packet)
-                f.record(packet)
+                *writingQueue <- packet
                 //close connection
                 if packet.FIN {
                     rst := constructRST(packet)
@@ -47,7 +48,7 @@ func handlePcap( packet gopacket.Packet, ipMeta * pState, timeoutQueue * chan pa
                     //remove from state, we are done now
                     ipMeta.remove(packet)
                     packet.fingerprintData()
-                    f.record(packet)
+                    *writingQueue <- packet
                     //close connection
                     rst := constructRST(packet)
                     err = handle.WritePacketData(rst)

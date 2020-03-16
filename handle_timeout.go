@@ -9,7 +9,8 @@ import (
 
 
 
-func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, f *output_file ) {
+func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
+    writingQueue * chan packet_metadata, f *output_file ) {
 
 	//verify that it wasnt already taken care of
 	if !(ipMeta.verifyScanningIP( &packet )) {
@@ -38,7 +39,7 @@ func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan
 
     //remove from state, we are done now
     ipMeta.remove(packet)
-    f.record(packet)
+    *writingQueue <- packet
     //close connection
     rst := constructRST(packet)
     err = handle.WritePacketData(rst)
