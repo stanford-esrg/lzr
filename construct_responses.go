@@ -74,6 +74,7 @@ func constructData( synack packet_metadata, data []byte,ack bool, push bool) []b
         FixLengths:       true,
     }
     tcpLayer.SetNetworkLayerForChecksum(ipLayer)
+
     // And create the packet with the layers
     if err := gopacket.SerializeLayers(buffer, options,
 		ethernetLayer,

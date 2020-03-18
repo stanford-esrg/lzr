@@ -83,14 +83,14 @@ func convertToPacketM ( packet gopacket.Packet ) ( *packet_metadata ) {
 func convertToPacket ( input string ) *packet_metadata  {
 
 
-        var synack packet_metadata
+        synack := &packet_metadata{}
         //expecting ip,sequence number, acknumber,windowsize
-        err = json.Unmarshal( []byte(input),&synack )
+        err = json.Unmarshal( []byte(input),synack )
         if err != nil {
             log.Fatal(err)
             return nil
         }
-        return &synack
+        return synack
 }
 
 

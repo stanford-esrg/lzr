@@ -65,7 +65,7 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
 		// Open device
 		handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, 0) //timeout
 		if err != nil {
-            panic(err)
+            //panic(err)
 			log.Fatal(err)
 		}
 		defer handle.Close()
@@ -84,7 +84,7 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
 			}
             packet := convertToPacketM( pcapPacket )
             if packet == nil {
-                return
+                continue
             }
 			pcapIncoming <- *packet
 		}
