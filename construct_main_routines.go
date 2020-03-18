@@ -114,7 +114,7 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
                     continue
                 }
                 //if state hasnt changed
-                if p.ExpectedR != packet.ExpectedR {
+                if p.ExpectedRToLZR != packet.ExpectedRToLZR {
                     continue
                 } else {
                     go func() { //must be its own routine to avoid deadlock

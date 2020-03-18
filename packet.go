@@ -18,29 +18,28 @@ var (
 
 type packet_metadata struct {
 
-	Saddr		string	`json:"saddr"`
-	Daddr		string	`json:"daddr"`
-	Sport		int		`json:"sport"`
-	Dport		int		`json:"dport"`
-	Seqnum		int		`json:"seqnum"`
-	Acknum		int		`json:"acknum"`
-	Window		int		`json:"window"`
-	Counter		int
-    ACK         bool
-    SYN         bool
-    RST         bool
-    FIN         bool
-    PUSH        bool
+	Saddr		    string	`json:"saddr"`
+	Daddr		    string	`json:"daddr"`
+	Sport		    int		`json:"sport"`
+	Dport		    int		`json:"dport"`
+	Seqnum		    int		`json:"seqnum"`
+	Acknum		    int		`json:"acknum"`
+	Window		    int		`json:"window"`
+	Counter		    int
+    ACK             bool
+    SYN             bool
+    RST             bool
+    FIN             bool
+    PUSH            bool
 
-    Fingerprint string
-	Timestamp	time.Time
-    ResponseL   int
-	ExpectedR	string
-	//SourceQ     string  //might not need this
-    Data        string
-    Processing  bool
-    //Closed      bool    //might not need: 
-                        //to see if connection has been closed in general
+    Fingerprint     string
+	Timestamp	    time.Time
+    LZRResponseL    int
+	ExpectedRToLZR  string
+    Data            string
+    Processing      bool
+    //Closed        bool    //might not need: 
+                            //to see if connection has been closed in general
 }
 
 
@@ -61,7 +60,7 @@ func ReadLayers( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
         PUSH: tcp.PSH,
         Data: string(tcp.Payload),
         Timestamp: time.Now(),
-        ExpectedR: "",
+        ExpectedRToLZR: "",
         Counter: 0,
     }
 	return packet
@@ -105,13 +104,13 @@ func (synack *packet_metadata) windowZero() bool {
 
 func (packet * packet_metadata) updateResponse( state string ) {
 
-	packet.ExpectedR = state
+	packet.ExpectedRToLZR = state
 
 }
 
 func (packet * packet_metadata) updateResponseL( data []byte ) {
 
-	packet.ResponseL = len( data )
+	packet.LZRResponseL = len( data )
 
 }
 func (packet * packet_metadata) incrementCounter() {

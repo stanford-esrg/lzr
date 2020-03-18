@@ -9,11 +9,13 @@ import (
 
 
 
-func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
+func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata,
     writingQueue * chan packet_metadata, f *output_file ) {
 
 	//verify that it wasnt already taken care of
 	if !(ipMeta.verifyScanningIP( &packet )) {
+		packet.updateTimestamp()
+        *timeoutQueue <- packet
 	    return
 	}
 
@@ -21,7 +23,7 @@ func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan
     //and do not requeue...will requeue later...
 
     //send again with just data no ack
-    if packet.ExpectedR == ACK {
+    if packet.ExpectedRToLZR == ACK {
         if packet.Counter < 1 {
             packet.incrementCounter()
             data := getData( string(packet.Saddr) )

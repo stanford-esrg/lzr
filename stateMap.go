@@ -2,6 +2,7 @@ package main
 
 import (
     "sync"
+    "fmt"
 )
 
 type pState struct {
@@ -108,11 +109,29 @@ func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 		return false
 	}
 	//second check that 4-tuple matches
+	//TODO: check seq & ack and check state that we expect(?)
 	if (( pMap.Saddr == pRecv.Saddr ) && (pMap.Dport == pRecv.Dport) &&
     (pMap.Sport == pRecv.Sport) ) { // && (pRecv.Acknum == pMap.Seqnum + 1)) {
-		return true
-	}
-	//TODO: check seq & ack and check state that we expect(?)
+
+             fmt.Println("recv seq num:", pRecv.Seqnum)
+             fmt.Println("stored seqnum: ", pMap.Seqnum)
+             fmt.Println("recv ack num:", pRecv.Acknum)
+             fmt.Println("stored acknum: ", pMap.Acknum)
+             fmt.Println("received response length: ",pRecv.LZRResponseL)
+             fmt.Println("stored response length: ",pMap.LZRResponseL)
+         if ( pMap.LZRResponseL > 0 ) {
+             if ( pRecv.Acknum == ( pMap.Acknum + pMap.LZRResponseL ) ) {
+                 fmt.Println("TRUE_ RESPONSE")
+		        return true
+             }
+         } else {
+             if ( pRecv.Acknum == ( pMap.Acknum ) ) {
+                 fmt.Println("TRUE_SEQ+1")
+                 return true
+             }
+         }
+
+    }
 
 	return false
 
