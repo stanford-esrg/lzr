@@ -11,7 +11,6 @@ type pState struct {
 
 }
 
-//TODO: move the ipStateMap stuff to own file
 
 /* keeps state by storing the packet that was received 
  * and within the packet stores the expected response 
@@ -28,7 +27,7 @@ func constructPacketStateMap() pState {
 }
 
 
-func (ipMeta * pState) metaContains(p * packet_metadata) bool {
+func (ipMeta * pState) metaContains( p * packet_metadata ) bool {
     ipMeta.MLock.RLock()
 	_, ok := ipMeta.IPmap[p.Saddr]
     ipMeta.MLock.RUnlock()
@@ -37,6 +36,46 @@ func (ipMeta * pState) metaContains(p * packet_metadata) bool {
 	}
     return true
 }
+
+
+//is Processing for goPackets
+func (ipMeta * pState) isProcessing( p * packet_metadata ) ( bool,bool ) {
+    ipMeta.MLock.RLock()
+    defer ipMeta.MLock.RUnlock()
+    p_out, ok := ipMeta.IPmap[p.Saddr]
+    if !ok {
+        return false,false
+    }
+    return true, p_out.Processing
+
+}
+
+func (ipMeta * pState) startProcessing( p * packet_metadata ) bool {
+
+    ipMeta.MLock.Lock()
+    defer ipMeta.MLock.Unlock()
+    p_out, ok := ipMeta.IPmap[p.Saddr]
+    if !ok {
+        return false
+    }
+    p_out.startProcessing()
+    return true
+
+}
+
+func (ipMeta * pState) finishProcessing( p * packet_metadata ) bool {
+
+    ipMeta.MLock.RLock()
+    p_out, ok := ipMeta.IPmap[p.Saddr]
+    if !ok {
+        return false
+    }
+    p_out.finishedProcessing()
+    return true
+
+}
+
+
 
 func (ipMeta * pState) find(p * packet_metadata) ( *packet_metadata, bool ) {
     ipMeta.MLock.RLock()

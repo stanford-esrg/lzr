@@ -1,8 +1,11 @@
 package main
 
 import (
+    "github.com/google/gopacket"
     "github.com/google/gopacket/layers"
     "time"
+	"encoding/json"
+    "log"
 )
 
 var (
@@ -35,12 +38,13 @@ type packet_metadata struct {
 	ExpectedR	string
 	//SourceQ     string  //might not need this
     Data        string
+    Processing  bool
     //Closed      bool    //might not need: 
                         //to see if connection has been closed in general
 }
 
 
-func NewPacket( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
+func ReadLayers( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
 
     packet := &packet_metadata{
         Saddr: ip.SrcIP.String(),
@@ -62,6 +66,34 @@ func NewPacket( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
     }
 	return packet
 }
+
+func convertToPacketM ( packet gopacket.Packet ) ( *packet_metadata ) {
+        tcpLayer := packet.Layer(layers.LayerTypeTCP)
+        if tcpLayer != nil {
+            tcp, _ := tcpLayer.(*layers.TCP)
+            ipLayer := packet.Layer(layers.LayerTypeIPv4)
+            ip, _ := ipLayer.(*layers.IPv4)
+
+            metapacket := ReadLayers(ip,tcp)
+            return metapacket
+        }
+        return nil
+}
+
+func convertToPacket ( input string ) *packet_metadata  {
+
+
+        var synack packet_metadata
+        //expecting ip,sequence number, acknumber,windowsize
+        err = json.Unmarshal( []byte(input),&synack )
+        if err != nil {
+            log.Fatal(err)
+            return nil
+        }
+        return &synack
+}
+
+
 
 func (synack *packet_metadata) windowZero() bool {
     if synack.Window == 0 {
@@ -91,6 +123,18 @@ func (packet * packet_metadata) incrementCounter() {
 func (packet * packet_metadata) updateTimestamp() {
 
 	packet.Timestamp = time.Now()
+
+}
+
+func (packet * packet_metadata) startProcessing() {
+
+    packet.Processing = true
+
+}
+
+func (packet * packet_metadata) finishedProcessing() {
+
+    packet.Processing = false
 
 }
 
