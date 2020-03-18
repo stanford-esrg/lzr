@@ -115,6 +115,7 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
                     timeoutQueue <-packet
                 }()
             } else {
+                //fmt.Println("out of timeout")
 	            p, ok := ipMeta.find( &packet )
                 //if no longer in map
 	            if !ok {
@@ -126,6 +127,7 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
                     continue
                 } else {
                     go func() { //must be its own routine to avoid deadlock
+                        //fmt.Println("put into timeoutIncoming")
                         timeoutIncoming <-packet
                     }()
                 }

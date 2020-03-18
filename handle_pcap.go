@@ -14,7 +14,7 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
 
 	//verify 
 	if !(ipMeta.verifyScanningIP( &packet )) {
-				return
+		return
 	}
     //for every closed connection, record
     if packet.RST || packet.FIN {
@@ -48,7 +48,6 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
              return
 
          }
-
 		 //add to map
 		 packet.updateResponse(DATA)
 		 packet.updateTimestamp()

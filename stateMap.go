@@ -66,6 +66,7 @@ func (ipMeta * pState) startProcessing( p * packet_metadata ) bool {
 func (ipMeta * pState) finishProcessing( p * packet_metadata ) bool {
 
     ipMeta.MLock.RLock()
+    defer ipMeta.MLock.RUnlock()
     p_out, ok := ipMeta.IPmap[p.Saddr]
     if !ok {
         return false
