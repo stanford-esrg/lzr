@@ -113,24 +113,27 @@ func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 	if (( pMap.Saddr == pRecv.Saddr ) && (pMap.Dport == pRecv.Dport) &&
     (pMap.Sport == pRecv.Sport) ) { // && (pRecv.Acknum == pMap.Seqnum + 1)) {
 
-         /*    fmt.Println("recv seq num:", pRecv.Seqnum)
+            /*
+             fmt.Println("recv seq num:", pRecv.Seqnum)
              fmt.Println("stored seqnum: ", pMap.Seqnum)
              fmt.Println("recv ack num:", pRecv.Acknum)
              fmt.Println("stored acknum: ", pMap.Acknum)
-             fmt.Println("received response length: ",pRecv.LZRResponseL)
-             fmt.Println("stored response length: ",pMap.LZRResponseL)
-         */
-         if ( pMap.LZRResponseL > 0 ) {
+             fmt.Println("received response length: ",len(pRecv.Data))
+             fmt.Println("stored response length: ",pMap.LZRResponseL) 
+            */
              if ( pRecv.Acknum == ( pMap.Acknum + pMap.LZRResponseL ) ) {
-                //fmt.Println("TRUE_ RESPONSE")
-		        return true
+                 //fmt.Println("ack passed")
+                 if (len(pRecv.Data) > 0 ) {
+                    if pRecv.Seqnum == ( pMap.Seqnum + 1 ) {
+                        //fmt.Println("here")
+                        return true
+                    }
+                 } else {
+                    if pRecv.Seqnum ==  pMap.Seqnum {
+                        return true
+                    }
+                 }
              }
-         } else {
-             if ( pRecv.Acknum == ( pMap.Acknum ) ) {
-                 //fmt.Println("TRUE_SEQ+1")
-                 return true
-             }
-         }
 
     }
 

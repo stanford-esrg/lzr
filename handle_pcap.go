@@ -12,9 +12,13 @@ import (
 func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
     writingQueue * chan packet_metadata, f *output_file ) {
 
+    //fmt.Println( packet )
+
 	//verify 
 	if !(ipMeta.verifyScanningIP( &packet )) {
+        packet.incrementCounter()
 		packet.updateTimestamp()
+        packet.validationFail()
         *timeoutQueue <-packet
 		return
 	}
@@ -40,7 +44,7 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
     if packet.RST || packet.FIN {
 
         ipMeta.remove(packet)
-        //*writingQueue <- packet
+        *writingQueue <- packet
         //close connection
         if packet.FIN {
             rst := constructRST(packet)

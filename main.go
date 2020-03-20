@@ -1,7 +1,7 @@
 package main
 
 import (
-    "time"
+    //"time"
     "context"
     "golang.org/x/sync/semaphore"
     //"fmt"
@@ -33,8 +33,8 @@ func main() {
     zmapIncoming := constructZMapRoutine( options.Workers )
     pcapIncoming := constructPcapRoutine( options.Workers )
     timeoutQueue := constructTimeoutQueue( options.Workers )
-    timeoutIncoming := pollTimeoutRoutine( &ipMeta,timeoutQueue, options.Workers, options.Timeout )
-    timeoutEmpty := true
+    timeoutIncoming,timeoutEmptyChannel := pollTimeoutRoutine(
+        &ipMeta,timeoutQueue, options.Workers, options.Timeout )
 
     // record to file
     go func() {
@@ -57,9 +57,11 @@ func main() {
                 //done reading from zmap (channel closed)
                 //TODO: timeoutQ is empty ??????
                 //eventually check: all locks are released (no more jobs runnign)
-                if !ok && timeoutEmpty {
-                    time.Sleep( 1 * time.Second )
-                    return
+                if !ok {
+                    if *timeoutEmptyChannel {
+                        return
+                    }
+                    continue
                 }
                 if err := sem.Acquire(ctx, 1); err != nil {
                     continue

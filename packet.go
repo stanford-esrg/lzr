@@ -31,6 +31,7 @@ type packet_metadata struct {
     RST             bool
     FIN             bool
     PUSH            bool
+    ValFail         bool
 
     Fingerprint     string
 	Timestamp	    time.Time
@@ -140,6 +141,19 @@ func (packet * packet_metadata) finishedProcessing() {
 func (packet * packet_metadata) updateData( payload string ) {
 
 	packet.Data = payload
+
+}
+
+
+func (packet * packet_metadata) validationFail() {
+
+    packet.ValFail = true
+
+}
+
+func (packet * packet_metadata) getValidationFail() bool {
+
+    return packet.ValFail
 
 }
 

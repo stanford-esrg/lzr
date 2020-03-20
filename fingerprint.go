@@ -32,7 +32,7 @@ func getOpQuery(collname string, query []byte) ([]byte) {
         return out
 }
 
-func getData( dst string ) []byte {
+func getDataMongo( dst string ) []byte {
 
     query, _ := bson.Marshal(bson.M{ "isMaster": 1 })
     query_msg := getOpQuery("admin.$cmd", query)
@@ -40,17 +40,8 @@ func getData( dst string ) []byte {
 
 }
 
-func fingerprintResponse( data string ) string {
 
-    if strings.Contains( data, "maxBsonObjectSize" ) {
-        return "Mongo"
-    } else {
-        return ""
-    }
-
-}
-
-func getDataHTTP( dst string ) []byte {
+func getData( dst string ) []byte {
 
         req, _ := http.NewRequest("GET","/",nil)
         req.Host =  dst
@@ -62,10 +53,12 @@ func getDataHTTP( dst string ) []byte {
 	return data
 }
 
-func fingerprintResponseHTTP( data string ) string {
+func fingerprintResponse( data string ) string {
 
-    if strings.Contains( data, "HTTP" ) {
-        return "HTTP"
+    if strings.Contains( data, "HTTP" ){
+         return "HTTP"
+    } else if strings.Contains( data, "maxBsonObjectSize" ) {
+        return "Mongo"
     } else {
         return ""
     }

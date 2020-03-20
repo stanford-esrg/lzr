@@ -88,44 +88,58 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
 
 
 
-func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, workers int, timeout int ) chan packet_metadata {
+func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, workers int, timeout int ) (
+    chan packet_metadata, * bool ) {
 
     TIMEOUT := time.Duration(timeout)*time.Second
 
+    channelTimeout := time.Now()
 	timeoutIncoming := make(chan packet_metadata)//, workers)
+    timeoutOfTimeoutChannel := false
     //timeoutReQ := make(chan packet_metadata) //to avoid deadlock need 
     //return from timeout when packet has expired
     go func() {
+
         for {
-            packet := <-timeoutQueue
-            //if timeout has reached, return packet.
-            //else, check that the state has updated in the meanwhile
-            //if not, put the packet back in timeoutQueue
-            if ( ((time.Now()).Sub( packet.Timestamp ) ) < TIMEOUT) {
-                go func() { //must be its own routine to avoid deadlock
-                    timeoutQueue <-packet
-                }()
-            } else {
-                //fmt.Println("out of timeout")
-	            p, ok := ipMeta.find( &packet )
-                //if no longer in map
-	            if !ok {
-                    //fmt.Println("no longer in map: " + string(packet.Saddr))
-                    continue
-                }
-                //if state hasnt changed
-                if p.ExpectedRToLZR != packet.ExpectedRToLZR {
-                    continue
-                } else {
+            select {
+            case packet := <-timeoutQueue:
+                timeoutOfTimeoutChannel = false
+                channelTimeout = time.Now()
+                //if timeout has reached, return packet.
+                //else, check that the state has updated in the meanwhile
+                //if not, put the packet back in timeoutQueue
+                if ( ((time.Now()).Sub( packet.Timestamp ) ) < TIMEOUT) {
                     go func() { //must be its own routine to avoid deadlock
-                        //fmt.Println("put into timeoutIncoming")
-                        timeoutIncoming <-packet
+                        timeoutQueue <-packet
                     }()
+                } else {
+                    //fmt.Println("out of timeout")
+	                p, ok := ipMeta.find( &packet )
+                    //if no longer in map
+	                if !ok {
+                        //fmt.Println("no longer in map: " + string(packet.Saddr))
+                        continue
+                    }
+                    //if state hasnt changed
+                    if p.ExpectedRToLZR != packet.ExpectedRToLZR {
+                        continue
+                    } else {
+                        go func() { //must be its own routine to avoid deadlock
+                            //fmt.Println("put into timeoutIncoming")
+                            timeoutIncoming <-packet
+                        }()
+                    }
                 }
+            //if nothing for greater than 1 sec, mark time and send to other channel
+            default:
+                if ( ((time.Now()).Sub( channelTimeout ) ) > 1*time.Second ) {
+                    timeoutOfTimeoutChannel = true
+                }
+                continue
             }
         }
     }()
-    return timeoutIncoming
+    return timeoutIncoming, &timeoutOfTimeoutChannel
 
 }
 
