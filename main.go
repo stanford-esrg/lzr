@@ -35,6 +35,7 @@ func main() {
     timeoutQueue := constructTimeoutQueue( options.Workers )
     timeoutIncoming,timeoutEmptyChannel := pollTimeoutRoutine(
         &ipMeta,timeoutQueue, options.Workers, options.Timeout )
+    done := false
 
     // record to file
     go func() {
@@ -47,11 +48,10 @@ func main() {
                 }
         }
     }()
-
-
-	//read from both zmap and pcap
-	for {
-		select {
+    //read from zmap
+    go func() {
+	    for {
+		    select {
 			case input, ok := <-zmapIncoming:
                 //ExitCondition:
                 //done reading from zmap (channel closed)
@@ -59,7 +59,7 @@ func main() {
                 //eventually check: all locks are released (no more jobs runnign)
                 if !ok {
                     if *timeoutEmptyChannel {
-                        return
+                        done=true
                     }
                     continue
                 }
@@ -73,14 +73,23 @@ func main() {
                     // and thus IPs cannot be in ipMeta b4 zmap adds to it
 				    ackZMap( input, &ipMeta, &timeoutQueue, &writingQueue, f )
                 }()
+            default:
+                continue
+            }
+        }
+    }()
+    //read from pcap
+    go func() {
+        for {
+            select {
 			case input := <-pcapIncoming:
-
+                    //fmt.Println( packet )
                 if err := sem.Acquire(ctx, 1); err != nil {
                     continue
                 }
                 go func() {
                     defer sem.Release(1)
-                    inMap, processing := ipMeta.isProcessing( &input ) 
+                    inMap, processing := ipMeta.isProcessing( &input )
                     //if another thread is processing, put input back
                     if processing {
                         pcapIncoming <- input
@@ -94,13 +103,23 @@ func main() {
 				    handlePcap( input, &ipMeta, &timeoutQueue, &writingQueue, f )
                     ipMeta.finishProcessing( &input )
                 }()
+            default:
+                continue
+            }
+        }
+    }()
+    //read from timeout
+    go func() {
+
+        for {
+            select {
             case input, _ := <-timeoutIncoming:
                 if err := sem.Acquire(ctx, 1); err != nil {
                     continue
                 }
                 go func() {
                     defer sem.Release(1)
-                    inMap, processing := ipMeta.isProcessing( &input ) 
+                    inMap, processing := ipMeta.isProcessing( &input )
                     //if another thread is processing, put input back
                     if processing {
                         pcapIncoming <- input
@@ -117,6 +136,17 @@ func main() {
 
 			default:
                 continue
-		}
-	}
+		    }
+        }
+    }()
+
+    //exit gracefull when done
+    for {
+        if done {
+            return
+        }
+    }
+
+
+
 } //end of main

@@ -85,10 +85,21 @@ func (ipMeta * pState) find(p * packet_metadata) ( *packet_metadata, bool ) {
     ipMeta.MLock.RUnlock()
     return &p_out, ok
 }
-func (ipMeta * pState) update( packet packet_metadata ) {
+func (ipMeta * pState) update( packet * packet_metadata ) {
     ipMeta.MLock.Lock()
-	ipMeta.IPmap[packet.Saddr] = packet
+	ipMeta.IPmap[packet.Saddr] = *packet
     ipMeta.MLock.Unlock()
+}
+
+func (ipMeta * pState) incrementCounter( packet * packet_metadata ) bool {
+
+    p_out, ok := ipMeta.find( packet )
+    if !ok {
+        return false
+    }
+    p_out.incrementCounter()
+    ipMeta.update( p_out )
+    return true
 }
 
 
@@ -122,17 +133,20 @@ func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
              fmt.Println("stored response length: ",pMap.LZRResponseL) 
             */
              if ( pRecv.Acknum == ( pMap.Acknum + pMap.LZRResponseL ) ) {
-                 //fmt.Println("ack passed")
+                 if ((pRecv.Seqnum == ( pMap.Seqnum )) || (pRecv.Seqnum == ( pMap.Seqnum + 1 ))) {
+                    return true
+                 }
+/*                 //fmt.Println("ack passed")
                  if (len(pRecv.Data) > 0 ) {
-                    if pRecv.Seqnum == ( pMap.Seqnum + 1 ) {
+                    if pRecv.Seqnum == ( pMap.Seqnum + 1) {
                         //fmt.Println("here")
                         return true
                     }
                  } else {
-                    if pRecv.Seqnum ==  pMap.Seqnum {
+                    if pRecv.Seqnum == ( pMap.Seqnum  ){
                         return true
                     }
-                 }
+                 }*/
              }
 
     }

@@ -6,9 +6,6 @@ import (
 )
 
 
-
-
-
 func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata,
     writingQueue * chan packet_metadata, f *output_file ) {
 
@@ -21,22 +18,6 @@ func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan
    //this is if seq/ack dont match up b/c server refuses to 
    //ack our data. 
    if packet.getValidationFail() {
-        //send again with just data (not apart of handshake)
-        if packet.ExpectedRToLZR == ACK {
-            if packet.Counter < 1 {
-                packet.incrementCounter()
-                data := getData( string(packet.Saddr) )
-                dataPacket := constructData( packet,data, true,true )
-                err = handle.WritePacketData( dataPacket )
-                if err != nil {
-                    log.Fatal(err)
-                }
-		        packet.updateTimestamp()
-		        ipMeta.update(packet)
-                *timeoutQueue <- packet
-                return
-            }
-       }
        //if we waited a bit and validation seems to still fail, just record
        // and move on
        //2 times timout is arbitrary
@@ -55,8 +36,25 @@ func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan
 
 	//verify that it wasnt already taken care of
 	if !(ipMeta.verifyScanningIP( &packet )) {
-		packet.updateTimestamp()
+
+
         packet.validationFail()
+        //send again with just data (not apart of handshake)
+        if packet.ExpectedRToLZR == ACK {
+            if packet.Counter < 1 {
+                packet.incrementCounter()
+                data := getData( string(packet.Saddr) )
+                dataPacket := constructData( packet,data, true,true )
+                err = handle.WritePacketData( dataPacket )
+                if err != nil {
+                    log.Fatal(err)
+                }
+		        packet.updateTimestamp()
+		        ipMeta.update( &packet )
+            }
+       }
+
+		packet.updateTimestamp()
         *timeoutQueue <- packet
 	    return
 	}

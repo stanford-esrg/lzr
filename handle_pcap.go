@@ -12,7 +12,6 @@ import (
 func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
     writingQueue * chan packet_metadata, f *output_file ) {
 
-    //fmt.Println( packet )
 
 	//verify 
 	if !(ipMeta.verifyScanningIP( &packet )) {
@@ -58,7 +57,7 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
 		 //add to map
 		 packet.updateResponse(DATA)
 		 packet.updateTimestamp()
-		 ipMeta.update(packet)
+		 ipMeta.update(&packet)
 
 		 //add to map
          *timeoutQueue <-packet
