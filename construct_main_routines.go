@@ -8,12 +8,17 @@ import (
     "bufio"
     "os"
     "time"
-    //"fmt"
+   "fmt"
 )
 
 var (
     handle       *pcap.Handle
+    device       string = "ens8"
+    snapshot_len int32  = 65536
+    promiscuous  bool   = false
+    err          error
 )
+
 
 func constructWritingQueue( workers int ) chan packet_metadata {
 
@@ -54,7 +59,7 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
 	pcapIncoming := make(chan packet_metadata) //, workers)
 	go func() {
 		// Open device
-		handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, 0) //timeout
+		handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, pcap.BlockForever) //timeout
 		if err != nil {
             //panic(err)
 			log.Fatal(err)
@@ -76,6 +81,9 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
             packet := convertToPacketM( pcapPacket )
             if packet == nil {
                 continue
+            }
+            if packet.Saddr == "104.16.131.21" {
+                fmt.Println(pcapPacket)
             }
 			pcapIncoming <- *packet
 		}

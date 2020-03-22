@@ -132,10 +132,10 @@ func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
              fmt.Println("received response length: ",len(pRecv.Data))
              fmt.Println("stored response length: ",pMap.LZRResponseL) 
             */
-             if ( pRecv.Acknum == ( pMap.Acknum + pMap.LZRResponseL ) ) {
+            /* if ( pRecv.Acknum == ( pMap.Acknum + pMap.LZRResponseL ) ) {
                  if ((pRecv.Seqnum == ( pMap.Seqnum )) || (pRecv.Seqnum == ( pMap.Seqnum + 1 ))) {
                     return true
-                 }
+                 } */
 /*                 //fmt.Println("ack passed")
                  if (len(pRecv.Data) > 0 ) {
                     if pRecv.Seqnum == ( pMap.Seqnum + 1) {
@@ -146,8 +146,9 @@ func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
                     if pRecv.Seqnum == ( pMap.Seqnum  ){
                         return true
                     }
-                 }*/
-             }
+                 }
+             }*/
+             return true
 
     }
 

@@ -4,17 +4,9 @@ import (
     //"time"
     "context"
     "golang.org/x/sync/semaphore"
-    //"fmt"
+    "fmt"
 )
 
-
-//TODO: move vars to appropriate places
-var (
-    device       string = "ens8"
-    snapshot_len int32  = 1024
-    promiscuous  bool   = false
-    err          error
-)
 
 
 func main() {
@@ -53,11 +45,9 @@ func main() {
 	    for {
 		    select {
 			case input, ok := <-zmapIncoming:
-                //ExitCondition:
-                //done reading from zmap (channel closed)
-                //TODO: timeoutQ is empty ??????
-                //eventually check: all locks are released (no more jobs runnign)
+                //ExitCondition: zmap channel closed
                 if !ok {
+                    //TODO: change to see if metaMap is empty
                     if *timeoutEmptyChannel {
                         done=true
                     }
@@ -83,7 +73,10 @@ func main() {
         for {
             select {
 			case input := <-pcapIncoming:
-                    //fmt.Println( packet )
+                if input.Saddr == "104.16.131.21" {
+                    fmt.Println(input)
+                }
+                //fmt.Println( packet )
                 if err := sem.Acquire(ctx, 1); err != nil {
                     continue
                 }
