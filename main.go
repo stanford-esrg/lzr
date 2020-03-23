@@ -115,7 +115,7 @@ func main() {
                     inMap, processing := ipMeta.isProcessing( &input )
                     //if another thread is processing, put input back
                     if processing {
-                        pcapIncoming <- input
+                        timeoutIncoming <- input
                         return
                     }
                     //if not in map, return

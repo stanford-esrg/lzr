@@ -12,18 +12,18 @@ type pState struct {
 
 }
 
-
 /* keeps state by storing the packet that was received 
  * and within the packet stores the expected response 
  * storing received as to what was sent b/c want to know
  * perhaps need to wait some more 
  */
 func constructPacketStateMap() pState {
-
+    ipMeta := NewConcurrentMap()
+    /*
 	ipMeta := pState{
         IPmap: make( map[string]packet_metadata ),
         MLock: sync.RWMutex{},
-    }
+    }*/
     return ipMeta
 }
 

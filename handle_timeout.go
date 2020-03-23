@@ -14,31 +14,6 @@ func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan
         return
     }
 
-   //TODO: not sure this is what i want
-   //this is if seq/ack dont match up b/c server refuses to 
-   //ack our data. 
-   if packet.getValidationFail() {
-       //if we waited a bit and validation seems to still fail, just record
-       // and move on
-       //2 times timout is arbitrary
-       if packet.Counter >= 2 {
-
-           //remove from state, we are done now
-           ipMeta.remove(packet)
-           *writingQueue <- packet
-           //close connection
-           rst := constructRST(packet)
-           err = handle.WritePacketData(rst)
-       }
-       //take note that validation failed again
-       packet.incrementCounter()
-   }
-
-	//verify that it wasnt already taken care of
-	if !(ipMeta.verifyScanningIP( &packet )) {
-
-
-        packet.validationFail()
         //send again with just data (not apart of handshake)
         if packet.ExpectedRToLZR == ACK {
             if packet.Counter < 1 {
@@ -51,12 +26,11 @@ func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan
                 }
 		        packet.updateTimestamp()
 		        ipMeta.update( &packet )
-            }
-       }
 
 		packet.updateTimestamp()
         *timeoutQueue <- packet
 	    return
+    }
 	}
 
     //if it just acked, for now just write with empty data to file 

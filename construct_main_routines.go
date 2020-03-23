@@ -15,7 +15,7 @@ var (
     handle       *pcap.Handle
     device       string = "ens8"
     snapshot_len int32  = 65536
-    promiscuous  bool   = false
+    promiscuous  bool   = true
     err          error
 )
 
