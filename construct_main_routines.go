@@ -8,14 +8,14 @@ import (
     "bufio"
     "os"
     "time"
-   "fmt"
+    //"fmt"
 )
 
 var (
     handle       *pcap.Handle
     device       string = "ens8"
     snapshot_len int32  = 65536
-    promiscuous  bool   = true
+    promiscuous  bool   = false
     err          error
 )
 
@@ -43,7 +43,7 @@ func constructZMapRoutine( workers int ) chan packet_metadata {
 			}
             packet := convertToPacket( input )
             if packet == nil {
-                return
+                continue
             }
 			zmapIncoming <- *packet
 		}
@@ -73,6 +73,7 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
 			//Read from pcap
 			pcapPacket, err := packetSource.NextPacket()
 			if err == io.EOF {
+				log.Println("Error:", err)
 				return
 			} else if err != nil {
 				log.Println("Error:", err)
@@ -81,9 +82,6 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
             packet := convertToPacketM( pcapPacket )
             if packet == nil {
                 continue
-            }
-            if packet.Saddr == "104.16.131.21" {
-                fmt.Println(pcapPacket)
             }
 			pcapIncoming <- *packet
 		}
