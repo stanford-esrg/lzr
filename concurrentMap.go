@@ -1,52 +1,47 @@
 //https://github.com/orcaman/concurrent-map/blob/master/concurrent_map.go
+package main
 
 import "sync"
+
+
 
 var SHARD_COUNT = 4096
 
 // A "thread" safe map of type string:Anything.
 // To avoid lock bottlenecks this map is dived to several (SHARD_COUNT) map shards.
-type ConcurrentMap []*ConcurrentMapShared
+type pState []*pStateShared
 
 // A "thread" safe string to anything map.
-type ConcurrentMapShared struct {
-	items        map[string]interface{}
+type pStateShared struct {
+	items        map[string]*packet_metadata
 	sync.RWMutex // Read Write mutex, guards access to internal map.
 }
 
 // Creates a new concurrent map.
-func NewConcurrentMap() ConcurrentMap {
-	m := make(ConcurrentMap, SHARD_COUNT)
+func NewpState() pState {
+	m := make(pState, SHARD_COUNT)
 	for i := 0; i < SHARD_COUNT; i++ {
-		m[i] = &ConcurrentMapShared{items: make(map[string]interface{})}
+		m[i] = &pStateShared{items: make(map[string]*packet_metadata)}
 	}
 	return m
 }
 
 // GetShard returns shard under given key
-func (m ConcurrentMap) GetShard(key string) *ConcurrentMapShared {
+func (m pState) GetShard(key string) *pStateShared {
 	return m[uint(fnv32(key))%uint(SHARD_COUNT)]
 }
 
-// Callback to return new element to be inserted into the map
-// It is called while lock is held, therefore it MUST NOT
-// try to access other keys in same map, as it can lead to deadlock since
-// Go sync.RWLock is not reentrant
-type UpsertCb func(exist bool, valueInMap interface{}, newValue interface{}) interface{}
-
 // Insert or Update - updates existing element or inserts a new one using UpsertCb
-func (m ConcurrentMap) Upsert(key string, value interface{}, cb UpsertCb) (res interface{}) {
+func (m pState) Insert(key string, value * packet_metadata) (res * packet_metadata) {
 	shard := m.GetShard(key)
 	shard.Lock()
-	v, ok := shard.items[key]
-	res = cb(ok, v, value)
-	shard.items[key] = res
+	shard.items[key] = value
 	shard.Unlock()
 	return res
 }
 
 // Get retrieves an element from map under given key.
-func (m ConcurrentMap) Get(key string) (interface{}, bool) {
+func (m pState) Get(key string) (*packet_metadata, bool) {
 	// Get shard
 	shard := m.GetShard(key)
 	shard.RLock()
@@ -57,7 +52,7 @@ func (m ConcurrentMap) Get(key string) (interface{}, bool) {
 }
 
 // Count returns the number of elements within the map.
-func (m ConcurrentMap) Count() int {
+func (m pState) Count() int {
 	count := 0
 	for i := 0; i < SHARD_COUNT; i++ {
 		shard := m[i]
@@ -69,12 +64,12 @@ func (m ConcurrentMap) Count() int {
 }
 
 // IsEmpty checks if map is empty.
-func (m ConcurrentMap) IsEmpty() bool {
+func (m pState) IsEmpty() bool {
 	return m.Count() == 0
 }
 
 // Looks up an item under specified key
-func (m ConcurrentMap) Has(key string) bool {
+func (m pState) Has(key string) bool {
 	// Get shard
 	shard := m.GetShard(key)
 	shard.RLock()
@@ -82,4 +77,72 @@ func (m ConcurrentMap) Has(key string) bool {
 	_, ok := shard.items[key]
 	shard.RUnlock()
 	return ok
+}
+
+// Remove removes an element from the map.
+func (m pState) Remove(key string) {
+	// Try to get shard.
+	shard := m.GetShard(key)
+	shard.Lock()
+	delete(shard.items, key)
+	shard.Unlock()
+}
+
+/* FOR PACKET_METADATA */
+//is Processing for goPackets
+func (m pState) isProcessing( p * packet_metadata ) ( bool,bool ) {
+    // Get shard
+    shard := m.GetShard(p.Saddr)
+    shard.RLock()
+    defer shard.RUnlock()
+    // Get item from shard.
+    p_out, ok := shard.items[p.Saddr]
+    if !ok {
+        return false,false
+    }
+    return true, p_out.Processing
+
+}
+
+func (m pState) startProcessing( p * packet_metadata ) bool {
+
+    // Get shard
+    shard := m.GetShard(p.Saddr)
+    shard.RLock()
+    defer shard.RUnlock()
+    // See if element is within shard.
+    p_out, ok := shard.items[p.Saddr]
+    if !ok {
+        return false
+    }
+    p_out.startProcessing()
+    return ok
+
+}
+
+func (m pState) finishProcessing( p * packet_metadata ) bool {
+
+    // Get shard
+    shard := m.GetShard(p.Saddr)
+    shard.RLock()
+    defer shard.RUnlock()
+    // See if element is within shard.
+    p_out, ok := shard.items[p.Saddr]
+    if !ok {
+        return false
+    }
+    p_out.finishedProcessing()
+    return ok
+
+}
+
+/* Meta functions */
+func fnv32(key string) uint32 {
+	hash := uint32(2166136261)
+	const prime32 = uint32(16777619)
+	for i := 0; i < len(key); i++ {
+		hash *= prime32
+		hash ^= uint32(key[i])
+	}
+	return hash
 }
