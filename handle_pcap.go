@@ -13,7 +13,9 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
     writingQueue * chan packet_metadata, f *output_file ) {
 
 
-	//verify 
+    packet.PCapTracker -= 1
+
+    //verify 
 	if !(ipMeta.verifyScanningIP( &packet )) {
         packet.incrementCounter()
 		packet.updateTimestamp()

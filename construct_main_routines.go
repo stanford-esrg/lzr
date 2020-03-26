@@ -22,7 +22,7 @@ var (
 
 func constructWritingQueue( workers int ) chan packet_metadata {
 
-    writingQueue := make(chan packet_metadata)//, workers)
+    writingQueue := make(chan packet_metadata, 1* workers)
     return writingQueue
 }
 
@@ -30,7 +30,7 @@ func constructZMapRoutine( workers int ) chan packet_metadata {
 
 
 	//routine to read in from ZMap
-	zmapIncoming := make(chan packet_metadata ) //, workers)
+	zmapIncoming := make(chan packet_metadata , 1*workers)
 	go func() {
 		reader := bufio.NewReader(os.Stdin)
 		for {
@@ -56,12 +56,12 @@ func constructZMapRoutine( workers int ) chan packet_metadata {
 func constructPcapRoutine( workers int ) chan packet_metadata {
 
 	//routine to read in from pcap
-	pcapIncoming := make(chan packet_metadata) //, workers)
+	pcapIncoming := make(chan packet_metadata, 1*workers)
 	go func() {
 		// Open device
 		handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, pcap.BlockForever) //timeout
 		if err != nil {
-            //panic(err)
+            panic(err)
 			log.Fatal(err)
 		}
 		defer handle.Close()
@@ -83,6 +83,7 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
             if packet == nil {
                 continue
             }
+            packet.PCapTracker += 1
 			pcapIncoming <- *packet
 		}
 
@@ -92,67 +93,100 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
 
 }
 
+/*
+func pollTimeoutRoutine(  ipMeta * pState, timeoutQueue chan packet_metadata, workers int, timeout int ) (
+    chan packet_metadata ) {
 
+        TIMEOUT := time.Duration(timeout)*time.Second
+        timeoutIncoming := make(chan packet_metadata, 1*workers)
+
+   //read from Q into data struct
+    go func() {
+        for {
+            select {
+            case packet := <-timeoutQueue:
+
+                p, ok := ipMeta.find( &packet )
+                //if no longer in map
+                if !ok {
+                    //fmt.Println("no longer in map: " + string(packet.Saddr))
+                    continue
+                }
+
+
+*/
 
 func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, workers int, timeout int ) (
-    chan packet_metadata, * bool ) {
+    chan packet_metadata ) {
 
     TIMEOUT := time.Duration(timeout)*time.Second
 
     channelTimeout := time.Now()
-	timeoutIncoming := make(chan packet_metadata)//, workers)
-    timeoutOfTimeoutChannel := false
-    //timeoutReQ := make(chan packet_metadata) //to avoid deadlock need 
+	timeoutIncoming := make(chan packet_metadata, 1*workers)
+	timeoutQPass := make(chan packet_metadata, 1*workers)
     //return from timeout when packet has expired
     go func() {
-
         for {
             select {
             case packet := <-timeoutQueue:
-                timeoutOfTimeoutChannel = false
+
+	            p, ok := ipMeta.find( &packet )
+                //if no longer in map
+	            if !ok {
+                    //fmt.Println("no longer in map: " + string(packet.Saddr))
+                    continue
+                }
                 channelTimeout = time.Now()
                 //if timeout has reached, return packet.
                 //else, check that the state has updated in the meanwhile
                 //if not, put the packet back in timeoutQueue
-                if ( ((time.Now()).Sub( packet.Timestamp ) ) < TIMEOUT) {
-                    go func() { //must be its own routine to avoid deadlock
-                        timeoutQueue <-packet
-                    }()
-                } else {
-                    //fmt.Println("out of timeout")
-	                p, ok := ipMeta.find( &packet )
-                    //if no longer in map
-	                if !ok {
-                        //fmt.Println("no longer in map: " + string(packet.Saddr))
+                if (p.Counter > 1 && ( ((time.Now()).Sub( packet.Timestamp ) ) < TIMEOUT)) ||
+                (((time.Now()).Sub( packet.Timestamp ) ) < 1*time.Second) {
+                    //go func() { //must be its own routine to avoid deadlock
+                        timeoutQPass <-packet
                         continue
-                    }
+                    //}()
+                }else {
+                    //fmt.Println("out of timeout")
                     //if state hasnt changed
                     if p.ExpectedRToLZR != packet.ExpectedRToLZR {
                         continue
                     } else {
-                        go func() { //must be its own routine to avoid deadlock
+                        //go func() { //must be its own routine to avoid deadlock
                             //fmt.Println("put into timeoutIncoming")
                             timeoutIncoming <-packet
-                        }()
+                        //}()
                     }
                 }
-            //if nothing for greater than 1 sec, mark time and send to other channel
-            default:
-                if ( ((time.Now()).Sub( channelTimeout ) ) > 1*time.Second ) {
-                    timeoutOfTimeoutChannel = true
-                }
+            case <-time.After(2 * time.Second):
+                //fmt.Println("Something wrong with reading from timeoutQ")
                 continue
             }
         }
     }()
-    return timeoutIncoming, &timeoutOfTimeoutChannel
+    //dumb routine to avoid deadlock
+    //pass to a passingQ
+    go func() {
+        for {
+            select {
+            case packet := <-timeoutQPass:
+                timeoutQueue <- packet
+            default:
+                continue
+           }
+        }
+    }()
+
+
+
+    return timeoutIncoming
 
 }
 
 // TimeoutQueueStuff TODO:need to move
 func constructTimeoutQueue( workers int ) chan packet_metadata {
 
-    timeoutQueue := make(chan packet_metadata)//, workers)
+    timeoutQueue := make(chan packet_metadata, 100000)
     return timeoutQueue
 }
 

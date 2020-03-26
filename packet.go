@@ -26,6 +26,7 @@ type packet_metadata struct {
 	Acknum		    int		`json:"acknum"`
 	Window		    int		`json:"window"`
 	Counter		    int
+    PCapTracker     int
     ACK             bool
     SYN             bool
     RST             bool
