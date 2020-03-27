@@ -40,6 +40,20 @@ func (ipMeta * pState) incrementCounter( packet * packet_metadata ) bool {
     return true
 }
 
+func (ipMeta * pState) updatePCap( packet * packet_metadata ) *packet_metadata {
+
+    if packet.PCapTracker == 0 {
+        return packet
+    }
+
+    p_out, ok := ipMeta.Get(packet.Saddr)
+    if !ok {
+        return nil
+    }
+    p_out.PCapTracker += packet.PCapTracker
+    packet.PCapTracker = 0
+    return packet
+}
 
 func (ipMeta * pState) remove( packet packet_metadata) {
     ipMeta.Remove(packet.Saddr)

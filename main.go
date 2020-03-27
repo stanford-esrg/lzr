@@ -78,13 +78,19 @@ func main() {
                             fmt.Println(input)
                         }
                         inMap, processing := ipMeta.isProcessing( &input )
+                        //if not in map, return
+                        if !inMap {
+                            continue
+                        }
+                        //inform timeout that pcap exists 
+                        temp_input := ipMeta.updatePCap( &input )
+                        if temp_input == nil {
+                            continue
+                        }
+                        input = *temp_input
                         //if another thread is processing, put input back
                         if processing {
                             pcapIncoming <- input
-                            continue
-                        }
-                        //if not in map, return
-                        if !inMap {
                             continue
                         }
                         ipMeta.startProcessing( &input )

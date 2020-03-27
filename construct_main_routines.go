@@ -93,29 +93,6 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
 
 }
 
-/*
-func pollTimeoutRoutine(  ipMeta * pState, timeoutQueue chan packet_metadata, workers int, timeout int ) (
-    chan packet_metadata ) {
-
-        TIMEOUT := time.Duration(timeout)*time.Second
-        timeoutIncoming := make(chan packet_metadata, 1*workers)
-
-   //read from Q into data struct
-    go func() {
-        for {
-            select {
-            case packet := <-timeoutQueue:
-
-                p, ok := ipMeta.find( &packet )
-                //if no longer in map
-                if !ok {
-                    //fmt.Println("no longer in map: " + string(packet.Saddr))
-                    continue
-                }
-
-
-*/
-
 func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, workers int, timeout int ) (
     chan packet_metadata ) {
 
