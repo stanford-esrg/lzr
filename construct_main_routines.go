@@ -2,6 +2,7 @@ package main
 
 import (
     "github.com/google/gopacket"
+    "github.com/google/gopacket/layers"
     "github.com/google/gopacket/pcap"
     "log"
     "io"
@@ -56,7 +57,7 @@ func constructZMapRoutine( workers int ) chan packet_metadata {
 func constructPcapRoutine( workers int ) chan packet_metadata {
 
 	//routine to read in from pcap
-	pcapIncoming := make(chan packet_metadata, 1*workers)
+	pcapIncoming := make(chan packet_metadata, 1*workers )
 	go func() {
 		// Open device
 		handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, pcap.BlockForever) //timeout
@@ -64,28 +65,48 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
             panic(err)
 			log.Fatal(err)
 		}
-		defer handle.Close()
-		// Use the handle as a packet source to process all packets
-		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-
+		//packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+        for i := 0; i < workers/PARTITIONS; i ++ {
+        go func( i int ) {
 		for {
 
+		    defer handle.Close()
+
+            var eth layers.Ethernet
+	        var ip4 layers.IPv4
+	        var tcp layers.TCP
+            var payload gopacket.Payload
+
+            parser := gopacket.NewDecodingLayerParser(layers.LayerTypeEthernet, &eth, &ip4,&tcp, &payload)
+            pcapPacket := []gopacket.LayerType{}
+
+		    // Use the handle as a packet source to process all packets
+            data,_,_ := handle.ZeroCopyReadPacketData()
+            err := parser.DecodeLayers(data, &pcapPacket)
 			//Read from pcap
-			pcapPacket, err := packetSource.NextPacket()
+			//pcapPacket, err := packetSource.NextPacket()
 			if err == io.EOF {
 				log.Println("Error:", err)
 				return
+            // packet does not have ipv4 or tcp
 			} else if err != nil {
-				log.Println("Error:", err)
+                //fmt.Println(err)
 				continue
 			}
-            packet := convertToPacketM( pcapPacket )
+            packet := ReadLayers( &ip4, &tcp )
+            /*if ip4.SrcIP.String() == "100.38.245.67" {
+                fmt.Println(packet)
+            }
+            
             if packet == nil {
                 continue
             }
-            packet.PCapTracker += 1
-			pcapIncoming <- *packet
+            fmt.Println(packet) 
+            packet.PCapTracker += 1*/
+			pcapIncoming <- *packet 
 		}
+        }(i)
+        }
 
 	}()
 

@@ -34,9 +34,9 @@ func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan
 	}
     //if pcap still has something relevant to this ip, put it back on timeout queue 
     //TODO: update timestamp or just to the back of Q is good enough??
-    if packet.PCapTracker != 0 {
+    /*if packet.PCapTracker != 0 {
         *timeoutQueue <- packet
-    }
+    }*/
 
     //else, we give up, just record. 
     //remove from state, we are done now

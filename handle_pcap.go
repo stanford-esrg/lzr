@@ -13,7 +13,7 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
     writingQueue * chan packet_metadata, f *output_file ) {
 
 
-    packet.PCapTracker -= 1
+    //packet.PCapTracker -= 1
 
     //verify 
 	if !(ipMeta.verifyScanningIP( &packet )) {
