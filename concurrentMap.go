@@ -90,17 +90,21 @@ func (m pState) Remove(key string) {
 
 /* FOR PACKET_METADATA */
 //is Processing for goPackets
-func (m pState) isProcessing( p * packet_metadata ) ( bool,bool ) {
+func (m pState) isStartProcessing( p * packet_metadata ) ( bool,bool ) {
     // Get shard
     shard := m.GetShard(p.Saddr)
-    shard.RLock()
-    defer shard.RUnlock()
+    shard.Lock()
+    defer shard.Unlock()
     // Get item from shard.
     p_out, ok := shard.items[p.Saddr]
     if !ok {
         return false,false
     }
-    return true, p_out.Processing
+	if !p_out.Processing {
+		p_out.startProcessing()
+		return true,true
+	}
+    return true, false
 
 }
 
@@ -124,8 +128,8 @@ func (m pState) finishProcessing( p * packet_metadata ) bool {
 
     // Get shard
     shard := m.GetShard(p.Saddr)
-    shard.RLock()
-    defer shard.RUnlock()
+    shard.Lock()
+    defer shard.Unlock()
     // See if element is within shard.
     p_out, ok := shard.items[p.Saddr]
     if !ok {

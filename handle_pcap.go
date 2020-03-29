@@ -1,7 +1,7 @@
 package main
 
 import (
-    //"fmt"
+    "fmt"
     "log"
 )
 
@@ -62,8 +62,8 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
 
 		 //add to map
          *timeoutQueue <-packet
-
+		  return
     }
-
+	fmt.Println(packet)
 }
 

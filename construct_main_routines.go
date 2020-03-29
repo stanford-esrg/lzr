@@ -9,13 +9,13 @@ import (
     "bufio"
     "os"
     "time"
-    //"fmt"
+    "fmt"
 )
 
 var (
     handle       *pcap.Handle
     device       string = "ens8"
-    snapshot_len int32  = 65536
+    snapshot_len int32  = 1024
     promiscuous  bool   = false
     err          error
 )
@@ -23,7 +23,7 @@ var (
 
 func constructWritingQueue( workers int ) chan packet_metadata {
 
-    writingQueue := make(chan packet_metadata )//, 1* workers)
+    writingQueue := make(chan packet_metadata,100000)// 4* workers)
     return writingQueue
 }
 
@@ -31,7 +31,7 @@ func constructZMapRoutine( workers int ) chan packet_metadata {
 
 
 	//routine to read in from ZMap
-	zmapIncoming := make(chan packet_metadata)// , 1*workers)
+	zmapIncoming := make(chan packet_metadata,100000)// 4*workers)
 	go func() {
 		reader := bufio.NewReader(os.Stdin)
 		for {
@@ -39,6 +39,7 @@ func constructZMapRoutine( workers int ) chan packet_metadata {
 			//Read from ZMap
 			input, err := reader.ReadString(byte('\n'))
 			if err != nil && err == io.EOF {
+				fmt.Println("ZMAP CLOSED")
                 close(zmapIncoming)
 				return
 			}
@@ -55,29 +56,22 @@ func constructZMapRoutine( workers int ) chan packet_metadata {
     return zmapIncoming
 }
 
-func constructPcapRoutine( workers int ) chan packet_metadata {
+func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_metadata) {
 
 	//routine to read in from pcap
-	pcapIncoming := make(chan packet_metadata)//, 1*workers )
-	pcapQueue := make(chan []byte)//, 1*workers )
+	pcapIncoming := make(chan packet_metadata,1000000)//,4*workers )
+	pcapdQueue := make(chan []byte,1000000)
+	pcapQueue := make(chan packet_metadata,1000000)
 	// Open device
-	handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, pcap.BlockForever) //timeout
+	handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, 1*time.Second)//pcap.BlockForever) //timeout
 	if err != nil {
         panic(err)
 		log.Fatal(err)
 	}
-    go func() {
-		    defer handle.Close()
-
-			for {
-				// Use the handle as a packet source to process all packets
-				data,_,_ := handle.ZeroCopyReadPacketData()
-				pcapQueue <- data
-			}
-	}()
-
+	fmt.Println("1")
     for i := 0; i < workers/PARTITIONS; i ++ {
-		go func() {
+		go func(i int) {
+			fmt.Println(i,"2")
             var eth layers.Ethernet
 	        var ip4 layers.IPv4
 	        var tcp layers.TCP
@@ -87,7 +81,10 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
             pcapPacket := []gopacket.LayerType{}
 			for {
 				select {
-				case data := <-pcapQueue:
+				case data := <-pcapdQueue:
+					if ip4.SrcIP.String() == "104.16.131.21" || ip4.SrcIP.String() == "104.16.131.20" {
+						fmt.Println( "ah")
+					}
 					err := parser.DecodeLayers(data, &pcapPacket)
 					if err == io.EOF {
 						log.Println("Error:", err)
@@ -102,10 +99,30 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
 					continue
 				}
 			}
-        }()
+        }(i)
     }
+	go func() {
+            for {
+				select {
+					case pcap:= <-pcapQueue:
+						pcapIncoming <- pcap
+					default:
+						continue
+				}
+            }
+    }()
+    go func() {
+		    defer handle.Close()
 
-    return pcapIncoming
+			for {
+				// Use the handle as a packet source to process all packets
+				data,_,_ := handle.ZeroCopyReadPacketData()
+				pcapdQueue <- data
+			}
+			fmt.Println("stopped readingh dtya!!")
+	}()
+
+    return pcapIncoming, pcapQueue
 
 }
 
@@ -114,9 +131,8 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
 
     TIMEOUT := time.Duration(timeout)*time.Second
 
-    channelTimeout := time.Now()
-	timeoutIncoming := make(chan packet_metadata)//, 1*workers)
-	timeoutQPass := make(chan packet_metadata)//, 1*workers)
+	timeoutIncoming := make(chan packet_metadata,100000)//4*workers)
+	timeoutQPass := make(chan packet_metadata,100000)//4*workers)
     //return from timeout when packet has expired
     go func() {
         for {
@@ -129,7 +145,6 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
                     //fmt.Println("no longer in map: " + string(packet.Saddr))
                     continue
                 }
-                channelTimeout = time.Now()
                 //if timeout has reached, return packet.
                 //else, check that the state has updated in the meanwhile
                 //if not, put the packet back in timeoutQueue
@@ -179,7 +194,7 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
 // TimeoutQueueStuff TODO:need to move
 func constructTimeoutQueue( workers int ) chan packet_metadata {
 
-    timeoutQueue := make(chan packet_metadata)//, 100000)
+    timeoutQueue := make(chan packet_metadata, 100000)
     return timeoutQueue
 }
 

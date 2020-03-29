@@ -4,6 +4,9 @@ import (
     "time"
     //"context"
     //"golang.org/x/sync/semaphore"
+	"runtime/pprof"
+	"os"
+	"log"
     "fmt"
 )
 
@@ -18,6 +21,17 @@ func main() {
     //read in config 
     options := parse()
 
+	time.Sleep(2*time.Second)
+	//For CPUProfiling
+	if options.CPUProfile != "" {
+		f, err := os.Create(options.CPUProfile)
+		if err != nil {
+            log.Fatal(err)
+        }
+        pprof.StartCPUProfile(f)
+        defer pprof.StopCPUProfile()
+	}
+
 	//initalize
 	ipMeta := constructPacketStateMap()
     f := initFile( options.Filename )
@@ -25,7 +39,7 @@ func main() {
 
     writingQueue := constructWritingQueue( options.Workers )
     zmapIncoming := constructZMapRoutine( options.Workers )
-    pcapIncoming := constructPcapRoutine( options.Workers )
+    pcapIncoming, pcapQueue := constructPcapRoutine( options.Workers )
     timeoutQueue := constructTimeoutQueue( options.Workers )
     timeoutIncoming := pollTimeoutRoutine(
         &ipMeta,timeoutQueue, options.Workers, options.Timeout )
@@ -57,6 +71,10 @@ func main() {
                                 done=true
                                 return
                             }
+							fmt.Println("state map: ",ipMeta.Count())
+							fmt.Println("pcapInc: ", len(pcapIncoming))
+							fmt.Println("pcapQ: ", len(pcapQueue))
+							time.Sleep(1*time.Second)
                             continue
                         }
 
@@ -80,17 +98,17 @@ func main() {
                         if input.Saddr == "104.16.128.199" {
                             fmt.Println(input)
                         }
-                        inMap, processing := ipMeta.isProcessing( &input )
-                        //if another thread is processing, put input back
-                        if processing {
-                            pcapIncoming <- input
-                            continue
-                        }
+                        inMap, processing := ipMeta.isStartProcessing( &input )
                         //if not in map, return
                         if !inMap {
                             continue
                         }
-                        ipMeta.startProcessing( &input )
+                        //if another thread is processing, put input back
+                        if !processing {
+                            pcapQueue <- input
+                            continue
+                        }
+						fmt.Println("pcap processing...",input.Saddr)
 				        handlePcap( input, &ipMeta, &timeoutQueue, &writingQueue, f )
                         ipMeta.finishProcessing( &input )
                     case <-time.After(2 * time.Second):
@@ -107,19 +125,19 @@ func main() {
         for {
             select {
             case input, _ := <-timeoutIncoming:
-                    inMap, processing := ipMeta.isProcessing( &input )
+                    inMap, processing := ipMeta.isStartProcessing( &input )
                     //if another thread is processing, put input back
-                    if processing {
-                        timeoutQueue <- input // Incoming or Q to avoid dlock??
-                        continue
-                        //return
-                    }
                     //if not in map, return
                     if !inMap {
                         continue
                         //return
                     }
-                    ipMeta.startProcessing( &input )
+                    if !processing {
+                        timeoutQueue <- input 
+                        continue
+                        //return
+                    }
+					fmt.Println("tout processing...",input.Saddr)
                     handleTimeout( input, &ipMeta, &timeoutQueue, &writingQueue, f )
                     ipMeta.finishProcessing( &input )
 
@@ -131,10 +149,25 @@ func main() {
     }()
 
     //exit gracefully when done
+	//OR for debugging, within 5 seconds
     for {
-        if done {
+		/*select {
+			case <-time.After(30 * time.Second):
+
+				if options.MemProfile != "" {
+					f, err := os.Create(options.MemProfile)
+					if err != nil {
+						log.Fatal(err)
+					}
+					pprof.WriteHeapProfile(f)
+					f.Close()
+				}
+				return
+		}*/
+       if done {
+			fmt.Println(len(pcapIncoming))
             return
-        }
+       }
     }
 
 
