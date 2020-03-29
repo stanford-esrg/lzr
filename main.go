@@ -36,8 +36,10 @@ func main() {
         for {
             select {
                 case input := <-writingQueue:
+					//fmt.Println("writing")
                     f.record( input )
-                default:
+                 case <-time.After(2 * time.Second):
+					//fmt.Println(": Something wrong with reading from writing")
                     continue
                 }
         }
@@ -57,12 +59,13 @@ func main() {
                             }
                             continue
                         }
+
                         // not checking if another thread is processing since we are 
                         // assuming that repeats are being filtered at zmap 
                         // and thus IPs cannot be in ipMeta b4 zmap adds to it
 				        ackZMap( input, &ipMeta, &timeoutQueue, &writingQueue, f )
                     case <-time.After(2 * time.Second):
-                        //fmt.Println("Something wrong with reading from zmap")
+                        //fmt.Println(i,": Something wrong with reading from zmap")
                         continue
                 }
             }
@@ -104,11 +107,6 @@ func main() {
         for {
             select {
             case input, _ := <-timeoutIncoming:
-                /*if err := sem.Acquire(ctx, 1); err != nil {
-                    continue
-                }
-                go func() {
-                    defer sem.Release(1) */
                     inMap, processing := ipMeta.isProcessing( &input )
                     //if another thread is processing, put input back
                     if processing {
@@ -124,7 +122,6 @@ func main() {
                     ipMeta.startProcessing( &input )
                     handleTimeout( input, &ipMeta, &timeoutQueue, &writingQueue, f )
                     ipMeta.finishProcessing( &input )
-                //}()
 
                 case <-time.After(2 * time.Second):
                     //fmt.Println("Something wrong with reading from timeout")

@@ -34,7 +34,7 @@ func ( f *output_file ) record( packet packet_metadata ) {
 
 
 func initFile( fname string ) *output_file {
-    f, err := os.OpenFile( fname, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644 )
+    f, err := os.OpenFile( fname, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777 )
 
     if err != nil {
         panic(err)

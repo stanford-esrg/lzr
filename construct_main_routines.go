@@ -23,7 +23,7 @@ var (
 
 func constructWritingQueue( workers int ) chan packet_metadata {
 
-    writingQueue := make(chan packet_metadata, 1* workers)
+    writingQueue := make(chan packet_metadata )//, 1* workers)
     return writingQueue
 }
 
@@ -31,7 +31,7 @@ func constructZMapRoutine( workers int ) chan packet_metadata {
 
 
 	//routine to read in from ZMap
-	zmapIncoming := make(chan packet_metadata , 1*workers)
+	zmapIncoming := make(chan packet_metadata)// , 1*workers)
 	go func() {
 		reader := bufio.NewReader(os.Stdin)
 		for {
@@ -42,6 +42,7 @@ func constructZMapRoutine( workers int ) chan packet_metadata {
                 close(zmapIncoming)
 				return
 			}
+
             packet := convertToPacket( input )
             if packet == nil {
                 continue
@@ -57,21 +58,26 @@ func constructZMapRoutine( workers int ) chan packet_metadata {
 func constructPcapRoutine( workers int ) chan packet_metadata {
 
 	//routine to read in from pcap
-	pcapIncoming := make(chan packet_metadata, 1*workers )
-	go func() {
-		// Open device
-		handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, pcap.BlockForever) //timeout
-		if err != nil {
-            panic(err)
-			log.Fatal(err)
-		}
-		//packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-        for i := 0; i < workers/PARTITIONS; i ++ {
-        go func( i int ) {
-		for {
-
+	pcapIncoming := make(chan packet_metadata)//, 1*workers )
+	pcapQueue := make(chan []byte)//, 1*workers )
+	// Open device
+	handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, pcap.BlockForever) //timeout
+	if err != nil {
+        panic(err)
+		log.Fatal(err)
+	}
+    go func() {
 		    defer handle.Close()
 
+			for {
+				// Use the handle as a packet source to process all packets
+				data,_,_ := handle.ZeroCopyReadPacketData()
+				pcapQueue <- data
+			}
+	}()
+
+    for i := 0; i < workers/PARTITIONS; i ++ {
+		go func() {
             var eth layers.Ethernet
 	        var ip4 layers.IPv4
 	        var tcp layers.TCP
@@ -79,36 +85,25 @@ func constructPcapRoutine( workers int ) chan packet_metadata {
 
             parser := gopacket.NewDecodingLayerParser(layers.LayerTypeEthernet, &eth, &ip4,&tcp, &payload)
             pcapPacket := []gopacket.LayerType{}
-
-		    // Use the handle as a packet source to process all packets
-            data,_,_ := handle.ZeroCopyReadPacketData()
-            err := parser.DecodeLayers(data, &pcapPacket)
-			//Read from pcap
-			//pcapPacket, err := packetSource.NextPacket()
-			if err == io.EOF {
-				log.Println("Error:", err)
-				return
-            // packet does not have ipv4 or tcp
-			} else if err != nil {
-                //fmt.Println(err)
-				continue
+			for {
+				select {
+				case data := <-pcapQueue:
+					err := parser.DecodeLayers(data, &pcapPacket)
+					if err == io.EOF {
+						log.Println("Error:", err)
+						return
+					// packet does not have ipv4 or tcp
+					} else if err != nil {
+						continue
+					}
+					packet := ReadLayers( &ip4, &tcp )
+					pcapIncoming <- *packet
+				default:
+					continue
+				}
 			}
-            packet := ReadLayers( &ip4, &tcp )
-            /*if ip4.SrcIP.String() == "100.38.245.67" {
-                fmt.Println(packet)
-            }
-            
-            if packet == nil {
-                continue
-            }
-            fmt.Println(packet) 
-            packet.PCapTracker += 1*/
-			pcapIncoming <- *packet 
-		}
-        }(i)
-        }
-
-	}()
+        }()
+    }
 
     return pcapIncoming
 
@@ -120,8 +115,8 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
     TIMEOUT := time.Duration(timeout)*time.Second
 
     channelTimeout := time.Now()
-	timeoutIncoming := make(chan packet_metadata, 1*workers)
-	timeoutQPass := make(chan packet_metadata, 1*workers)
+	timeoutIncoming := make(chan packet_metadata)//, 1*workers)
+	timeoutQPass := make(chan packet_metadata)//, 1*workers)
     //return from timeout when packet has expired
     go func() {
         for {
@@ -184,7 +179,7 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
 // TimeoutQueueStuff TODO:need to move
 func constructTimeoutQueue( workers int ) chan packet_metadata {
 
-    timeoutQueue := make(chan packet_metadata, 100000)
+    timeoutQueue := make(chan packet_metadata)//, 100000)
     return timeoutQueue
 }
 

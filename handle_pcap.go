@@ -27,7 +27,6 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
 
      //exit condition
      if len(packet.Data) > 0 {
-
         //remove from state, we are done now
         ipMeta.remove(packet)
         packet.fingerprintData()

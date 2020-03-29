@@ -11,8 +11,6 @@ func ackZMap( synack  packet_metadata, ipMeta * pState, timeoutQueue * chan pack
     writingQueue * chan packet_metadata, f *output_file ) {
 
         //TODO: check that ip_metadata contains what we want (saddr,seq,ack,window)
-
-        //fmt.Println(synack.Saddr)
         if synack.windowZero() {
             //not a real s/a
             *writingQueue <- synack
