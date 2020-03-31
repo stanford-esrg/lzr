@@ -1,7 +1,10 @@
 //https://github.com/orcaman/concurrent-map/blob/master/concurrent_map.go
 package main
 
-import "sync"
+import (
+	"sync"
+	"fmt"
+)
 
 
 
@@ -84,8 +87,8 @@ func (m pState) Remove(key string) {
 	// Try to get shard.
 	shard := m.GetShard(key)
 	shard.Lock()
+	defer shard.Unlock()
 	delete(shard.items, key)
-	shard.Unlock()
 }
 
 /* FOR PACKET_METADATA */
@@ -102,6 +105,8 @@ func (m pState) isStartProcessing( p * packet_metadata ) ( bool,bool ) {
     }
 	if !p_out.Processing {
 		p_out.startProcessing()
+		p_out, _ := shard.items[p.Saddr]
+		fmt.Println(p_out.Processing)
 		return true,true
 	}
     return true, false

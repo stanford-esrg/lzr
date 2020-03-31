@@ -17,7 +17,7 @@ type output_file struct {
 func ( f *output_file ) record( packet packet_metadata ) {
 
     out, _ := json.Marshal( packet )
-    _,err = (f.F).WriteString( string(out) )
+    _,err := (f.F).WriteString( string(out) )
     if err != nil {
         f.F.Close()
         panic(err)

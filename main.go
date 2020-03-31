@@ -5,6 +5,7 @@ import (
     //"context"
     //"golang.org/x/sync/semaphore"
 	"runtime/pprof"
+	"sync"
 	"os"
 	"log"
     "fmt"
@@ -21,7 +22,6 @@ func main() {
     //read in config 
     options := parse()
 
-	time.Sleep(2*time.Second)
 	//For CPUProfiling
 	if options.CPUProfile != "" {
 		f, err := os.Create(options.CPUProfile)
@@ -39,7 +39,7 @@ func main() {
 
     writingQueue := constructWritingQueue( options.Workers )
     zmapIncoming := constructZMapRoutine( options.Workers )
-    pcapIncoming, pcapQueue := constructPcapRoutine( options.Workers )
+    pcapIncoming, pcapQueue := constructPcapRoutine( options.Workers ) //pcapQueue
     timeoutQueue := constructTimeoutQueue( options.Workers )
     timeoutIncoming := pollTimeoutRoutine(
         &ipMeta,timeoutQueue, options.Workers, options.Timeout )
@@ -58,46 +58,36 @@ func main() {
                 }
         }
     }()
+	time.Sleep(1*time.Second)
     //start all workers
     //read from zmap
+	var zmapDone sync.WaitGroup
+	zmapDone.Add(options.Workers/PARTITIONS)
     for i := 0; i < options.Workers/PARTITIONS; i ++ {
         go func( i int ) {
-	        for {
-		        select {
-			        case input, ok := <-zmapIncoming:
-                        //ExitCondition: zmap channel closed
-                        if !ok {
-                            if ipMeta.IsEmpty() {
-                                done=true
-                                return
-                            }
-							fmt.Println("state map: ",ipMeta.Count())
-							fmt.Println("pcapInc: ", len(pcapIncoming))
-							fmt.Println("pcapQ: ", len(pcapQueue))
-							time.Sleep(1*time.Second)
-                            continue
-                        }
-
-                        // not checking if another thread is processing since we are 
-                        // assuming that repeats are being filtered at zmap 
-                        // and thus IPs cannot be in ipMeta b4 zmap adds to it
+	        for input := range zmapIncoming {
 				        ackZMap( input, &ipMeta, &timeoutQueue, &writingQueue, f )
-                    case <-time.After(2 * time.Second):
-                        //fmt.Println(i,": Something wrong with reading from zmap")
-                        continue
-                }
+						fmt.Println("done",input.Saddr)
+                        ipMeta.finishProcessing( &input )
+            }
+
+			fmt.Println(ipMeta.Get("104.16.131.20"))
+			fmt.Println(ipMeta.Get("104.16.131.21"))
+            //ExitCondition: zmap channel closed
+			for {
+				if ipMeta.IsEmpty() {
+					done=true
+					zmapDone.Done()
+					return
+				}
             }
         }(i)
     }
+	time.Sleep(1*time.Second)
     //read from pcap
     for i := 0; i < options.Workers/PARTITIONS; i ++ {
         go func() {
-            for {
-                select {
-                   case input := <-pcapIncoming:
-                        if input.Saddr == "104.16.128.199" {
-                            fmt.Println(input)
-                        }
+            for input := range pcapIncoming {
                         inMap, processing := ipMeta.isStartProcessing( &input )
                         //if not in map, return
                         if !inMap {
@@ -105,16 +95,15 @@ func main() {
                         }
                         //if another thread is processing, put input back
                         if !processing {
+							fmt.Println("! processing...",input.Saddr)
                             pcapQueue <- input
                             continue
                         }
+						fmt.Println("len of pcap", len(pcapIncoming))
 						fmt.Println("pcap processing...",input.Saddr)
 				        handlePcap( input, &ipMeta, &timeoutQueue, &writingQueue, f )
                         ipMeta.finishProcessing( &input )
-                    case <-time.After(2 * time.Second):
-                        //fmt.Println("Something wrong with reading from pcap")
-                        continue
-                }
+						fmt.Println("finished pcap processing...",input.Saddr)
             }
         }()
     }
@@ -122,9 +111,7 @@ func main() {
     //read from timeout
     go func() {
 
-        for {
-            select {
-            case input, _ := <-timeoutIncoming:
+        for input := range timeoutIncoming {
                     inMap, processing := ipMeta.isStartProcessing( &input )
                     //if another thread is processing, put input back
                     //if not in map, return
@@ -140,16 +127,12 @@ func main() {
 					fmt.Println("tout processing...",input.Saddr)
                     handleTimeout( input, &ipMeta, &timeoutQueue, &writingQueue, f )
                     ipMeta.finishProcessing( &input )
-
-                case <-time.After(2 * time.Second):
-                    //fmt.Println("Something wrong with reading from timeout")
-                    continue
 		    }
-        }
     }()
 
     //exit gracefully when done
 	//OR for debugging, within 5 seconds
+	zmapDone.Wait()
     for {
 		/*select {
 			case <-time.After(30 * time.Second):

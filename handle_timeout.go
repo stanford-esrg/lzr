@@ -1,7 +1,7 @@
 package main
 
 import (
-    //"fmt"
+    "fmt"
     "log"
 )
 
@@ -41,6 +41,7 @@ func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan
     //else, we give up, just record. 
     //remove from state, we are done now
     ipMeta.remove(packet)
+	fmt.Println("timeout Removed <- ",string(packet.Saddr))
     *writingQueue <- packet
     //close connection
     rst := constructRST(packet)

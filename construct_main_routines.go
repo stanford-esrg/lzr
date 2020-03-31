@@ -10,12 +10,13 @@ import (
     "os"
     "time"
     "fmt"
+	"bytes"
 )
 
 var (
     handle       *pcap.Handle
     device       string = "ens8"
-    snapshot_len int32  = 1024
+    snapshot_len int32  = 2048
     promiscuous  bool   = false
     err          error
 )
@@ -63,7 +64,7 @@ func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_meta
 	pcapdQueue := make(chan []byte,1000000)
 	pcapQueue := make(chan packet_metadata,1000000)
 	// Open device
-	handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, 1*time.Second)//pcap.BlockForever) //timeout
+	handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, pcap.BlockForever)//1*time.Second)
 	if err != nil {
         panic(err)
 		log.Fatal(err)
@@ -82,9 +83,6 @@ func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_meta
 			for {
 				select {
 				case data := <-pcapdQueue:
-					if ip4.SrcIP.String() == "104.16.131.21" || ip4.SrcIP.String() == "104.16.131.20" {
-						fmt.Println( "ah")
-					}
 					err := parser.DecodeLayers(data, &pcapPacket)
 					if err == io.EOF {
 						log.Println("Error:", err)
@@ -93,7 +91,15 @@ func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_meta
 					} else if err != nil {
 						continue
 					}
-					packet := ReadLayers( &ip4, &tcp )
+					packet := ReadLayers( &ip4, &tcp, &payload )
+					fmt.Println("PcapIncoming<-",packet.Saddr,"Seq:", packet.Seqnum,"Ack:", packet.Acknum )
+					if packet.Saddr == "104.16.131.21" {
+						fmt.Println("==payloads==")
+						fmt.Println(payload.String())
+						fmt.Println(string(payload.Payload()))
+						fmt.Println(string(tcp.Payload))
+						fmt.Println("============")
+					}
 					pcapIncoming <- *packet
 				default:
 					continue
@@ -113,11 +119,16 @@ func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_meta
     }()
     go func() {
 		    defer handle.Close()
-
+			var old_data []byte
 			for {
 				// Use the handle as a packet source to process all packets
-				data,_,_ := handle.ZeroCopyReadPacketData()
+				data,_,err := handle.ZeroCopyReadPacketData()
+				if err != nil || (bytes.Compare(data,old_data) == 0) {
+					continue
+				}
+				fmt.Println((bytes.Compare(data,old_data)))
 				pcapdQueue <- data
+				old_data = data
 			}
 			fmt.Println("stopped readingh dtya!!")
 	}()
@@ -148,8 +159,8 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
                 //if timeout has reached, return packet.
                 //else, check that the state has updated in the meanwhile
                 //if not, put the packet back in timeoutQueue
-                if (p.Counter > 1 && ( ((time.Now()).Sub( packet.Timestamp ) ) < TIMEOUT)) ||
-                (((time.Now()).Sub( packet.Timestamp ) ) < 1*time.Second) {
+                if !((p.Counter == 1 && ( ((time.Now()).Sub( packet.Timestamp ) ) > 1*time.Second)) ||
+                (((time.Now()).Sub( packet.Timestamp ) ) > TIMEOUT)) {
                     //go func() { //must be its own routine to avoid deadlock
                         timeoutQPass <-packet
                         continue
