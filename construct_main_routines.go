@@ -2,7 +2,7 @@ package main
 
 import (
     "github.com/google/gopacket"
-    "github.com/google/gopacket/layers"
+    //"github.com/google/gopacket/layers"
     "github.com/google/gopacket/pcap"
     "log"
     "io"
@@ -10,7 +10,7 @@ import (
     "os"
     "time"
     "fmt"
-	"bytes"
+	//"bytes"
 )
 
 var (
@@ -61,7 +61,7 @@ func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_meta
 
 	//routine to read in from pcap
 	pcapIncoming := make(chan packet_metadata,1000000)//,4*workers )
-	pcapdQueue := make(chan []byte,1000000)
+	pcapdQueue := make(chan gopacket.Packet,1000000)
 	pcapQueue := make(chan packet_metadata,1000000)
 	// Open device
 	handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, pcap.BlockForever)//1*time.Second)
@@ -73,31 +73,17 @@ func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_meta
     for i := 0; i < workers/PARTITIONS; i ++ {
 		go func(i int) {
 			fmt.Println(i,"2")
-            var eth layers.Ethernet
-	        var ip4 layers.IPv4
-	        var tcp layers.TCP
-            var payload gopacket.Payload
-
-            parser := gopacket.NewDecodingLayerParser(layers.LayerTypeEthernet, &eth, &ip4,&tcp, &payload)
-            pcapPacket := []gopacket.LayerType{}
 			for {
 				select {
 				case data := <-pcapdQueue:
-					err := parser.DecodeLayers(data, &pcapPacket)
-					if err == io.EOF {
-						log.Println("Error:", err)
-						return
-					// packet does not have ipv4 or tcp
-					} else if err != nil {
+					packet := convertToPacketM( data )
+					if packet == nil {
 						continue
 					}
-					packet := ReadLayers( &ip4, &tcp, &payload )
 					fmt.Println("PcapIncoming<-",packet.Saddr,"Seq:", packet.Seqnum,"Ack:", packet.Acknum )
 					if packet.Saddr == "104.16.131.21" {
 						fmt.Println("==payloads==")
-						fmt.Println(payload.String())
-						fmt.Println(string(payload.Payload()))
-						fmt.Println(string(tcp.Payload))
+						fmt.Println(string(packet.Data))
 						fmt.Println("============")
 					}
 					pcapIncoming <- *packet
@@ -119,16 +105,10 @@ func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_meta
     }()
     go func() {
 		    defer handle.Close()
-			var old_data []byte
+			packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 			for {
-				// Use the handle as a packet source to process all packets
-				data,_,err := handle.ZeroCopyReadPacketData()
-				if err != nil || (bytes.Compare(data,old_data) == 0) {
-					continue
-				}
-				fmt.Println((bytes.Compare(data,old_data)))
-				pcapdQueue <- data
-				old_data = data
+				pcapPacket, _ := packetSource.NextPacket()
+				pcapdQueue <- pcapPacket
 			}
 			fmt.Println("stopped readingh dtya!!")
 	}()

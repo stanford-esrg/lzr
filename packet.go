@@ -45,7 +45,7 @@ type packet_metadata struct {
 }
 
 
-func ReadLayers( ip *layers.IPv4, tcp *layers.TCP, payload *gopacket.Payload ) *packet_metadata {
+func ReadLayers( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
 
     packet := &packet_metadata{
         Saddr: ip.SrcIP.String(),
@@ -60,13 +60,27 @@ func ReadLayers( ip *layers.IPv4, tcp *layers.TCP, payload *gopacket.Payload ) *
         RST: tcp.RST,
         FIN: tcp.FIN,
         PUSH: tcp.PSH,
-        Data: string(payload.Payload()),
+        Data: string(tcp.Payload),
         Timestamp: time.Now(),
         ExpectedRToLZR: "",
         Counter: 0,
 		Processing: true,
     }
 	return packet
+}
+
+
+func convertToPacketM ( packet gopacket.Packet ) ( *packet_metadata ) {
+        tcpLayer := packet.Layer(layers.LayerTypeTCP)
+        if tcpLayer != nil {
+            tcp, _ := tcpLayer.(*layers.TCP)
+            ipLayer := packet.Layer(layers.LayerTypeIPv4)
+            ip, _ := ipLayer.(*layers.IPv4)
+
+            metapacket := ReadLayers(ip,tcp)
+            return metapacket
+        }
+        return nil
 }
 
 func convertToPacket ( input string ) *packet_metadata  {
