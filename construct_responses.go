@@ -63,7 +63,7 @@ func constructData( synack packet_metadata, data []byte,ack bool, push bool) []b
         DstPort: layers.TCPPort(synack.Sport),
     Seq: uint32(synack.Acknum),
     Ack: uint32(synack.Seqnum+1),
-    Window: 8192,
+    Window: 65535,
     ACK: ack,
     PSH: push,
     }

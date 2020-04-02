@@ -6,6 +6,7 @@ import (
     "time"
 	"encoding/json"
     "log"
+	//"fmt"
 )
 
 var (
@@ -76,7 +77,6 @@ func convertToPacketM ( packet gopacket.Packet ) ( *packet_metadata ) {
             tcp, _ := tcpLayer.(*layers.TCP)
             ipLayer := packet.Layer(layers.LayerTypeIPv4)
             ip, _ := ipLayer.(*layers.IPv4)
-
             metapacket := ReadLayers(ip,tcp)
             return metapacket
         }

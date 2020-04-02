@@ -16,7 +16,7 @@ import (
 var (
     handle       *pcap.Handle
     device       string = "ens8"
-    snapshot_len int32  = 2048
+    snapshot_len int32  = 1024
     promiscuous  bool   = false
     err          error
 )
@@ -69,22 +69,22 @@ func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_meta
         panic(err)
 		log.Fatal(err)
 	}
-	fmt.Println("1")
+	//set to filter out zmap syn packets (just syn) 
+	err := handle.SetBPFFilter("tcp[tcpflags] != tcp-syn")
+	if err != nil {
+        panic(err)
+		log.Fatal(err)
+	}
+
+
     for i := 0; i < workers/PARTITIONS; i ++ {
 		go func(i int) {
-			fmt.Println(i,"2")
 			for {
 				select {
 				case data := <-pcapdQueue:
 					packet := convertToPacketM( data )
 					if packet == nil {
 						continue
-					}
-					fmt.Println("PcapIncoming<-",packet.Saddr,"Seq:", packet.Seqnum,"Ack:", packet.Acknum )
-					if packet.Saddr == "104.16.131.21" {
-						fmt.Println("==payloads==")
-						fmt.Println(string(packet.Data))
-						fmt.Println("============")
 					}
 					pcapIncoming <- *packet
 				default:
@@ -110,7 +110,6 @@ func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_meta
 				pcapPacket, _ := packetSource.NextPacket()
 				pcapdQueue <- pcapPacket
 			}
-			fmt.Println("stopped readingh dtya!!")
 	}()
 
     return pcapIncoming, pcapQueue
@@ -139,7 +138,9 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
                 //if timeout has reached, return packet.
                 //else, check that the state has updated in the meanwhile
                 //if not, put the packet back in timeoutQueue
-                if !((p.Counter == 1 && ( ((time.Now()).Sub( packet.Timestamp ) ) > 1*time.Second)) ||
+				//fmt.Println(p.Counter, ((time.Now()).Sub( packet.Timestamp ) ))
+				//fmt.Println(p)
+                if !((p.Counter == 0 && ( ((time.Now()).Sub( packet.Timestamp ) ) > 1*time.Second)) ||
                 (((time.Now()).Sub( packet.Timestamp ) ) > TIMEOUT)) {
                     //go func() { //must be its own routine to avoid deadlock
                         timeoutQPass <-packet

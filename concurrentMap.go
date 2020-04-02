@@ -3,7 +3,7 @@ package main
 
 import (
 	"sync"
-	"fmt"
+	//"fmt"
 )
 
 
@@ -105,8 +105,6 @@ func (m pState) isStartProcessing( p * packet_metadata ) ( bool,bool ) {
     }
 	if !p_out.Processing {
 		p_out.startProcessing()
-		p_out, _ := shard.items[p.Saddr]
-		fmt.Println(p_out.Processing)
 		return true,true
 	}
     return true, false

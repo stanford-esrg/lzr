@@ -2,7 +2,7 @@ package main
 
 import (
     //"sync"
-    "fmt"
+    //"fmt"
 )
 
 /* keeps state by storing the packet that was received 
@@ -78,14 +78,14 @@ func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 
     }
 
-             fmt.Println(pMap.Saddr, "====")
+             /*fmt.Println(pMap.Saddr, "====")
              fmt.Println("recv seq num:", pRecv.Seqnum)
              fmt.Println("stored seqnum: ", pMap.Seqnum)
              fmt.Println("recv ack num:", pRecv.Acknum)
              fmt.Println("stored acknum: ", pMap.Acknum)
              fmt.Println("received response length: ",len(pRecv.Data))
              fmt.Println("stored response length: ",pMap.LZRResponseL) 
-             fmt.Println(pMap.Saddr ,"====")
+             fmt.Println(pMap.Saddr ,"====")*/
 	return false
 
 }

@@ -17,7 +17,10 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
 
     //verify 
 	if !(ipMeta.verifyScanningIP( &packet )) {
-		fmt.Println(packet.Saddr,"not verified")
+		if packet.Saddr == "178.190.236.145" {
+			fmt.Println("not verified")
+			fmt.Println(packet)
+		}
         packet.incrementCounter()
 		packet.updateTimestamp()
         packet.validationFail()
@@ -25,17 +28,19 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
 		return
 	}
 
+		if packet.Saddr == "222.255.220.94" {
+			fmt.Println(packet)
+		}
 
      //exit condition
      if len(packet.Data) > 0 {
         //remove from state, we are done now
-		fmt.Println(packet.Saddr, "data!")
         ipMeta.remove(packet)
         packet.fingerprintData()
         *writingQueue <- packet
         //close connection
         rst := constructRST(packet)
-        err = handle.WritePacketData(rst)
+        err := handle.WritePacketData(rst)
         if err != nil {
             log.Fatal(err)
         }
@@ -45,20 +50,18 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
     //for every closed connection, record
     if packet.RST || packet.FIN {
 
-		fmt.Println(packet.Saddr, "closed")
         ipMeta.remove(packet)
         *writingQueue <- packet
         //close connection
         if packet.FIN {
             rst := constructRST(packet)
-            err = handle.WritePacketData(rst)
+            handle.WritePacketData(rst)
         }
         return
      }
      //for every ack received, mark as accepting data
      if (!packet.SYN) && packet.ACK {
 
-		fmt.Println(packet.Saddr, "justack")
 		 //add to map
 		 packet.updateResponse(DATA)
 		 packet.updateTimestamp()

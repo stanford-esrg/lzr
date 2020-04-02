@@ -8,7 +8,6 @@ import (
 	"sync"
 	"os"
 	"log"
-    "fmt"
 )
 
 var (
@@ -67,12 +66,9 @@ func main() {
         go func( i int ) {
 	        for input := range zmapIncoming {
 				        ackZMap( input, &ipMeta, &timeoutQueue, &writingQueue, f )
-						fmt.Println("done",input.Saddr)
                         ipMeta.finishProcessing( &input )
             }
 
-			fmt.Println(ipMeta.Get("104.16.131.20"))
-			fmt.Println(ipMeta.Get("104.16.131.21"))
             //ExitCondition: zmap channel closed
 			for {
 				if ipMeta.IsEmpty() {
@@ -95,15 +91,11 @@ func main() {
                         }
                         //if another thread is processing, put input back
                         if !processing {
-							fmt.Println("! processing...",input.Saddr)
                             pcapQueue <- input
                             continue
                         }
-						fmt.Println("len of pcap", len(pcapIncoming))
-						fmt.Println("pcap processing...",input.Saddr)
 				        handlePcap( input, &ipMeta, &timeoutQueue, &writingQueue, f )
                         ipMeta.finishProcessing( &input )
-						fmt.Println("finished pcap processing...",input.Saddr)
             }
         }()
     }
@@ -124,7 +116,6 @@ func main() {
                         continue
                         //return
                     }
-					fmt.Println("tout processing...",input.Saddr)
                     handleTimeout( input, &ipMeta, &timeoutQueue, &writingQueue, f )
                     ipMeta.finishProcessing( &input )
 		    }
@@ -147,8 +138,7 @@ func main() {
 				}
 				return
 		}*/
-       if done {
-			fmt.Println(len(pcapIncoming))
+       if done && len(writingQueue) == 0 {
             return
        }
     }

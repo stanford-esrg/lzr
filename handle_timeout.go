@@ -1,7 +1,7 @@
 package main
 
 import (
-    "fmt"
+    //"fmt"
     "log"
 )
 
@@ -19,7 +19,12 @@ func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan
         if packet.Counter < 2 {
             packet.incrementCounter()
             data := getData( string(packet.Saddr) )
-            dataPacket := constructData( packet,data, true,true )
+			var dataPacket []byte
+			if packet.Counter  == 0 {
+				dataPacket = constructData( packet,data, true,false )
+			} else {
+				dataPacket = constructData( packet,data, true,true )
+			}
             err = handle.WritePacketData( dataPacket )
             if err != nil {
                 log.Fatal(err)
@@ -41,7 +46,7 @@ func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan
     //else, we give up, just record. 
     //remove from state, we are done now
     ipMeta.remove(packet)
-	fmt.Println("timeout Removed <- ",string(packet.Saddr))
+	//fmt.Println("timeout Removed <- ",string(packet.Saddr))
     *writingQueue <- packet
     //close connection
     rst := constructRST(packet)
