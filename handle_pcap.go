@@ -17,6 +17,10 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
 
     //verify 
 	if !(ipMeta.verifyScanningIP( &packet )) {
+		if packet.Saddr == "178.190.236.145" {
+			fmt.Println("not verified")
+			fmt.Println(packet)
+		}
         packet.incrementCounter()
 		packet.updateTimestamp()
         packet.validationFail()
@@ -24,6 +28,9 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
 		return
 	}
 
+		if packet.Saddr == "222.255.220.94" {
+			fmt.Println(packet)
+		}
 
      //exit condition
      if len(packet.Data) > 0 {
@@ -33,7 +40,7 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
         *writingQueue <- packet
         //close connection
         rst := constructRST(packet)
-        err = handle.WritePacketData(rst)
+        err := handle.WritePacketData(rst)
         if err != nil {
             log.Fatal(err)
         }
@@ -48,7 +55,7 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
         //close connection
         if packet.FIN {
             rst := constructRST(packet)
-            err = handle.WritePacketData(rst)
+            handle.WritePacketData(rst)
         }
         return
      }
@@ -64,6 +71,5 @@ func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan pa
          *timeoutQueue <-packet
 		  return
     }
-	fmt.Println(packet)
 }
 

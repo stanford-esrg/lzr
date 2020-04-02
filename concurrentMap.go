@@ -1,7 +1,10 @@
 //https://github.com/orcaman/concurrent-map/blob/master/concurrent_map.go
 package main
 
-import "sync"
+import (
+	"sync"
+	//"fmt"
+)
 
 
 
@@ -84,8 +87,8 @@ func (m pState) Remove(key string) {
 	// Try to get shard.
 	shard := m.GetShard(key)
 	shard.Lock()
+	defer shard.Unlock()
 	delete(shard.items, key)
-	shard.Unlock()
 }
 
 /* FOR PACKET_METADATA */

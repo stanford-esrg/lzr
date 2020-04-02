@@ -2,7 +2,7 @@ package main
 
 import (
     "github.com/google/gopacket"
-    "github.com/google/gopacket/layers"
+    //"github.com/google/gopacket/layers"
     "github.com/google/gopacket/pcap"
     "log"
     "io"
@@ -10,6 +10,7 @@ import (
     "os"
     "time"
     "fmt"
+	//"bytes"
 )
 
 var (
@@ -60,40 +61,31 @@ func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_meta
 
 	//routine to read in from pcap
 	pcapIncoming := make(chan packet_metadata,1000000)//,4*workers )
-	pcapdQueue := make(chan []byte,1000000)
+	pcapdQueue := make(chan gopacket.Packet,1000000)
 	pcapQueue := make(chan packet_metadata,1000000)
 	// Open device
-	handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, 1*time.Second)//pcap.BlockForever) //timeout
+	handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, pcap.BlockForever)//1*time.Second)
 	if err != nil {
         panic(err)
 		log.Fatal(err)
 	}
-	fmt.Println("1")
+	//set to filter out zmap syn packets (just syn) 
+	err := handle.SetBPFFilter("tcp[tcpflags] != tcp-syn")
+	if err != nil {
+        panic(err)
+		log.Fatal(err)
+	}
+
+
     for i := 0; i < workers/PARTITIONS; i ++ {
 		go func(i int) {
-			fmt.Println(i,"2")
-            var eth layers.Ethernet
-	        var ip4 layers.IPv4
-	        var tcp layers.TCP
-            var payload gopacket.Payload
-
-            parser := gopacket.NewDecodingLayerParser(layers.LayerTypeEthernet, &eth, &ip4,&tcp, &payload)
-            pcapPacket := []gopacket.LayerType{}
 			for {
 				select {
 				case data := <-pcapdQueue:
-					if ip4.SrcIP.String() == "104.16.131.21" || ip4.SrcIP.String() == "104.16.131.20" {
-						fmt.Println( "ah")
-					}
-					err := parser.DecodeLayers(data, &pcapPacket)
-					if err == io.EOF {
-						log.Println("Error:", err)
-						return
-					// packet does not have ipv4 or tcp
-					} else if err != nil {
+					packet := convertToPacketM( data )
+					if packet == nil {
 						continue
 					}
-					packet := ReadLayers( &ip4, &tcp )
 					pcapIncoming <- *packet
 				default:
 					continue
@@ -113,13 +105,11 @@ func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_meta
     }()
     go func() {
 		    defer handle.Close()
-
+			packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 			for {
-				// Use the handle as a packet source to process all packets
-				data,_,_ := handle.ZeroCopyReadPacketData()
-				pcapdQueue <- data
+				pcapPacket, _ := packetSource.NextPacket()
+				pcapdQueue <- pcapPacket
 			}
-			fmt.Println("stopped readingh dtya!!")
 	}()
 
     return pcapIncoming, pcapQueue
@@ -148,8 +138,10 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
                 //if timeout has reached, return packet.
                 //else, check that the state has updated in the meanwhile
                 //if not, put the packet back in timeoutQueue
-                if (p.Counter > 1 && ( ((time.Now()).Sub( packet.Timestamp ) ) < TIMEOUT)) ||
-                (((time.Now()).Sub( packet.Timestamp ) ) < 1*time.Second) {
+				//fmt.Println(p.Counter, ((time.Now()).Sub( packet.Timestamp ) ))
+				//fmt.Println(p)
+                if !((p.Counter == 0 && ( ((time.Now()).Sub( packet.Timestamp ) ) > 1*time.Second)) ||
+                (((time.Now()).Sub( packet.Timestamp ) ) > TIMEOUT)) {
                     //go func() { //must be its own routine to avoid deadlock
                         timeoutQPass <-packet
                         continue

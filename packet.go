@@ -1,10 +1,12 @@
 package main
 
 import (
+    "github.com/google/gopacket"
     "github.com/google/gopacket/layers"
     "time"
 	"encoding/json"
     "log"
+	//"fmt"
 )
 
 var (
@@ -63,8 +65,22 @@ func ReadLayers( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
         Timestamp: time.Now(),
         ExpectedRToLZR: "",
         Counter: 0,
+		Processing: true,
     }
 	return packet
+}
+
+
+func convertToPacketM ( packet gopacket.Packet ) ( *packet_metadata ) {
+        tcpLayer := packet.Layer(layers.LayerTypeTCP)
+        if tcpLayer != nil {
+            tcp, _ := tcpLayer.(*layers.TCP)
+            ipLayer := packet.Layer(layers.LayerTypeIPv4)
+            ip, _ := ipLayer.(*layers.IPv4)
+            metapacket := ReadLayers(ip,tcp)
+            return metapacket
+        }
+        return nil
 }
 
 func convertToPacket ( input string ) *packet_metadata  {
@@ -72,7 +88,8 @@ func convertToPacket ( input string ) *packet_metadata  {
 
         synack := &packet_metadata{}
         //expecting ip,sequence number, acknumber,windowsize
-        err = json.Unmarshal( []byte(input),synack )
+        err := json.Unmarshal( []byte(input),synack )
+		synack.Processing = true
         if err != nil {
             log.Fatal(err)
             return nil

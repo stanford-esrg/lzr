@@ -26,7 +26,7 @@ func ackZMap( synack  packet_metadata, ipMeta * pState, timeoutQueue * chan pack
         synack.updateResponseL( data )
 		synack.updateTimestamp()
 		ipMeta.update( &synack )
-        err = handle.WritePacketData(ack)
+        err := handle.WritePacketData(ack)
         if err != nil {
             //panic(err)
             log.Fatal(err)
