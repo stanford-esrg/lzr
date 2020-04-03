@@ -7,7 +7,7 @@ import (
 )
 
 // Handshake implements the lzr.Handshake interface
-type Handshake struct {
+type HandshakeMod struct {
 }
 
 func getOpQuery(collname string, query []byte) ([]byte) {
@@ -34,7 +34,7 @@ func getOpQuery(collname string, query []byte) ([]byte) {
         return out
 }
 
-func (h *Handshake) getData( dst string ) []byte {
+func (h *HandshakeMod) GetData( dst string ) []byte {
 
     query, _ := bson.Marshal(bson.M{ "isMaster": 1 })
     query_msg := getOpQuery("admin.$cmd", query)
@@ -43,6 +43,6 @@ func (h *Handshake) getData( dst string ) []byte {
 }
 
 func RegisterHandshake() {
-    var h lzr.Handshake
-    lzr.AddHandshake( "mongodb",h )
+    var h HandshakeMod
+    lzr.AddHandshake( "mongodb",&h )
 }

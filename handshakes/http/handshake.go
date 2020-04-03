@@ -7,10 +7,10 @@ import (
 )
 
 // Handshake implements the lzr.Handshake interface
-type Handshake struct {
+type HandshakeMod struct {
 }
 
-func (h *Handshake) getData( dst string ) []byte {
+func (h *HandshakeMod) GetData( dst string ) []byte {
 
         req, _ := http.NewRequest("GET","/",nil)
         req.Host =  dst
@@ -23,7 +23,7 @@ func (h *Handshake) getData( dst string ) []byte {
 }
 
 func RegisterHandshake() {
-	var h lzr.Handshake
-	lzr.AddHandshake( "http",h )
+	var h HandshakeMod
+	lzr.AddHandshake( "http", &h )
 }
 

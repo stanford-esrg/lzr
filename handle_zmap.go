@@ -7,7 +7,7 @@ import (
 
 
 
-func AckZMap( handshake *Handshake, synack  packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
+func AckZMap( handshake Handshake, synack  packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
     writingQueue * chan packet_metadata, f *output_file ) {
 
         //TODO: check that ip_metadata contains what we want (saddr,seq,ack,window)

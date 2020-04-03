@@ -44,11 +44,11 @@ func constructEthLayer() (eth *layers.Ethernet) {
 }
 
 
-func constructData( handshake *Handshake, p packet_metadata, ack bool, push bool) ([]byte, []byte) {
+func constructData( handshake Handshake, p packet_metadata, ack bool, push bool) ([]byte, []byte) {
 
     //data := []byte("\n")
 
-    data := handshake.getData( string(p.Saddr) )
+    data := handshake.GetData( string(p.Saddr) )
 
 	ethernetLayer := constructEthLayer()
 

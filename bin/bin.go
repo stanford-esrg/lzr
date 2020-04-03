@@ -63,7 +63,7 @@ func LZRMain() {
     for i := 0; i < options.Workers; i ++ {
         go func( i int ) {
 	        for input := range zmapIncoming {
-				        lzr.AckZMap( &handshake, input, &ipMeta, &timeoutQueue, &writingQueue, f )
+				        lzr.AckZMap( handshake, input, &ipMeta, &timeoutQueue, &writingQueue, f )
                         ipMeta.FinishProcessing( &input )
             }
 
@@ -92,7 +92,7 @@ func LZRMain() {
                             pcapQueue <- input
                             continue
                         }
-				        lzr.HandlePcap(&handshake, input, &ipMeta, &timeoutQueue, &writingQueue, f )
+				        lzr.HandlePcap(handshake, input, &ipMeta, &timeoutQueue, &writingQueue, f )
                         ipMeta.FinishProcessing( &input )
             }
         }()
@@ -114,7 +114,7 @@ func LZRMain() {
                         continue
                         //return
                     }
-                    lzr.HandleTimeout( &handshake, input, &ipMeta, &timeoutQueue, &writingQueue, f )
+                    lzr.HandleTimeout( handshake, input, &ipMeta, &timeoutQueue, &writingQueue, f )
                     ipMeta.FinishProcessing( &input )
 		    }
     }()

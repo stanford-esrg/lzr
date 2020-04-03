@@ -5,7 +5,7 @@ var handshakes map[string]Handshake
 type Handshake interface {
 
     //get Data to send in first packet
-    getData( dst string ) []byte
+    GetData( dst string ) []byte
 
 }
 
