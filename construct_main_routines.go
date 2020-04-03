@@ -1,4 +1,4 @@
-package main
+package lzr
 
 import (
     "github.com/google/gopacket"
@@ -22,13 +22,13 @@ var (
 )
 
 
-func constructWritingQueue( workers int ) chan packet_metadata {
+func ConstructWritingQueue( workers int ) chan packet_metadata {
 
     writingQueue := make(chan packet_metadata,100000)// 4* workers)
     return writingQueue
 }
 
-func constructZMapRoutine( workers int ) chan packet_metadata {
+func ConstructZMapRoutine( workers int ) chan packet_metadata {
 
 
 	//routine to read in from ZMap
@@ -57,7 +57,7 @@ func constructZMapRoutine( workers int ) chan packet_metadata {
     return zmapIncoming
 }
 
-func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_metadata) {
+func ConstructPcapRoutine( workers int ) (chan packet_metadata, chan packet_metadata) {
 
 	//routine to read in from pcap
 	pcapIncoming := make(chan packet_metadata,1000000)//,4*workers )
@@ -77,7 +77,7 @@ func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_meta
 	}
 
 
-    for i := 0; i < workers/PARTITIONS; i ++ {
+    for i := 0; i < workers; i ++ {
 		go func(i int) {
 			for {
 				select {
@@ -116,7 +116,7 @@ func constructPcapRoutine( workers int ) (chan packet_metadata, chan packet_meta
 
 }
 
-func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, workers int, timeout int ) (
+func PollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, workers int, timeout int ) (
     chan packet_metadata ) {
 
     TIMEOUT := time.Duration(timeout)*time.Second
@@ -184,18 +184,9 @@ func pollTimeoutRoutine( ipMeta * pState, timeoutQueue chan packet_metadata, wor
 }
 
 // TimeoutQueueStuff TODO:need to move
-func constructTimeoutQueue( workers int ) chan packet_metadata {
+func ConstructTimeoutQueue( workers int ) chan packet_metadata {
 
     timeoutQueue := make(chan packet_metadata, 100000)
     return timeoutQueue
 }
-
-
-
-/*func constructIncomingChan() chan packet_metadata {
-
-    incomingChan := make(chan packet_metadata)
-    return incomingChan
-
-}*/
 

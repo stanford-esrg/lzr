@@ -1,4 +1,4 @@
-package main
+package lzr
 
 import (
     "encoding/json"
@@ -14,7 +14,7 @@ type output_file struct {
 }
 
 
-func ( f *output_file ) record( packet packet_metadata ) {
+func ( f *output_file ) Record( packet packet_metadata ) {
 
     out, _ := json.Marshal( packet )
     _,err := (f.F).WriteString( string(out) )
@@ -33,7 +33,7 @@ func ( f *output_file ) record( packet packet_metadata ) {
 }
 
 
-func initFile( fname string ) *output_file {
+func InitFile( fname string ) *output_file {
     f, err := os.OpenFile( fname, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777 )
 
     if err != nil {
@@ -48,4 +48,3 @@ func initFile( fname string ) *output_file {
     return o
 }
 
-//TODO: need to figure out when to close

@@ -1,4 +1,4 @@
-package main
+package lzr
 
 import (
     "github.com/google/gopacket"
@@ -44,25 +44,27 @@ func constructEthLayer() (eth *layers.Ethernet) {
 }
 
 
-func constructData( synack packet_metadata, data []byte,ack bool, push bool) []byte {
+func constructData( handshake *Handshake, p packet_metadata, ack bool, push bool) ([]byte, []byte) {
 
     //data := []byte("\n")
+
+    data := handshake.getData( string(p.Saddr) )
 
 	ethernetLayer := constructEthLayer()
 
     ipLayer := &layers.IPv4{
-        SrcIP: net.ParseIP(synack.Daddr),
-        DstIP: net.ParseIP(synack.Saddr),
+        SrcIP: net.ParseIP(p.Daddr),
+        DstIP: net.ParseIP(p.Saddr),
     TTL : 64,
     Protocol: layers.IPProtocolTCP,
     Version: 4,
     }
 
     tcpLayer := &layers.TCP{
-        SrcPort: layers.TCPPort(synack.Dport),
-        DstPort: layers.TCPPort(synack.Sport),
-    Seq: uint32(synack.Acknum),
-    Ack: uint32(synack.Seqnum+1),
+        SrcPort: layers.TCPPort(p.Dport),
+        DstPort: layers.TCPPort(p.Sport),
+    Seq: uint32(p.Acknum),
+    Ack: uint32(p.Seqnum+1),
     Window: 65535,
     ACK: ack,
     PSH: push,
@@ -86,7 +88,7 @@ func constructData( synack packet_metadata, data []byte,ack bool, push bool) []b
 
 	}
     outPacket := buffer.Bytes()
-    return outPacket
+    return outPacket,data
 
 }
 

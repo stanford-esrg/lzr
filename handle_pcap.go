@@ -1,4 +1,4 @@
-package main
+package lzr
 
 import (
     "fmt"
@@ -9,7 +9,7 @@ import (
 
 
 
-func handlePcap( packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
+func HandlePcap( handshake *Handshake, packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
     writingQueue * chan packet_metadata, f *output_file ) {
 
 

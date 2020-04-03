@@ -1,4 +1,4 @@
-package main
+package lzr
 
 import (
     //"fmt"
@@ -6,7 +6,7 @@ import (
 )
 
 
-func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata,
+func HandleTimeout( handshake *Handshake, packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata,
     writingQueue * chan packet_metadata, f *output_file ) {
 
     //if packet has already been dealt with, return
@@ -18,12 +18,11 @@ func handleTimeout( packet packet_metadata, ipMeta * pState, timeoutQueue * chan
     if (packet.ExpectedRToLZR == DATA || packet.ExpectedRToLZR == ACK) {
         if packet.Counter < 2 {
             packet.incrementCounter()
-            data := getData( string(packet.Saddr) )
 			var dataPacket []byte
 			if packet.Counter  == 0 {
-				dataPacket = constructData( packet,data, true,false )
+				dataPacket,_ = constructData( handshake, packet,true,false )
 			} else {
-				dataPacket = constructData( packet,data, true,true )
+				dataPacket,_ = constructData( handshake, packet,true,true )
 			}
             err = handle.WritePacketData( dataPacket )
             if err != nil {

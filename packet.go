@@ -1,4 +1,4 @@
-package main
+package lzr
 
 import (
     "github.com/google/gopacket"

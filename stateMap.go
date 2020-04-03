@@ -1,7 +1,6 @@
-package main
+package lzr
 
 import (
-    //"sync"
     //"fmt"
 )
 
@@ -10,7 +9,7 @@ import (
  * storing received as to what was sent b/c want to know
  * perhaps need to wait some more 
  */
-func constructPacketStateMap() pState {
+func ConstructPacketStateMap() pState {
     ipMeta := NewpState()
     return ipMeta
 }

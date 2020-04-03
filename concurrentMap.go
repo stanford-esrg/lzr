@@ -1,5 +1,5 @@
 //https://github.com/orcaman/concurrent-map/blob/master/concurrent_map.go
-package main
+package lzr
 
 import (
 	"sync"
@@ -93,7 +93,7 @@ func (m pState) Remove(key string) {
 
 /* FOR PACKET_METADATA */
 //is Processing for goPackets
-func (m pState) isStartProcessing( p * packet_metadata ) ( bool,bool ) {
+func (m pState) IsStartProcessing( p * packet_metadata ) ( bool,bool ) {
     // Get shard
     shard := m.GetShard(p.Saddr)
     shard.Lock()
@@ -111,7 +111,7 @@ func (m pState) isStartProcessing( p * packet_metadata ) ( bool,bool ) {
 
 }
 
-func (m pState) startProcessing( p * packet_metadata ) bool {
+func (m pState) StartProcessing( p * packet_metadata ) bool {
 
     // Get shard
     shard := m.GetShard(p.Saddr)
@@ -127,7 +127,7 @@ func (m pState) startProcessing( p * packet_metadata ) bool {
 
 }
 
-func (m pState) finishProcessing( p * packet_metadata ) bool {
+func (m pState) FinishProcessing( p * packet_metadata ) bool {
 
     // Get shard
     shard := m.GetShard(p.Saddr)

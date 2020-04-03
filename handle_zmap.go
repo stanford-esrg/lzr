@@ -1,4 +1,4 @@
-package main
+package lzr
 
 import (
     "log"
@@ -7,7 +7,7 @@ import (
 
 
 
-func ackZMap( synack  packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
+func AckZMap( handshake *Handshake, synack  packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
     writingQueue * chan packet_metadata, f *output_file ) {
 
         //TODO: check that ip_metadata contains what we want (saddr,seq,ack,window)
@@ -18,12 +18,11 @@ func ackZMap( synack  packet_metadata, ipMeta * pState, timeoutQueue * chan pack
         }
 
         //Send Ack with Data
-        data := getData( string(synack.Saddr) )
-        ack := constructData( synack, data, true, false )
+        ack, payload := constructData( handshake, synack, true, false )
 
 		//add to map
 		synack.updateResponse( ACK )
-        synack.updateResponseL( data )
+        synack.updateResponseL( payload )
 		synack.updateTimestamp()
 		ipMeta.update( &synack )
         err := handle.WritePacketData(ack)
