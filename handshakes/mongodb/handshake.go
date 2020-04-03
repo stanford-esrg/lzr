@@ -3,6 +3,7 @@ package mongodb
 import (
     "gopkg.in/mgo.v2/bson"
     "encoding/binary"
+	"strings"
 	"lzr"
 )
 
@@ -41,6 +42,16 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
     return query_msg
 
 }
+
+func (h *HandshakeMod) Verify( data string ) string {
+
+    if strings.Contains( data, "maxBsonObjectSize" ){
+         return "mongodb"
+    }
+    return ""
+
+}
+
 
 func RegisterHandshake() {
     var h HandshakeMod

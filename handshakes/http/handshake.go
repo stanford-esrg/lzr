@@ -3,6 +3,7 @@ package http
 import (
     "net/http"
     "net/http/httputil"
+	"strings"
 	"lzr"
 )
 
@@ -20,6 +21,15 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
         req.Header.Set("Accept-Encoding","gzip")
         data, _ := httputil.DumpRequest(req, false)
     return data
+}
+
+func (h *HandshakeMod) Verify( data string ) string {
+
+    if strings.Contains( data, "HTTP" ){
+         return "http"
+	}
+	return ""
+
 }
 
 func RegisterHandshake() {
