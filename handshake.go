@@ -22,14 +22,19 @@ func GetHandshake( name string ) Handshake {
 }
 
 func fingerprintResponse( data string ) string {
-	var fingerprint string
+	fingerprint := ""
+	tfingerprint := ""
 	for _, hand := range handshakes {
-		fingerprint = hand.Verify( data )
-		if fingerprint != "" {
-			return fingerprint
+		tfingerprint = hand.Verify( data )
+		if tfingerprint != "" {
+			if fingerprint == "" {
+				fingerprint += tfingerprint
+			} else {
+				fingerprint += ("-" + tfingerprint)
+			}
 		}
 	}
-	return ""
+	return fingerprint
 }
 
 
