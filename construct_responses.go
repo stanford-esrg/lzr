@@ -43,6 +43,49 @@ func constructEthLayer() (eth *layers.Ethernet) {
 
 }
 
+func constructSYN( p packet_metadata ) []byte {
+
+	ethernetLayer := constructEthLayer()
+
+	ipLayer := &layers.IPv4{
+        SrcIP: net.ParseIP(p.Daddr),
+        DstIP: net.ParseIP(p.Saddr),
+		TTL : 64,
+		Protocol: layers.IPProtocolTCP,
+		Version: 4,
+    }
+
+	tcpLayer := &layers.TCP{
+		//change srcport slightly
+        SrcPort: layers.TCPPort(p.Dport),
+        DstPort: layers.TCPPort(p.Sport),
+		Seq: uint32(p.Acknum),
+		Ack: 0,
+		Window: 65535,
+		SYN: true,
+    }
+
+    buffer := gopacket.NewSerializeBuffer()
+    options := gopacket.SerializeOptions{
+        ComputeChecksums: true,
+        FixLengths:       true,
+    }
+    tcpLayer.SetNetworkLayerForChecksum(ipLayer)
+
+    // And create the packet with the layers
+    if err := gopacket.SerializeLayers(buffer, options,
+		ethernetLayer,
+        ipLayer,
+        tcpLayer,
+    ); err != nil {
+        log.Fatal(err)
+
+	}
+    outPacket := buffer.Bytes()
+	return outPacket
+}
+
+
 
 func constructData( handshake Handshake, p packet_metadata, ack bool, push bool) ([]byte, []byte) {
 
@@ -55,19 +98,19 @@ func constructData( handshake Handshake, p packet_metadata, ack bool, push bool)
     ipLayer := &layers.IPv4{
         SrcIP: net.ParseIP(p.Daddr),
         DstIP: net.ParseIP(p.Saddr),
-    TTL : 64,
-    Protocol: layers.IPProtocolTCP,
-    Version: 4,
+		TTL : 64,
+		Protocol: layers.IPProtocolTCP,
+		Version: 4,
     }
 
     tcpLayer := &layers.TCP{
         SrcPort: layers.TCPPort(p.Dport),
         DstPort: layers.TCPPort(p.Sport),
-    Seq: uint32(p.Acknum),
-    Ack: uint32(p.Seqnum+1),
-    Window: 65535,
-    ACK: ack,
-    PSH: push,
+		Seq: uint32(p.Acknum),
+		Ack: uint32(p.Seqnum+1),
+		Window: 65535,
+		ACK: ack,
+		PSH: push,
     }
 
     buffer := gopacket.NewSerializeBuffer()

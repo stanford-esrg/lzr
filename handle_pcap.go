@@ -1,7 +1,7 @@
 package lzr
 
 import (
-    "fmt"
+    //"fmt"
     "log"
 )
 
@@ -9,28 +9,20 @@ import (
 
 
 
-func HandlePcap( handshake Handshake, packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
-    writingQueue * chan packet_metadata, f *output_file ) {
+func HandlePcap( handshakes []string, packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
+    writingQueue * chan packet_metadata ) {
 
 
     //packet.PCapTracker -= 1
 
     //verify 
 	if !(ipMeta.verifyScanningIP( &packet )) {
-		if packet.Saddr == "178.190.236.145" {
-			fmt.Println("not verified")
-			fmt.Println(packet)
-		}
         packet.incrementCounter()
 		packet.updateTimestamp()
         packet.validationFail()
         *timeoutQueue <-packet
 		return
 	}
-
-		if packet.Saddr == "222.255.220.94" {
-			fmt.Println(packet)
-		}
 
      //exit condition
      if len(packet.Data) > 0 {
@@ -47,17 +39,12 @@ func HandlePcap( handshake Handshake, packet packet_metadata, ipMeta * pState, t
         return
 
     }
-    //for every closed connection, record
+    //deal with closed connection 
     if packet.RST || packet.FIN {
 
-        ipMeta.remove(packet)
-        *writingQueue <- packet
-        //close connection
-        if packet.FIN {
-            rst := constructRST(packet)
-            handle.WritePacketData(rst)
-        }
-        return
+		handleExpired( packet, ipMeta, writingQueue )
+		return
+
      }
      //for every ack received, mark as accepting data
      if (!packet.SYN) && packet.ACK {
@@ -71,5 +58,11 @@ func HandlePcap( handshake Handshake, packet packet_metadata, ipMeta * pState, t
          *timeoutQueue <-packet
 		  return
     }
+
+	//for every s/a send the appropriate ack
+	if (packet.SYN) && packet.ACK {
+
+	}
+
 }
 

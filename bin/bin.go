@@ -3,7 +3,6 @@ package bin
 import (
     "time"
     //"context"
-    //"golang.org/x/sync/semaphore"
 	"runtime/pprof"
 	"sync"
 	"os"
@@ -29,14 +28,12 @@ func LZRMain() {
 	}
 
 	//initalize
-	handshake := lzr.GetHandshake(options.Handshake) // ??? 
 	ipMeta := lzr.ConstructPacketStateMap()
     f := lzr.InitFile( options.Filename )
-    //sem := semaphore.NewWeighted( int64(options.Workers) )
 
     writingQueue := lzr.ConstructWritingQueue( options.Workers )
     zmapIncoming := lzr.ConstructZMapRoutine( options.Workers )
-    pcapIncoming, pcapQueue := lzr.ConstructPcapRoutine( options.Workers ) //pcapQueue
+    pcapIncoming, pcapQueue := lzr.ConstructPcapRoutine( options.Workers )
     timeoutQueue := lzr.ConstructTimeoutQueue( options.Workers )
     timeoutIncoming := lzr.PollTimeoutRoutine(
         &ipMeta,timeoutQueue, options.Workers, options.Timeout )
@@ -63,7 +60,7 @@ func LZRMain() {
     for i := 0; i < options.Workers; i ++ {
         go func( i int ) {
 	        for input := range zmapIncoming {
-				        lzr.AckZMap( handshake, input, &ipMeta, &timeoutQueue, &writingQueue, f )
+				        lzr.SendAck( options.Handshakes, input, &ipMeta, &timeoutQueue, &writingQueue )
                         ipMeta.FinishProcessing( &input )
             }
 
@@ -92,7 +89,7 @@ func LZRMain() {
                             pcapQueue <- input
                             continue
                         }
-				        lzr.HandlePcap(handshake, input, &ipMeta, &timeoutQueue, &writingQueue, f )
+				        lzr.HandlePcap(options.Handshakes, input, &ipMeta, &timeoutQueue, &writingQueue )
                         ipMeta.FinishProcessing( &input )
             }
         }()
@@ -110,11 +107,11 @@ func LZRMain() {
                         //return
                     }
                     if !processing {
-                        timeoutQueue <- input 
+                        timeoutQueue <- input
                         continue
                         //return
                     }
-                    lzr.HandleTimeout( handshake, input, &ipMeta, &timeoutQueue, &writingQueue, f )
+                    lzr.HandleTimeout( options.Handshakes, input, &ipMeta, &timeoutQueue, &writingQueue )
                     ipMeta.FinishProcessing( &input )
 		    }
     }()
@@ -123,19 +120,6 @@ func LZRMain() {
 	//OR for debugging, within 5 seconds
 	zmapDone.Wait()
     for {
-		/*select {
-			case <-time.After(30 * time.Second):
-
-				if options.MemProfile != "" {
-					f, err := os.Create(options.MemProfile)
-					if err != nil {
-						log.Fatal(err)
-					}
-					pprof.WriteHeapProfile(f)
-					f.Close()
-				}
-				return
-		}*/
        if done && len(writingQueue) == 0 {
 			//TODO: need to properly close file
             return

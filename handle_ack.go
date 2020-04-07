@@ -7,8 +7,8 @@ import (
 
 
 
-func AckZMap( handshake Handshake, synack  packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
-    writingQueue * chan packet_metadata, f *output_file ) {
+func SendAck( handshakes []string, synack  packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
+    writingQueue * chan packet_metadata ) {
 
         //TODO: check that ip_metadata contains what we want (saddr,seq,ack,window)
         if synack.windowZero() {
@@ -16,6 +16,9 @@ func AckZMap( handshake Handshake, synack  packet_metadata, ipMeta * pState, tim
             *writingQueue <- synack
             return
         }
+
+		//grab which handshake
+		handshake := GetHandshake( handshakes[ synack.getHandshakeNum() ] )
 
         //Send Ack with Data
         ack, payload := constructData( handshake, synack, true, false )

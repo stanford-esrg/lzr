@@ -6,6 +6,7 @@ import (
     "time"
 	"encoding/json"
     "log"
+	"math"
 	//"fmt"
 )
 
@@ -35,6 +36,7 @@ type packet_metadata struct {
     PUSH            bool
     ValFail         bool
 
+    HandshakeNum	int
     Fingerprint     string
 	Timestamp	    time.Time
     LZRResponseL    int
@@ -63,7 +65,6 @@ func ReadLayers( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
         PUSH: tcp.PSH,
         Data: string(tcp.Payload),
         Timestamp: time.Now(),
-        ExpectedRToLZR: "",
         Counter: 0,
 		Processing: true,
     }
@@ -97,15 +98,36 @@ func convertToPacket ( input string ) *packet_metadata  {
         return synack
 }
 
+func (packet * packet_metadata) updatePacketFlow()  {
 
+	//creating a new sourceport to send from 
+	//and incrementing the handshake we are trying
 
-func (synack *packet_metadata) windowZero() bool {
-    if synack.Window == 0 {
+	newsrcprt := math.Mod(float64(packet.Dport),65535)+1
+	packet.Dport = int(newsrcprt)
+	packet.HandshakeNum += 1
+	packet.ExpectedRToLZR = SYN_ACK
+
+}
+
+func (packet * packet_metadata) windowZero() bool {
+    if packet.Window == 0 {
         return true
     }
     return false
 }
 
+func (packet * packet_metadata) setHandshakeNum( h int ) {
+
+    packet.HandshakeNum = h
+
+}
+
+func (packet * packet_metadata) getHandshakeNum() int {
+
+    return packet.HandshakeNum
+
+}
 
 func (packet * packet_metadata) updateResponse( state string ) {
 

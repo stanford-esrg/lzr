@@ -6,8 +6,8 @@ import (
 )
 
 
-func HandleTimeout( handshake Handshake, packet packet_metadata, ipMeta * pState,
-	timeoutQueue * chan packet_metadata, writingQueue * chan packet_metadata, f *output_file ) {
+func HandleTimeout( handshakes []string, packet packet_metadata, ipMeta * pState,
+	timeoutQueue * chan packet_metadata, writingQueue * chan packet_metadata ) {
 
     //if packet has already been dealt with, return
     if !ipMeta.metaContains( &packet ) {
@@ -18,12 +18,13 @@ func HandleTimeout( handshake Handshake, packet packet_metadata, ipMeta * pState
     if (packet.ExpectedRToLZR == DATA || packet.ExpectedRToLZR == ACK) {
         if packet.Counter < 2 {
             packet.incrementCounter()
-			var dataPacket []byte
-			if packet.Counter  == 0 {
-				dataPacket,_ = constructData( handshake, packet,true,false )
-			} else {
-				dataPacket,_ = constructData( handshake, packet,true,true )
-			}
+
+			//grab which handshake
+			handshake := GetHandshake(handshakes[packet.getHandshakeNum()])
+
+			//if packet counter is 0 then dont specify the push flag just yet
+			dataPacket,_ := constructData( handshake, packet,true,!(packet.Counter  == 0))
+
             err = handle.WritePacketData( dataPacket )
             if err != nil {
                 log.Fatal(err)
@@ -36,20 +37,10 @@ func HandleTimeout( handshake Handshake, packet packet_metadata, ipMeta * pState
 	        return
         }
 	}
-    //if pcap still has something relevant to this ip, put it back on timeout queue 
-    //TODO: update timestamp or just to the back of Q is good enough??
-    /*if packet.PCapTracker != 0 {
-        *timeoutQueue <- packet
-    }*/
 
-    //else, we give up, just record. 
-    //remove from state, we are done now
-    ipMeta.remove(packet)
-	//fmt.Println("timeout Removed <- ",string(packet.Saddr))
-    *writingQueue <- packet
-    //close connection
-    rst := constructRST(packet)
-    err = handle.WritePacketData(rst)
+	//this handshake timed-out 
+	handleExpired( packet, ipMeta, writingQueue )
+
     return
 
 }
