@@ -20,7 +20,12 @@ func HandleTimeout( handshakes []string, packet packet_metadata, ipMeta * pState
             packet.incrementCounter()
 
 			//grab which handshake
-			handshake := GetHandshake(handshakes[packet.getHandshakeNum()])
+			pStored, inMap := ipMeta.find(&packet)
+			handshakeNum := 0
+			if inMap {
+				handshakeNum = pStored.getHandshakeNum()
+			}
+			handshake := GetHandshake( handshakes[ handshakeNum ] )
 
 			//if packet counter is 0 then dont specify the push flag just yet
 			dataPacket,_ := constructData( handshake, packet,true,!(packet.Counter  == 0))
@@ -39,7 +44,7 @@ func HandleTimeout( handshakes []string, packet packet_metadata, ipMeta * pState
 	}
 
 	//this handshake timed-out 
-	handleExpired( packet, ipMeta, writingQueue )
+	handleExpired( handshakes, &packet, ipMeta, writingQueue )
 
     return
 

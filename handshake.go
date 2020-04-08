@@ -18,9 +18,14 @@ func AddHandshake( name string, h Handshake ) {
 }
 
 func GetHandshake( name string ) Handshake {
-	return handshakes[name]
+	h, ok := handshakes[name]
+	if !ok {
+		panic(name + " not found")
+	}
+	return h
 }
 
+//TODO: implement some type of hiearchy for labeling
 func fingerprintResponse( data string ) string {
 	fingerprint := ""
 	tfingerprint := ""

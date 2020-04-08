@@ -8,6 +8,7 @@ import (
 	"os"
 	"log"
 	"lzr"
+	//"fmt"
 )
 
 func LZRMain() {

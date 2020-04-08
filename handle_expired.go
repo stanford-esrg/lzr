@@ -1,12 +1,16 @@
 package lzr
 
-func handleExpired( packet packet_metadata, ipMeta * pState, writingQueue * chan packet_metadata ) {
+import (
+	//"fmt"
+)
+
+func handleExpired( handshakes []string, packet * packet_metadata, ipMeta * pState, writingQueue * chan packet_metadata ) {
 
 	// first close the existing connection unless
 	// its already been terminated
 	if !packet.RST {
 
-		rst := constructRST( packet )
+		rst := constructRST( *packet )
 		err = handle.WritePacketData(rst)
 
 	}
@@ -15,14 +19,14 @@ func handleExpired( packet packet_metadata, ipMeta * pState, writingQueue * chan
 	if packet.getHandshakeNum() >= len( handshakes ) {
 
 		//remove from state, we are done now
-		ipMeta.remove(packet)
-		*writingQueue <- packet
+		ipMeta.remove(*packet)
+		*writingQueue <- *packet
 
 	} else { // lets try another handshake
 
 		packet.updatePacketFlow()
-		ipMeta.update( &packet )
-		syn := constructSYN( packet )
+		ipMeta.update( packet )
+		syn := constructSYN( *packet )
 		// send SYN packet if so and start the whole process again
 		err = handle.WritePacketData(syn)
 		if err != nil {

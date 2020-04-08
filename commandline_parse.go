@@ -50,11 +50,15 @@ func Parse() *options {
 		MemProfile: *memprofile,
 		Handshakes: make([]string, strings.Count(*handshake,",")+1),
     }
-
-	for _, h := range strings.Split( *handshake, "," ) {
-		opt.Handshakes = append(opt.Handshakes, h)
+	if !strings.Contains( *handshake, ",")	{
+		opt.Handshakes[0] = *handshake
+	} else {
+		i := 0
+		for _, h := range strings.Split( *handshake, "," ) {
+			opt.Handshakes[i] = h
+			i += 1
+		}
 	}
-
     fmt.Println("Writing results to file: ", *filename)
     fmt.Println("Handshakes: ", *handshake)
 	if *memprofile != "" {

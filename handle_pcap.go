@@ -42,7 +42,7 @@ func HandlePcap( handshakes []string, packet packet_metadata, ipMeta * pState, t
     //deal with closed connection 
     if packet.RST || packet.FIN {
 
-		handleExpired( packet, ipMeta, writingQueue )
+		handleExpired( handshakes,&packet, ipMeta, writingQueue )
 		return
 
      }
@@ -60,7 +60,8 @@ func HandlePcap( handshakes []string, packet packet_metadata, ipMeta * pState, t
     }
 
 	//for every s/a send the appropriate ack
-	if (packet.SYN) && packet.ACK {
+	if packet.SYN && packet.ACK {
+		SendAck( handshakes, packet, ipMeta, timeoutQueue, writingQueue )
 
 	}
 

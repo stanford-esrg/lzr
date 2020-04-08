@@ -59,8 +59,8 @@ func constructSYN( p packet_metadata ) []byte {
 		//change srcport slightly
         SrcPort: layers.TCPPort(p.Dport),
         DstPort: layers.TCPPort(p.Sport),
-		Seq: uint32(p.Acknum),
-		Ack: 0,
+		Seq: uint32(p.Seqnum),
+		Ack: uint32(p.Acknum),
 		Window: 65535,
 		SYN: true,
     }

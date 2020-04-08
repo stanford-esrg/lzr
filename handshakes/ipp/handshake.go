@@ -26,10 +26,13 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
 
 func (h *HandshakeMod) Verify( data string ) string {
 
-    if strings.Contains( data, "application/ipp" ) &&
-		 strings.Contains( data, "200 OK" ) &&
-		 strings.Contains( data, "attributes-charset" ){
-         return "ipp"
+    if strings.Contains( data, "ipp" ) &&
+		 strings.Contains( data, "200 OK" ) {
+
+		 if strings.Contains( data, "attributes-charset" ) ||
+			strings.Contains( data, "print" ){
+			return "ipp"
+		}
 	}
 	return ""
 

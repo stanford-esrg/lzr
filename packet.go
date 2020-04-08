@@ -107,6 +107,8 @@ func (packet * packet_metadata) updatePacketFlow()  {
 	packet.Dport = int(newsrcprt)
 	packet.HandshakeNum += 1
 	packet.ExpectedRToLZR = SYN_ACK
+	packet.Seqnum = packet.Acknum
+	packet.Acknum = 0
 
 }
 
