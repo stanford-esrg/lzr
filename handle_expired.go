@@ -16,7 +16,7 @@ func handleExpired( handshakes []string, packet * packet_metadata, ipMeta * pSta
 	}
 
 	//if we are all out of handshakes to try, so sad. 
-	if packet.getHandshakeNum() >= len( handshakes ) {
+	if packet.getHandshakeNum() >= (len( handshakes ) - 1){
 
 		//remove from state, we are done now
 		ipMeta.remove(*packet)
