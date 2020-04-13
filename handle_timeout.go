@@ -16,7 +16,7 @@ func HandleTimeout( handshakes []string, packet packet_metadata, ipMeta * pState
 
     //send again with just data (not apart of handshake)
     if (packet.ExpectedRToLZR == DATA || packet.ExpectedRToLZR == ACK) {
-        if packet.Counter < 2 {
+        if packet.Counter < 1 {
             packet.incrementCounter()
 
 

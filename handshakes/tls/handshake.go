@@ -31,8 +31,8 @@ func (h *HandshakeMod) Verify( data string ) string {
 		return ""
 	}
 	//TODO: what other versions of tls??
-	if bytes.Equal([]byte(data[0:3]),
-		[]byte{0x16,0x03,0x03 } ) {
+	if bytes.Equal([]byte(data[0:2]),
+		[]byte{0x16,0x03} ) {
 		return "tls"
 	}
 	return ""
