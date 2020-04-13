@@ -18,11 +18,7 @@ func SendAck( handshakes []string, synack  packet_metadata, ipMeta * pState, tim
 	}
 
 	//grab which handshake
-	pStored, inMap := ipMeta.find(&synack)
-	handshakeNum := 0
-	if inMap {
-		handshakeNum = pStored.getHandshakeNum()
-	}
+	handshakeNum := ipMeta.getHandshake(&synack)
 	handshake := GetHandshake( handshakes[ handshakeNum ] )
 
 	//Send Ack with Data

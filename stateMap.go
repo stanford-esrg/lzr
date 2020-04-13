@@ -21,26 +21,58 @@ func (ipMeta * pState) metaContains( p * packet_metadata ) bool {
 
 
 func (ipMeta * pState) find(p * packet_metadata) ( *packet_metadata, bool ) {
-    return ipMeta.Get(p.Saddr)
+    ps, ok := ipMeta.Get(p.Saddr)
+	if ok {
+		return ps.Packet, ok
+	}
+    return nil,ok
 }
 
-func (ipMeta * pState) update( packet * packet_metadata ) {
-    ipMeta.Insert( packet.Saddr, packet )
+func (ipMeta * pState) update( p * packet_metadata ) {
+
+    ps, ok := ipMeta.Get(p.Saddr)
+	if !ok {
+		ps = &packet_state {
+			Packet: p,
+			HandshakeNum: 0,
+		}
+	} else {
+		ps.Packet = p
+	}
+    ipMeta.Insert( p.Saddr, ps )
 }
 
-func (ipMeta * pState) incrementCounter( packet * packet_metadata ) bool {
 
-    p_out, ok := ipMeta.Get(packet.Saddr)
+func (ipMeta * pState) incHandshake( p * packet_metadata ) bool {
+    ps, ok := ipMeta.Get(p.Saddr)
+	if ok {
+		ps.HandshakeNum += 1
+		ipMeta.Insert( p.Saddr, ps )
+	}
+	return ok
+}
+
+func (ipMeta * pState) getHandshake( p * packet_metadata ) int {
+    ps, ok := ipMeta.Get(p.Saddr)
+    if ok {
+        return ps.HandshakeNum
+    }
+    return 0
+}
+
+func (ipMeta * pState) incrementCounter( p * packet_metadata ) bool {
+
+    ps, ok := ipMeta.Get(p.Saddr)
     if !ok {
         return false
     }
-    p_out.incrementCounter()
-    ipMeta.Insert( p_out.Saddr, p_out )
+	ps.Packet.incrementCounter()
+    ipMeta.Insert( ps.Packet.Saddr, ps )
     return true
 }
 
 
-func (ipMeta * pState) remove( packet packet_metadata) {
+func (ipMeta * pState) remove( packet packet_metadata ) {
     ipMeta.Remove(packet.Saddr)
     return
 }
@@ -48,11 +80,11 @@ func (ipMeta * pState) remove( packet packet_metadata) {
 func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 
 	//first check that IP itself is being scanned
-    pMap, ok := ipMeta.Get(pRecv.Saddr)
-
+    ps, ok := ipMeta.Get(pRecv.Saddr)
 	if !ok {
 		return false
 	}
+	pMap := ps.Packet
 
 	//second check that 4-tuple matches
 	//TODO: check seq & ack and check state that we expect(?)

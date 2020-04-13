@@ -18,6 +18,11 @@ var (
 
 )
 
+type packet_state struct {
+	HandshakeNum	int
+	Packet			*packet_metadata
+}
+
 type packet_metadata struct {
 
 	Saddr		    string	`json:"saddr"`
@@ -67,6 +72,7 @@ func ReadLayers( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
         Timestamp: time.Now(),
         Counter: 0,
 		Processing: true,
+		HandshakeNum: 0,
     }
 	return packet
 }
@@ -119,14 +125,13 @@ func (packet * packet_metadata) windowZero() bool {
     return false
 }
 
-func (packet * packet_metadata) setHandshakeNum( h int ) {
+func (packet * packet_metadata) syncHandshakeNum( h int ) {
 
-    packet.HandshakeNum = h
+	packet.HandshakeNum = h
 
 }
 
 func (packet * packet_metadata) getHandshakeNum() int {
-
     return packet.HandshakeNum
 
 }

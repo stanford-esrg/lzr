@@ -39,6 +39,8 @@ func LZRMain() {
     timeoutIncoming := lzr.PollTimeoutRoutine(
         &ipMeta,timeoutQueue, options.Workers, options.Timeout )
     done := false
+	writing := false
+
 
     // record to file
     go func() {
@@ -46,9 +48,10 @@ func LZRMain() {
             select {
                 case input := <-writingQueue:
 					//fmt.Println("writing")
-                    f.Record( input )
-                 case <-time.After(2 * time.Second):
-					//fmt.Println(": Something wrong with reading from writing")
+					writing = true
+                    f.Record( input, options.Handshakes )
+					writing = false
+                 default:
                     continue
                 }
         }
@@ -121,7 +124,7 @@ func LZRMain() {
 	//OR for debugging, within 5 seconds
 	zmapDone.Wait()
     for {
-       if done && len(writingQueue) == 0 {
+       if done && len(writingQueue) == 0 && !writing {
 			//TODO: need to properly close file
             return
        }

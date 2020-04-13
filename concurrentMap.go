@@ -14,9 +14,11 @@ var SHARD_COUNT = 4096
 // To avoid lock bottlenecks this map is dived to several (SHARD_COUNT) map shards.
 type pState []*pStateShared
 
+
+
 // A "thread" safe string to anything map.
 type pStateShared struct {
-	items        map[string]*packet_metadata
+	items        map[string]*packet_state
 	sync.RWMutex // Read Write mutex, guards access to internal map.
 }
 
@@ -24,7 +26,7 @@ type pStateShared struct {
 func NewpState() pState {
 	m := make(pState, SHARD_COUNT)
 	for i := 0; i < SHARD_COUNT; i++ {
-		m[i] = &pStateShared{items: make(map[string]*packet_metadata)}
+		m[i] = &pStateShared{items: make(map[string]*packet_state)}
 	}
 	return m
 }
@@ -35,23 +37,23 @@ func (m pState) GetShard(key string) *pStateShared {
 }
 
 // Insert or Update - updates existing element or inserts a new one using UpsertCb
-func (m pState) Insert(key string, value * packet_metadata) (res * packet_metadata) {
+func (m pState) Insert(key string, p * packet_state) {
 	shard := m.GetShard(key)
 	shard.Lock()
-	shard.items[key] = value
+
+	shard.items[key] = p
 	shard.Unlock()
-	return res
 }
 
 // Get retrieves an element from map under given key.
-func (m pState) Get(key string) (*packet_metadata, bool) {
+func (m pState) Get(key string) (*packet_state, bool) {
 	// Get shard
 	shard := m.GetShard(key)
 	shard.RLock()
 	// Get item from shard.
-	val, ok := shard.items[key]
+	pstate, ok := shard.items[key]
 	shard.RUnlock()
-	return val, ok
+	return pstate, ok
 }
 
 // Count returns the number of elements within the map.
@@ -103,8 +105,8 @@ func (m pState) IsStartProcessing( p * packet_metadata ) ( bool,bool ) {
     if !ok {
         return false,false
     }
-	if !p_out.Processing {
-		p_out.startProcessing()
+	if !p_out.Packet.Processing {
+		p_out.Packet.startProcessing()
 		return true,true
 	}
     return true, false
@@ -122,7 +124,7 @@ func (m pState) StartProcessing( p * packet_metadata ) bool {
     if !ok {
         return false
     }
-    p_out.startProcessing()
+    p_out.Packet.startProcessing()
     return ok
 
 }
@@ -138,7 +140,7 @@ func (m pState) FinishProcessing( p * packet_metadata ) bool {
     if !ok {
         return false
     }
-    p_out.finishedProcessing()
+    p_out.Packet.finishedProcessing()
     return ok
 
 }

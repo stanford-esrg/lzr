@@ -26,8 +26,8 @@ func HandlePcap( handshakes []string, packet packet_metadata, ipMeta * pState, t
 
      //exit condition
      if len(packet.Data) > 0 {
-        //remove from state, we are done now
-        ipMeta.remove(packet)
+		handshakeNum := ipMeta.getHandshake( &packet )
+		packet.syncHandshakeNum( handshakeNum )
         packet.fingerprintData()
         *writingQueue <- packet
         //close connection
@@ -36,6 +36,8 @@ func HandlePcap( handshakes []string, packet packet_metadata, ipMeta * pState, t
         if err != nil {
             log.Fatal(err)
         }
+        //remove from state, we are done now
+        ipMeta.remove(packet)
         return
 
     }
@@ -61,6 +63,7 @@ func HandlePcap( handshakes []string, packet packet_metadata, ipMeta * pState, t
 
 	//for every s/a send the appropriate ack
 	if packet.SYN && packet.ACK {
+
 		SendAck( handshakes, packet, ipMeta, timeoutQueue, writingQueue )
 
 	}

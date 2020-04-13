@@ -4,7 +4,7 @@ import (
     "encoding/json"
     "log"
     "os"
-    //"fmt"
+    "fmt"
 )
 
 type output_file struct {
@@ -14,7 +14,11 @@ type output_file struct {
 }
 
 
-func ( f *output_file ) Record( packet packet_metadata ) {
+func ( f *output_file ) Record( packet packet_metadata, handshakes []string ) {
+
+	if packet.Data != "" {
+		fmt.Println( packet.Saddr + ", , " + handshakes[ packet.HandshakeNum ] )
+	}
 
     out, _ := json.Marshal( packet )
     _,err := (f.F).WriteString( string(out) )

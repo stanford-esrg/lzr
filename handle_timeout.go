@@ -19,12 +19,9 @@ func HandleTimeout( handshakes []string, packet packet_metadata, ipMeta * pState
         if packet.Counter < 2 {
             packet.incrementCounter()
 
+
 			//grab which handshake
-			pStored, inMap := ipMeta.find(&packet)
-			handshakeNum := 0
-			if inMap {
-				handshakeNum = pStored.getHandshakeNum()
-			}
+			handshakeNum := ipMeta.getHandshake( &packet )
 			handshake := GetHandshake( handshakes[ handshakeNum ] )
 
 			//if packet counter is 0 then dont specify the push flag just yet
