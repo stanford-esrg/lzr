@@ -78,11 +78,11 @@ func ReadLayers( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
 }
 
 
-func convertToPacketM ( packet gopacket.Packet ) ( *packet_metadata ) {
-        tcpLayer := packet.Layer(layers.LayerTypeTCP)
+func convertToPacketM ( packet *gopacket.Packet ) ( *packet_metadata ) {
+        tcpLayer := (*packet).Layer(layers.LayerTypeTCP)
         if tcpLayer != nil {
             tcp, _ := tcpLayer.(*layers.TCP)
-            ipLayer := packet.Layer(layers.LayerTypeIPv4)
+            ipLayer := (*packet).Layer(layers.LayerTypeIPv4)
             ip, _ := ipLayer.(*layers.IPv4)
             metapacket := ReadLayers(ip,tcp)
             return metapacket

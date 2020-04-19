@@ -72,7 +72,7 @@ func (ipMeta * pState) incrementCounter( p * packet_metadata ) bool {
 }
 
 
-func (ipMeta * pState) remove( packet packet_metadata ) {
+func (ipMeta * pState) remove( packet *packet_metadata ) {
     ipMeta.Remove(packet.Saddr)
     return
 }

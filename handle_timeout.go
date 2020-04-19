@@ -6,11 +6,11 @@ import (
 )
 
 
-func HandleTimeout( handshakes []string, packet packet_metadata, ipMeta * pState,
-	timeoutQueue * chan packet_metadata, writingQueue * chan packet_metadata ) {
+func HandleTimeout( handshakes []string, packet *packet_metadata, ipMeta * pState,
+	timeoutQueue * chan *packet_metadata, writingQueue * chan *packet_metadata ) {
 
     //if packet has already been dealt with, return
-    if !ipMeta.metaContains( &packet ) {
+    if !ipMeta.metaContains( packet ) {
         return
     }
 
@@ -21,7 +21,7 @@ func HandleTimeout( handshakes []string, packet packet_metadata, ipMeta * pState
 
 
 			//grab which handshake
-			handshakeNum := ipMeta.getHandshake( &packet )
+			handshakeNum := ipMeta.getHandshake( packet )
 			handshake := GetHandshake( handshakes[ handshakeNum ] )
 
 			//if packet counter is 0 then dont specify the push flag just yet
@@ -32,7 +32,7 @@ func HandleTimeout( handshakes []string, packet packet_metadata, ipMeta * pState
                 log.Fatal(err)
             }
 		    packet.updateTimestamp()
-		    ipMeta.update( &packet )
+		    ipMeta.update( packet )
 
 		    packet.updateTimestamp()
             *timeoutQueue <- packet
@@ -41,7 +41,7 @@ func HandleTimeout( handshakes []string, packet packet_metadata, ipMeta * pState
 	}
 
 	//this handshake timed-out 
-	handleExpired( handshakes, &packet, ipMeta, writingQueue )
+	handleExpired( handshakes, packet, ipMeta, writingQueue )
 
     return
 

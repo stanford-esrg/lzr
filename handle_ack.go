@@ -7,8 +7,8 @@ import (
 
 
 
-func SendAck( handshakes []string, synack  packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata,
-    writingQueue * chan packet_metadata ) {
+func SendAck( handshakes []string, synack  *packet_metadata, ipMeta * pState, timeoutQueue * chan *packet_metadata,
+    writingQueue * chan *packet_metadata ) {
 
 	//TODO: check that ip_metadata contains what we want (saddr,seq,ack,window)
 	if synack.windowZero() {
@@ -18,7 +18,7 @@ func SendAck( handshakes []string, synack  packet_metadata, ipMeta * pState, tim
 	}
 
 	//grab which handshake
-	handshakeNum := ipMeta.getHandshake(&synack)
+	handshakeNum := ipMeta.getHandshake(synack)
 	handshake := GetHandshake( handshakes[ handshakeNum ] )
 
 	//Send Ack with Data
@@ -27,7 +27,7 @@ func SendAck( handshakes []string, synack  packet_metadata, ipMeta * pState, tim
 	synack.updateResponse( ACK )
 	synack.updateResponseL( payload )
 	synack.updateTimestamp()
-	ipMeta.update( &synack )
+	ipMeta.update( synack )
 	err := handle.WritePacketData(ack)
 	if err != nil {
 		log.Fatal(err)

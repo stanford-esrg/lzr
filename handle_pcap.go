@@ -9,14 +9,14 @@ import (
 
 
 
-func HandlePcap( handshakes []string, packet packet_metadata, ipMeta * pState, timeoutQueue * chan packet_metadata, 
-    writingQueue * chan packet_metadata ) {
+func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, timeoutQueue * chan *packet_metadata, 
+    writingQueue * chan *packet_metadata ) {
 
 
     //packet.PCapTracker -= 1
 
     //verify 
-	if !(ipMeta.verifyScanningIP( &packet )) {
+	if !(ipMeta.verifyScanningIP( packet )) {
         packet.incrementCounter()
 		packet.updateTimestamp()
         packet.validationFail()
@@ -26,7 +26,7 @@ func HandlePcap( handshakes []string, packet packet_metadata, ipMeta * pState, t
 
      //exit condition
      if len(packet.Data) > 0 {
-		handshakeNum := ipMeta.getHandshake( &packet )
+		handshakeNum := ipMeta.getHandshake( packet )
 		packet.syncHandshakeNum( handshakeNum )
         packet.fingerprintData()
         *writingQueue <- packet
@@ -44,7 +44,7 @@ func HandlePcap( handshakes []string, packet packet_metadata, ipMeta * pState, t
     //deal with closed connection 
     if packet.RST || packet.FIN {
 
-		handleExpired( handshakes,&packet, ipMeta, writingQueue )
+		handleExpired( handshakes,packet, ipMeta, writingQueue )
 		return
 
      }
@@ -54,7 +54,7 @@ func HandlePcap( handshakes []string, packet packet_metadata, ipMeta * pState, t
 		 //add to map
 		 packet.updateResponse(DATA)
 		 packet.updateTimestamp()
-		 ipMeta.update(&packet)
+		 ipMeta.update(packet)
 
 		 //add to map
          *timeoutQueue <-packet

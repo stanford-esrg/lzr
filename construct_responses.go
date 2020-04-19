@@ -11,7 +11,9 @@ import (
 
 
 /*  Packet Ops */
-
+var (
+	source_mac = getSourceMacAddr()
+)
 func getSourceMacAddr() (addr net.HardwareAddr) {
 	interfaces, err := net.Interfaces()
 	if err == nil {
@@ -33,7 +35,7 @@ func getHostMacAddr() (addr net.HardwareAddr) {
 func constructEthLayer() (eth *layers.Ethernet) {
 
     ethernetLayer := &layers.Ethernet{
-        SrcMAC: getSourceMacAddr(),
+        SrcMAC: source_mac,
         DstMAC: getHostMacAddr(),
         //EthernetType: layers.EthernetTypeARP,
         EthernetType: layers.EthernetTypeIPv4,
@@ -43,7 +45,7 @@ func constructEthLayer() (eth *layers.Ethernet) {
 
 }
 
-func constructSYN( p packet_metadata ) []byte {
+func constructSYN( p *packet_metadata ) []byte {
 
 	ethernetLayer := constructEthLayer()
 
@@ -87,7 +89,7 @@ func constructSYN( p packet_metadata ) []byte {
 
 
 
-func constructData( handshake Handshake, p packet_metadata, ack bool, push bool) ([]byte, []byte) {
+func constructData( handshake Handshake, p *packet_metadata, ack bool, push bool) ([]byte, []byte) {
 
     //data := []byte("\n")
 
@@ -136,7 +138,7 @@ func constructData( handshake Handshake, p packet_metadata, ack bool, push bool)
 }
 
 
-func constructRST( ack packet_metadata ) []byte {
+func constructRST( ack *packet_metadata ) []byte {
 
 	ethernetLayer := constructEthLayer()
 
