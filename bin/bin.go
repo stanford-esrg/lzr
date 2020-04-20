@@ -47,16 +47,12 @@ func LZRMain() {
         for {
             select {
                 case input := <-writingQueue:
-					//fmt.Println("writing")
 					writing = true
-                    f.Record( input, options.Handshakes )
+                    f.Record( *input, options.Handshakes )
 					writing = false
-                 default:
-                    continue
                 }
         }
     }()
-	time.Sleep(1*time.Second)
     //start all workers
     //read from zmap
 	var zmapDone sync.WaitGroup
@@ -65,7 +61,7 @@ func LZRMain() {
         go func( i int ) {
 	        for input := range zmapIncoming {
 				        lzr.SendAck( options.Handshakes, input, &ipMeta, &timeoutQueue, &writingQueue )
-                        ipMeta.FinishProcessing( &input )
+                        ipMeta.FinishProcessing( input )
             }
 
             //ExitCondition: zmap channel closed
@@ -75,15 +71,15 @@ func LZRMain() {
 					zmapDone.Done()
 					return
 				}
+				time.Sleep(1*time.Second)
             }
         }(i)
     }
-	time.Sleep(1*time.Second)
     //read from pcap
     for i := 0; i < options.Workers; i ++ {
         go func() {
             for input := range pcapIncoming {
-                        inMap, processing := ipMeta.IsStartProcessing( &input )
+                        inMap, processing := ipMeta.IsStartProcessing( input )
                         //if not in map, return
                         if !inMap {
                             continue
@@ -94,7 +90,7 @@ func LZRMain() {
                             continue
                         }
 				        lzr.HandlePcap(options.Handshakes, input, &ipMeta, &timeoutQueue, &writingQueue )
-                        ipMeta.FinishProcessing( &input )
+                        ipMeta.FinishProcessing( input )
             }
         }()
     }
@@ -103,20 +99,18 @@ func LZRMain() {
     go func() {
 
         for input := range timeoutIncoming {
-                    inMap, processing := ipMeta.IsStartProcessing( &input )
+                    inMap, processing := ipMeta.IsStartProcessing( input )
                     //if another thread is processing, put input back
                     //if not in map, return
                     if !inMap {
                         continue
-                        //return
                     }
                     if !processing {
                         timeoutQueue <- input
                         continue
-                        //return
                     }
                     lzr.HandleTimeout( options.Handshakes, input, &ipMeta, &timeoutQueue, &writingQueue )
-                    ipMeta.FinishProcessing( &input )
+                    ipMeta.FinishProcessing( input )
 		    }
     }()
 
@@ -126,6 +120,15 @@ func LZRMain() {
     for {
        if done && len(writingQueue) == 0 && !writing {
 			//TODO: need to properly close file
+				if options.MemProfile != "" {
+					f, err := os.Create(options.MemProfile)
+					if err != nil {
+						log.Fatal(err)
+					}
+					pprof.WriteHeapProfile(f)
+					f.Close()
+				}
+
             return
        }
     }
