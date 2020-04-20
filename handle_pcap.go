@@ -9,8 +9,8 @@ import (
 
 
 
-func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, timeoutQueue * chan *packet_metadata, 
-    writingQueue * chan *packet_metadata ) {
+func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, timeoutQueue  chan *packet_metadata, 
+    writingQueue chan *packet_metadata ) {
 
 
     //packet.PCapTracker -= 1
@@ -20,7 +20,7 @@ func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, 
         packet.incrementCounter()
 		packet.updateTimestamp()
         packet.validationFail()
-        *timeoutQueue <-packet
+        timeoutQueue <-packet
 		return
 	}
 
@@ -29,7 +29,7 @@ func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, 
 		handshakeNum := ipMeta.getHandshake( packet )
 		packet.syncHandshakeNum( handshakeNum )
         packet.fingerprintData()
-        *writingQueue <- packet
+        writingQueue <- packet
         //close connection
         rst := constructRST(packet)
         err := handle.WritePacketData(rst)
@@ -57,8 +57,8 @@ func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, 
 		 ipMeta.update(packet)
 
 		 //add to map
-         *timeoutQueue <-packet
-		  return
+         timeoutQueue <-packet
+		 return
     }
 
 	//for every s/a send the appropriate ack

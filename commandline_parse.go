@@ -11,6 +11,7 @@ var (
     filename    *string
     workers     *int
     timeout     *int
+    retransmit     *int
 	cpuprofile	*string
 	memprofile	*string
 	handshake	*string
@@ -21,6 +22,7 @@ type options struct {
     Filename   string
     Workers    int
     Timeout    int
+    Retransmit    int
 	CPUProfile string
 	MemProfile string
 	Handshakes  []string
@@ -34,9 +36,10 @@ func init() {
   filename = flag.String("f", fname , "json file name")
   workers = flag.Int("w", 1000 , "number of worker threads for each channel")
   timeout = flag.Int("t", 1 , "number of seconds to wait in timeout queue")
+  retransmit = flag.Int("r", 1 , "number of seconds until re-transmitting packet")
   cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
   memprofile = flag.String("memprofile", "", "write memory profile to this file")
-  handshake = flag.String("h", "http" , "handshake to scan with")
+  handshake = flag.String("h", "http" , "handshakes to scan with")
 }
 
 func Parse() *options {
@@ -46,6 +49,7 @@ func Parse() *options {
         Filename: *filename,
         Workers: *workers,
         Timeout: *timeout,
+        Retransmit: *retransmit,
 		CPUProfile: *cpuprofile,
 		MemProfile: *memprofile,
 		Handshakes: make([]string, strings.Count(*handshake,",")+1),
@@ -59,16 +63,17 @@ func Parse() *options {
 			i += 1
 		}
 	}
-    fmt.Println("Writing results to file: ", *filename)
-    fmt.Println("Handshakes: ", *handshake)
+    fmt.Println("Writing results to file:", *filename)
+    fmt.Println("Handshakes:", *handshake)
 	if *memprofile != "" {
-		fmt.Println("Writing memprofile to file: ", *cpuprofile)
+		fmt.Println("Writing memprofile to file:", *memprofile)
 	}
 	if *cpuprofile != "" {
-		fmt.Println("Writing cpuprofile to file: ", *cpuprofile)
+		fmt.Println("Writing cpuprofile to file:", *cpuprofile)
 	}
-    fmt.Println("Worker threads: ", *workers)
-    fmt.Println("Timeout: ", *timeout)
+    fmt.Println("Worker threads:", *workers)
+    fmt.Println("Timeout Interval (s):", *timeout)
+    fmt.Println("Retransmit Interval (s):", *retransmit)
     //fmt.Println("port:", *port)
     return opt
 }

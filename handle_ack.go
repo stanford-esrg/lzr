@@ -7,13 +7,13 @@ import (
 
 
 
-func SendAck( handshakes []string, synack  *packet_metadata, ipMeta * pState, timeoutQueue * chan *packet_metadata,
-    writingQueue * chan *packet_metadata ) {
+func SendAck( handshakes []string, synack  *packet_metadata, ipMeta * pState, timeoutQueue  chan *packet_metadata,
+    writingQueue  chan *packet_metadata ) {
 
 	//TODO: check that ip_metadata contains what we want (saddr,seq,ack,window)
 	if synack.windowZero() {
 		//not a real s/a
-		*writingQueue <- synack
+		writingQueue <- synack
 		return
 	}
 
@@ -34,7 +34,7 @@ func SendAck( handshakes []string, synack  *packet_metadata, ipMeta * pState, ti
 		panic(err)
 	}
 	synack.updateTimestamp()
-	*timeoutQueue <-synack
+	timeoutQueue <-synack
 	return
 
 }

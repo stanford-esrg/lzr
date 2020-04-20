@@ -7,7 +7,8 @@ import (
 
 
 func HandleTimeout( handshakes []string, packet *packet_metadata, ipMeta * pState,
-	timeoutQueue * chan *packet_metadata, writingQueue * chan *packet_metadata ) {
+	timeoutQueue chan *packet_metadata, retransmitQueue  chan *packet_metadata,
+	writingQueue  chan *packet_metadata ) {
 
     //if packet has already been dealt with, return
     if !ipMeta.metaContains( packet ) {
@@ -35,7 +36,7 @@ func HandleTimeout( handshakes []string, packet *packet_metadata, ipMeta * pStat
 		    ipMeta.update( packet )
 
 		    packet.updateTimestamp()
-            *timeoutQueue <- packet
+            retransmitQueue <- packet
 	        return
         }
 	}

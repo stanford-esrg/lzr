@@ -32,7 +32,7 @@ func ConstructZMapRoutine( workers int ) chan *packet_metadata {
 
 
 	//routine to read in from ZMap
-	zmapIncoming := make(chan *packet_metadata,10000)// 4*workers)
+	zmapIncoming := make(chan *packet_metadata,1000000)// 4*workers)
 	go func() {
 		reader := bufio.NewReader(os.Stdin)
 		for {
@@ -57,12 +57,11 @@ func ConstructZMapRoutine( workers int ) chan *packet_metadata {
     return zmapIncoming
 }
 
-func ConstructPcapRoutine( workers int ) (chan *packet_metadata, chan *packet_metadata) {
+func ConstructPcapRoutine( workers int ) chan *packet_metadata {
 
 	//routine to read in from pcap
-	pcapIncoming := make(chan *packet_metadata)//,10)//,4*workers )
-	pcapdQueue := make(chan *gopacket.Packet)//,10)
-	pcapQueue := make(chan *packet_metadata)//,10)
+	pcapIncoming := make(chan *packet_metadata,1000000)//,10)//,4*workers )
+	pcapdQueue := make(chan *gopacket.Packet,1000000)//,10)
 	// Open device
 	handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, pcap.BlockForever)//1*time.Second)
 	if err != nil {
@@ -91,14 +90,6 @@ func ConstructPcapRoutine( workers int ) (chan *packet_metadata, chan *packet_me
 			}
         }(i)
     }
-	go func() {
-            for {
-				select {
-					case pcap:= <-pcapQueue:
-						pcapIncoming <- pcap
-				}
-            }
-    }()
     go func() {
 		    defer handle.Close()
 			packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
@@ -108,27 +99,39 @@ func ConstructPcapRoutine( workers int ) (chan *packet_metadata, chan *packet_me
 			}
 	}()
 
-    return pcapIncoming, pcapQueue
+    return pcapIncoming
 
 }
 
-func PollTimeoutRoutine( ipMeta * pState, timeoutQueue chan *packet_metadata, workers int, timeout int ) (
-    chan *packet_metadata ) {
+func PollTimeoutRoutine( ipMeta * pState, timeoutQueue chan *packet_metadata, retransmitQueue chan *packet_metadata, 
+	workers int, timeoutT int,  timeoutR int ) chan *packet_metadata  {
 
-    TIMEOUT := time.Duration(timeout)*time.Second
+    TIMEOUT_T := time.Duration(timeoutT)*time.Second
+    TIMEOUT_R := time.Duration(timeoutR)*time.Second
 
-	timeoutIncoming := make(chan *packet_metadata,10000)//4*workers)
-	//timeoutQPass := make(chan *packet_metadata,10000)//4*workers)
-    //return from timeout when packet has expired
+	timeoutIncoming := make(chan *packet_metadata,1000000)//4*workers)
+	//spawn off appropriate routines to poll from timeout & retransmit Queues at specified intervals
+	timeoutAlg(  ipMeta, timeoutQueue, timeoutIncoming, TIMEOUT_T )
+	timeoutAlg(  ipMeta, retransmitQueue, timeoutIncoming, TIMEOUT_R )
+
+	return timeoutIncoming
+}
+
+
+//peek at front of q and sleep until processing
+func timeoutAlg(  ipMeta * pState, queue chan *packet_metadata, timeoutIncoming chan *packet_metadata,
+	timeout time.Duration) {
+
     go func() {
 		tdif := time.Duration(timeout)
         for {
             select {
-            case packet := <-timeoutQueue:
+            case packet := <-queue:
 				tdif = (time.Now()).Sub( packet.Timestamp )
 				//if top of the Q is early, put routine to sleep until
-				if tdif < TIMEOUT {
+				if tdif < timeout {
 					time.Sleep(tdif)
+					//fmt.Println("slept for:",tdif)
 				}
 
 	            p, ok := ipMeta.find( packet )
@@ -138,22 +141,28 @@ func PollTimeoutRoutine( ipMeta * pState, timeoutQueue chan *packet_metadata, wo
                 }
                 //if state hasnt changed
 				if p.ExpectedRToLZR != packet.ExpectedRToLZR {
-                        continue
+                    continue
                 } else {
-                            timeoutIncoming <-packet
+                    timeoutIncoming <-packet
                 }
             }
         }
     }()
-
-    return timeoutIncoming
-
 }
+
+// TimeoutQueueStuff TODO:need to move
+func ConstructRetransmitQueue( workers int ) chan *packet_metadata {
+
+    retransmitQueue := make(chan *packet_metadata, 1000000)
+    return retransmitQueue
+}
+
+
 
 // TimeoutQueueStuff TODO:need to move
 func ConstructTimeoutQueue( workers int ) chan *packet_metadata {
 
-    timeoutQueue := make(chan *packet_metadata, 100000)
+    timeoutQueue := make(chan *packet_metadata, 1000000)
     return timeoutQueue
 }
 

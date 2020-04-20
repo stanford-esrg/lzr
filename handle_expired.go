@@ -4,7 +4,7 @@ import (
 	//"fmt"
 )
 
-func handleExpired( handshakes []string, packet * packet_metadata, ipMeta * pState, writingQueue * chan *packet_metadata ) {
+func handleExpired( handshakes []string, packet * packet_metadata, ipMeta * pState, writingQueue chan *packet_metadata ) {
 
 	// first close the existing connection unless
 	// its already been terminated
@@ -23,7 +23,7 @@ func handleExpired( handshakes []string, packet * packet_metadata, ipMeta * pSta
 		packet.syncHandshakeNum( handshakeNum )
 		//remove from state, we are done now
 		ipMeta.remove(packet)
-		*writingQueue <- packet
+		writingQueue <- packet
 
 	} else { // lets try another handshake
 
