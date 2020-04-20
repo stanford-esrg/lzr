@@ -1,7 +1,10 @@
 package lzr
 
-var handshakes map[string]Handshake
+var (
 
+	handshakes map[string]Handshake
+	fingerprintMap  map[string]int
+)
 type Handshake interface {
 
     //get Data to send in first packet
@@ -29,9 +32,10 @@ func GetHandshake( name string ) Handshake {
 func fingerprintResponse( data string ) string {
 	fingerprint := ""
 	tfingerprint := ""
-	for _, hand := range handshakes {
+	for hname, hand := range handshakes {
 		tfingerprint = hand.Verify( data )
 		if tfingerprint != "" {
+			fingerprintMap[hname] += 1
 			if fingerprint == "" {
 				fingerprint += tfingerprint
 			} else {
@@ -42,7 +46,11 @@ func fingerprintResponse( data string ) string {
 	return fingerprint
 }
 
+func GetFingerprints() map[string]int {
+	return fingerprintMap
+}
 
 func init() {
 	handshakes = make( map[string]Handshake )
+	fingerprintMap = make( map[string]int )
 }

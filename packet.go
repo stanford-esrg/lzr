@@ -25,15 +25,15 @@ type packet_state struct {
 
 type packet_metadata struct {
 
-	Saddr		    string	`json:"saddr"`
-	Daddr		    string	`json:"daddr"`
-	Sport		    int		`json:"sport"`
-	Dport		    int		`json:"dport"`
-	Seqnum		    int		`json:"seqnum"`
-	Acknum		    int		`json:"acknum"`
-	Window		    int		`json:"window"`
+	Saddr		    string		`json:"saddr"`
+	Daddr		    string		`json:"daddr"`
+	Sport		    int			`json:"sport"`
+	Dport		    int			`json:"dport"`
+	Seqnum		    int			`json:"seqnum"`
+	Acknum		    int			`json:"acknum"`
+	Window		    int			`json:"window"`
 	Counter		    int
-    //PCapTracker     int
+
     ACK             bool
     SYN             bool
     RST             bool
@@ -41,15 +41,13 @@ type packet_metadata struct {
     PUSH            bool
     ValFail         bool
 
-    HandshakeNum	int
-    Fingerprint     string
+    HandshakeNum	int			`json:"-"`
+    Fingerprint     string		`json:"fingerprint,omitempty"`
 	Timestamp	    time.Time
-    LZRResponseL    int
-	ExpectedRToLZR  string
-    Data            string
-    Processing      bool
-    //Closed        bool    //might not need: 
-                            //to see if connection has been closed in general
+    LZRResponseL    int			`json:"-"`
+	ExpectedRToLZR  string		`json:"expectedRToLZR,omitempty"`
+    Data            string		`json:"data,omitempty"`
+    Processing      bool		`json:"-"`
 }
 
 
@@ -103,6 +101,7 @@ func convertToPacket ( input string ) *packet_metadata  {
         }
         return synack
 }
+
 
 func (packet * packet_metadata) updatePacketFlow()  {
 
