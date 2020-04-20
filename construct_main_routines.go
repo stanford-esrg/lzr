@@ -117,49 +117,34 @@ func PollTimeoutRoutine( ipMeta * pState, timeoutQueue chan *packet_metadata, wo
 
     TIMEOUT := time.Duration(timeout)*time.Second
 
-	timeoutIncoming := make(chan *packet_metadata)//,1000)//4*workers)
-	timeoutQPass := make(chan *packet_metadata)//,1000)//4*workers)
+	timeoutIncoming := make(chan *packet_metadata,10000)//4*workers)
+	//timeoutQPass := make(chan *packet_metadata,10000)//4*workers)
     //return from timeout when packet has expired
     go func() {
+		tdif := time.Duration(timeout)
         for {
             select {
             case packet := <-timeoutQueue:
+				tdif = (time.Now()).Sub( packet.Timestamp )
+				//if top of the Q is early, put routine to sleep until
+				if tdif < TIMEOUT {
+					time.Sleep(tdif)
+				}
 
 	            p, ok := ipMeta.find( packet )
                 //if no longer in map
 	            if !ok {
                     continue
                 }
-                //if timeout has reached, return packet.
-                //else, check that the state has updated in the meanwhile
-                //if not, put the packet back in timeoutQueue
-                if !((p.Counter == 0 && ( ((time.Now()).Sub( packet.Timestamp ) ) > 1*time.Second)) ||
-                (((time.Now()).Sub( packet.Timestamp ) ) > TIMEOUT)) {
-                        timeoutQPass <-packet
+                //if state hasnt changed
+				if p.ExpectedRToLZR != packet.ExpectedRToLZR {
                         continue
-                }else {
-                    //if state hasnt changed
-                    if p.ExpectedRToLZR != packet.ExpectedRToLZR {
-                        continue
-                    } else {
+                } else {
                             timeoutIncoming <-packet
-                    }
                 }
             }
         }
     }()
-    //dumb routine to avoid deadlock
-    //pass to a passingQ
-    go func() {
-        for {
-            select {
-            case packet := <-timeoutQPass:
-                timeoutQueue <- packet
-           }
-        }
-    }()
-
-
 
     return timeoutIncoming
 
