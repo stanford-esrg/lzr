@@ -34,10 +34,11 @@ func LZRMain() {
 
     writingQueue := lzr.ConstructWritingQueue( options.Workers )
     zmapIncoming := lzr.ConstructZMapRoutine( options.Workers )
-    pcapIncoming, pcapQueue := lzr.ConstructPcapRoutine( options.Workers )
-    timeoutQueue := lzr.ConstructTimeoutQueue( options.Workers )
+    pcapIncoming := lzr.ConstructPcapRoutine( options.Workers )
+	timeoutQueue := lzr.ConstructTimeoutQueue( options.Workers )
+    retransmitQueue := lzr.ConstructRetransmitQueue( options.Workers )
     timeoutIncoming := lzr.PollTimeoutRoutine(
-        &ipMeta,timeoutQueue, options.Workers, options.Timeout )
+        &ipMeta,timeoutQueue, retransmitQueue, options.Workers, options.Timeout, options.Retransmit )
     done := false
 	writing := false
 
@@ -60,19 +61,21 @@ func LZRMain() {
     for i := 0; i < options.Workers; i ++ {
         go func( i int ) {
 	        for input := range zmapIncoming {
-				        lzr.SendAck( options.Handshakes, input, &ipMeta, &timeoutQueue, &writingQueue )
+				        lzr.SendAck( options.Handshakes, input, &ipMeta, timeoutQueue, writingQueue )
                         ipMeta.FinishProcessing( input )
             }
-
             //ExitCondition: zmap channel closed
-			for {
-				if ipMeta.IsEmpty() {
-					done=true
-					zmapDone.Done()
-					return
+			if (i == options.Workers - 1) {
+				for {
+					if ipMeta.IsEmpty() {
+						done=true
+						zmapDone.Done()
+						return
+					}
+					//slow down to prevent CPU busy looping
+					time.Sleep(1*time.Second)
 				}
-				time.Sleep(1*time.Second)
-            }
+			}
         }(i)
     }
     //read from pcap
@@ -86,10 +89,10 @@ func LZRMain() {
                         }
                         //if another thread is processing, put input back
                         if !processing {
-                            pcapQueue <- input
+                            pcapIncoming <- input
                             continue
                         }
-				        lzr.HandlePcap(options.Handshakes, input, &ipMeta, &timeoutQueue, &writingQueue )
+				        lzr.HandlePcap(options.Handshakes, input, &ipMeta, timeoutQueue, writingQueue )
                         ipMeta.FinishProcessing( input )
             }
         }()
@@ -106,16 +109,15 @@ func LZRMain() {
                         continue
                     }
                     if !processing {
-                        timeoutQueue <- input
+                        timeoutIncoming <- input
                         continue
                     }
-                    lzr.HandleTimeout( options.Handshakes, input, &ipMeta, &timeoutQueue, &writingQueue )
+                    lzr.HandleTimeout( options.Handshakes, input, &ipMeta, timeoutQueue, retransmitQueue, writingQueue )
                     ipMeta.FinishProcessing( input )
 		    }
     }()
 
     //exit gracefully when done
-	//OR for debugging, within 5 seconds
 	zmapDone.Wait()
     for {
        if done && len(writingQueue) == 0 && !writing {
