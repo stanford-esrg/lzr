@@ -30,10 +30,33 @@ func (h *HandshakeMod) Verify( data string ) string {
 	if len(datab) < 3 {
 		return ""
 	}
-	//TODO: what other versions of tls??
-	if bytes.Equal([]byte(data[0:2]),
-		[]byte{0x16,0x03} ) {
-		return "tls"
+	//http://blog.fourthbit.com/2014/12/23/traffic-analysis-of-an-ssl-slash-tls-session/
+	// Record Type Values       dec      hex
+	// -------------------------------------
+	// CHANGE_CIPHER_SPEC        20     0x14
+	// ALERT                     21     0x15
+	// HANDSHAKE                 22     0x16
+	// APPLICATION_DATA          23     0x17
+	//Version Values            dec     hex
+	// -------------------------------------
+	// SSL 3.0                   3,0  0x0300
+	// TLS 1.0                   3,1  0x0301
+	// TLS 1.1                   3,2  0x0302
+	// TLS 1.2                   3,3  0x0303
+	// TLS 1.3                   3,4  0x0304
+
+	if bytes.Equal([]byte(data[0:1]), []byte{0x16} ) ||
+		bytes.Equal([]byte(data[0:1]), []byte{0x14} ) ||
+		bytes.Equal([]byte(data[0:1]), []byte{0x15} ) ||
+		bytes.Equal([]byte(data[0:1]), []byte{0x17} )  {
+		if bytes.Equal([]byte(data[1:3]),[]byte{0x03,0x01} ) ||
+			bytes.Equal([]byte(data[1:3]),[]byte{0x03,0x02} ) ||
+			bytes.Equal([]byte(data[1:3]),[]byte{0x03,0x03} ) ||
+			bytes.Equal([]byte(data[1:3]),[]byte{0x03,0x04} ) {
+			return "tls"
+		} else if bytes.Equal([]byte(data[1:3]),[]byte{0x03,0x00} ) {
+			return "ssl"
+		}
 	}
 	return ""
 }
