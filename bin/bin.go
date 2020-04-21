@@ -72,14 +72,15 @@ func LZRMain() {
 				for {
 					if ipMeta.IsEmpty() {
 						done=true
-						zmapDone.Done()
-						return
+						break
 					}
 					//slow down to prevent CPU busy looping
 					time.Sleep(1*time.Second)
 					fmt.Println("Finishing Last:",ipMeta.Count())
 				}
 			}
+			zmapDone.Done()
+			return
         }(i)
     }
     //read from pcap

@@ -22,7 +22,6 @@ type summary struct {
 
 	TotalResponses	int
 	ZeroWindow		int
-	//Fingerprint			map ??
 	ACKed			int
 	Data			int
 	No_SYNACK		int
