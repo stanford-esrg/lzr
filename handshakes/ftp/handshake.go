@@ -2,7 +2,7 @@ package ftp
 
 import (
 	"lzr"
-	"unicode"
+	//"unicode"
 	"strings"
 	"unicode/utf8"
 )
@@ -17,7 +17,9 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
 }
 
 func (h *HandshakeMod) Verify( data string ) string {
-	if strings.Contains( ToLower(data), "ftp" ) {
+	if data == "" || !isASCII(data) {
+		return ""
+	} else if strings.Contains( ToLower(data), "ftp" ) {
 		return "ftp"
 	}
     return ""
@@ -32,10 +34,6 @@ func RegisterHandshake() {
 //https://github.com/golang/go/issues/17859
 
 func ToLower(s string) string {
-	if s == "" { // quick return for empty strings
-		return s
-	}
-	if isASCII(s) { // optimize for ascii condition
 		b := make([]byte, len(s))
 		for i, c := range s {
 			if c >= 'A' && c <= 'Z' {
@@ -44,9 +42,6 @@ func ToLower(s string) string {
 			b[i] = byte(c)
 		}
 		return string(b)
-	}
-	//should i even call ToLower for non-ascii??
-	return strings.Map(unicode.ToLower, s)
 }
 
 func isASCII(s string) bool {
