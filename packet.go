@@ -41,7 +41,7 @@ type packet_metadata struct {
     RST             bool
     FIN             bool
     PUSH            bool
-    ValFail         bool
+    ValFail         bool		`json:"-"`
 
     HandshakeNum	int			`json:"-"`
     Fingerprint     string		`json:"fingerprint,omitempty"`

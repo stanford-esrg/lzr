@@ -5,6 +5,7 @@ import (
     "log"
     "os"
 	"bufio"
+	"time"
     "fmt"
 )
 
@@ -22,14 +23,15 @@ type summary struct {
 	TotalResponses	int
 	ZeroWindow		int
 	//Fingerprint			map ??
-	ValFailed		int
 	ACKed			int
+	Data			int
 	No_SYNACK		int
 
 }
 
 
-func Summarize() {
+func Summarize( t time.Duration ) {
+	fmt.Println( "Runtime:",t )
 	out, _ := json.Marshal( summaryLZR )
 	fmt.Println( string(out) )
 	//print out fingerprints
@@ -44,14 +46,14 @@ func addToSummary( packet *packet_metadata ) {
 	if packet.Window == 0 {
 		summaryLZR.ZeroWindow += 1
 	}
-	if packet.ValFail {
-		summaryLZR.ValFailed += 1
-	}
 	if packet.ACKed {
 		summaryLZR.ACKed += 1
 	}
 	if packet.ExpectedRToLZR == SYN_ACK {
 		summaryLZR.No_SYNACK += 1
+	}
+	if packet.Data != "" {
+		summaryLZR.Data += 1
 	}
 }
 
