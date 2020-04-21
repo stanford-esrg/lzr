@@ -25,7 +25,8 @@ type summary struct {
 	ACKed			int
 	Data			int
 	No_SYNACK		int
-
+    Rst             int
+    Fin             int
 }
 
 
@@ -48,6 +49,12 @@ func addToSummary( packet *packet_metadata ) {
 	if packet.ACKed {
 		summaryLZR.ACKed += 1
 	}
+    if packet.RST {
+        summaryLZR.Rst += 1
+    }
+    if packet.FIN {
+        summaryLZR.Fin += 1
+    }
 	if packet.ExpectedRToLZR == SYN_ACK {
 		summaryLZR.No_SYNACK += 1
 	}
