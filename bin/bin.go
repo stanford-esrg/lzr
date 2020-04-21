@@ -8,12 +8,14 @@ import (
 	"os"
 	"log"
 	"lzr"
-	//"fmt"
+	"fmt"
 )
 
 func LZRMain() {
     // create a context that can be cancelled
     //ctx, cancel := context.WithCancel(context.Background())
+
+	start := time.Now()
 
     //read in config 
     options := lzr.Parse()
@@ -61,7 +63,8 @@ func LZRMain() {
     for i := 0; i < options.Workers; i ++ {
         go func( i int ) {
 	        for input := range zmapIncoming {
-				        lzr.SendAck( options.Handshakes, input, &ipMeta, timeoutQueue, writingQueue )
+				        lzr.SendAck( options.Handshakes, input, &ipMeta, timeoutQueue,
+							retransmitQueue, writingQueue )
                         ipMeta.FinishProcessing( input )
             }
             //ExitCondition: zmap channel closed
@@ -74,6 +77,7 @@ func LZRMain() {
 					}
 					//slow down to prevent CPU busy looping
 					time.Sleep(1*time.Second)
+					fmt.Println("Finishing Last:",ipMeta.Count())
 				}
 			}
         }(i)
@@ -92,7 +96,8 @@ func LZRMain() {
                             pcapIncoming <- input
                             continue
                         }
-				        lzr.HandlePcap(options.Handshakes, input, &ipMeta, timeoutQueue, writingQueue )
+				        lzr.HandlePcap(options.Handshakes, input, &ipMeta, timeoutQueue,
+							retransmitQueue, writingQueue )
                         ipMeta.FinishProcessing( input )
             }
         }()
@@ -121,7 +126,6 @@ func LZRMain() {
 	zmapDone.Wait()
     for {
        if done && len(writingQueue) == 0 && !writing {
-			//TODO: need to properly close file
 				if options.MemProfile != "" {
 					f, err := os.Create(options.MemProfile)
 					if err != nil {
@@ -130,7 +134,11 @@ func LZRMain() {
 					pprof.WriteHeapProfile(f)
 					f.Close()
 				}
-
+			//closing file
+			f.F.Flush()
+			t := time.Now()
+			elapsed := t.Sub(start)
+			lzr.Summarize( elapsed )
             return
        }
     }
