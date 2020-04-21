@@ -24,6 +24,7 @@ type summary struct {
 	//Fingerprint			map ??
 	ValFailed		int
 	ACKed			int
+	No_SYNACK		int
 
 }
 
@@ -49,6 +50,9 @@ func addToSummary( packet *packet_metadata ) {
 	if packet.ACKed {
 		summaryLZR.ACKed += 1
 	}
+	if packet.ExpectedRToLZR == SYN_ACK {
+		summaryLZR.No_SYNACK += 1
+	}
 }
 
 func ( f *output_file ) Record( packet packet_metadata, handshakes []string ) {
@@ -57,6 +61,7 @@ func ( f *output_file ) Record( packet packet_metadata, handshakes []string ) {
 		fmt.Println( packet.Saddr + ", , " + handshakes[ packet.HandshakeNum ] )
 	}*/
 
+    packet.fingerprintData()
 	addToSummary( &packet )
 
     out, _ := json.Marshal( packet )

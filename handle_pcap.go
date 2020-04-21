@@ -33,7 +33,7 @@ func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, 
      if len(packet.Data) > 0 {
 		handshakeNum := ipMeta.getHandshake( packet )
 		packet.syncHandshakeNum( handshakeNum )
-        packet.fingerprintData()
+        //packet.fingerprintData()
         //close connection
         rst := constructRST(packet)
         err := handle.WritePacketData(rst)
@@ -49,7 +49,7 @@ func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, 
     //deal with closed connection 
     if packet.RST || packet.FIN {
 
-		handleExpired( handshakes,packet, ipMeta, writingQueue )
+		handleExpired( handshakes,packet, ipMeta, timeoutQueue, writingQueue )
 		return
 
      }

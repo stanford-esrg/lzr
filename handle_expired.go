@@ -4,7 +4,8 @@ import (
 	//"fmt"
 )
 
-func handleExpired( handshakes []string, packet * packet_metadata, ipMeta * pState, writingQueue chan *packet_metadata ) {
+func handleExpired( handshakes []string, packet * packet_metadata, ipMeta * pState, 
+	timeoutQueue chan *packet_metadata, writingQueue chan *packet_metadata ) {
 
 	// first close the existing connection unless
 	// its already been terminated
@@ -17,7 +18,6 @@ func handleExpired( handshakes []string, packet * packet_metadata, ipMeta * pSta
 
 	//grab which handshake
 	handshakeNum := ipMeta.getHandshake( packet )
-
 	//if we are all out of handshakes to try, so sad. 
 	if handshakeNum >= (len( handshakes ) - 1){
 		packet.syncHandshakeNum( handshakeNum )
@@ -26,9 +26,10 @@ func handleExpired( handshakes []string, packet * packet_metadata, ipMeta * pSta
 		writingQueue <- packet
 
 	} else { // lets try another handshake
-
 		packet.updatePacketFlow()
 		ipMeta.incHandshake( packet )
+		packet.updateResponse( SYN_ACK )
+		packet.updateTimestamp()
 		ipMeta.update( packet )
 		syn := constructSYN( packet )
 		// send SYN packet if so and start the whole process again
@@ -37,6 +38,9 @@ func handleExpired( handshakes []string, packet * packet_metadata, ipMeta * pSta
 			panic(err)
 
 		}
+		//wait for a s/a
+		packet.updateTimestamp()
+        timeoutQueue <- packet
 	}
 
 }

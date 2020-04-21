@@ -15,6 +15,7 @@ func HandleTimeout( handshakes []string, packet *packet_metadata, ipMeta * pStat
         return
     }
 
+
     //send again with just data (not apart of handshake)
     if (packet.ExpectedRToLZR == DATA || packet.ExpectedRToLZR == ACK) {
         if packet.Counter < 1 {
@@ -42,7 +43,7 @@ func HandleTimeout( handshakes []string, packet *packet_metadata, ipMeta * pStat
 	}
 
 	//this handshake timed-out 
-	handleExpired( handshakes, packet, ipMeta, writingQueue )
+	handleExpired( handshakes, packet, ipMeta, timeoutQueue, writingQueue )
 
     return
 

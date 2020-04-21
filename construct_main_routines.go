@@ -130,6 +130,7 @@ func timeoutAlg(  ipMeta * pState, queue chan *packet_metadata, timeoutIncoming 
 				tdif = (time.Now()).Sub( packet.Timestamp )
 				//if top of the Q is early, put routine to sleep until
 				if tdif < timeout {
+					//fmt.Println("sleeping:",timeout-tdif)
 					time.Sleep(timeout-tdif)
 				}
 
