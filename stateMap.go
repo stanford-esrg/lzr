@@ -34,6 +34,7 @@ func (ipMeta * pState) update( p * packet_metadata ) {
 	if !ok {
 		ps = &packet_state {
 			Packet: p,
+			Ack: false,
 			HandshakeNum: 0,
 		}
 	} else {
@@ -50,6 +51,23 @@ func (ipMeta * pState) incHandshake( p * packet_metadata ) bool {
 		ipMeta.Insert( p.Saddr, ps )
 	}
 	return ok
+}
+
+func (ipMeta * pState) updateAck( p * packet_metadata ) bool {
+    ps, ok := ipMeta.Get(p.Saddr)
+    if ok {
+        ps.Ack = true
+        ipMeta.Insert( p.Saddr, ps )
+    }
+    return ok
+}
+
+func (ipMeta * pState) getAck( p * packet_metadata ) bool {
+    ps, ok := ipMeta.Get(p.Saddr)
+    if ok {
+        return ps.Ack
+    }
+    return false
 }
 
 func (ipMeta * pState) getHandshake( p * packet_metadata ) int {
@@ -69,12 +87,14 @@ func (ipMeta * pState) incrementCounter( p * packet_metadata ) bool {
 	ps.Packet.incrementCounter()
     ipMeta.Insert( ps.Packet.Saddr, ps )
     return true
+
 }
 
 
-func (ipMeta * pState) remove( packet *packet_metadata ) {
-    ipMeta.Remove(packet.Saddr)
-    return
+func (ipMeta * pState) remove( packet *packet_metadata ) *packet_metadata {
+	packet.ACKed = ipMeta.getAck( packet )
+    ipMeta.Remove( packet.Saddr )
+    return packet
 }
 
 func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {

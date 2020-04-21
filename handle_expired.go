@@ -22,7 +22,7 @@ func handleExpired( handshakes []string, packet * packet_metadata, ipMeta * pSta
 	if handshakeNum >= (len( handshakes ) - 1){
 		packet.syncHandshakeNum( handshakeNum )
 		//remove from state, we are done now
-		ipMeta.remove(packet)
+		packet = ipMeta.remove(packet)
 		writingQueue <- packet
 
 	} else { // lets try another handshake

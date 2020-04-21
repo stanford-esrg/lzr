@@ -36,7 +36,7 @@ func HandleTimeout( handshakes []string, packet *packet_metadata, ipMeta * pStat
 		    ipMeta.update( packet )
 
 		    packet.updateTimestamp()
-            retransmitQueue <- packet
+            timeoutQueue <- packet
 	        return
         }
 	}

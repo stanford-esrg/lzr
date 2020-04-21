@@ -23,6 +23,7 @@ type summary struct {
 	ZeroWindow		int
 	//Fingerprint			map ??
 	ValFailed		int
+	ACKed			int
 
 }
 
@@ -45,7 +46,9 @@ func addToSummary( packet *packet_metadata ) {
 	if packet.ValFail {
 		summaryLZR.ValFailed += 1
 	}
-
+	if packet.ACKed {
+		summaryLZR.ACKed += 1
+	}
 }
 
 func ( f *output_file ) Record( packet packet_metadata, handshakes []string ) {

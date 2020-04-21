@@ -20,6 +20,7 @@ var (
 
 type packet_state struct {
 	HandshakeNum	int
+	Ack				bool
 	Packet			*packet_metadata
 }
 
@@ -35,6 +36,7 @@ type packet_metadata struct {
 	Counter		    int
 
     ACK             bool
+    ACKed           bool
     SYN             bool
     RST             bool
     FIN             bool
@@ -83,6 +85,7 @@ func convertToPacketM ( packet *gopacket.Packet ) ( *packet_metadata ) {
             ipLayer := (*packet).Layer(layers.LayerTypeIPv4)
             ip, _ := ipLayer.(*layers.IPv4)
             metapacket := ReadLayers(ip,tcp)
+			
             return metapacket
         }
         return nil

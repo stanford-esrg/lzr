@@ -10,7 +10,7 @@ import (
 
 
 func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, timeoutQueue  chan *packet_metadata, 
-    writingQueue chan *packet_metadata ) {
+    retransmitQueue chan *packet_metadata, writingQueue chan *packet_metadata ) {
 
 
     //packet.PCapTracker -= 1
@@ -24,12 +24,16 @@ func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, 
 		return
 	}
 
+	//for every ack received, mark as accepting data
+    if (!packet.SYN) && packet.ACK {
+		ipMeta.updateAck( packet )
+	}
+
      //exit condition
      if len(packet.Data) > 0 {
 		handshakeNum := ipMeta.getHandshake( packet )
 		packet.syncHandshakeNum( handshakeNum )
         packet.fingerprintData()
-        writingQueue <- packet
         //close connection
         rst := constructRST(packet)
         err := handle.WritePacketData(rst)
@@ -37,7 +41,8 @@ func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, 
             log.Fatal(err)
         }
         //remove from state, we are done now
-        ipMeta.remove(packet)
+        packet = ipMeta.remove(packet)
+        writingQueue <- packet
         return
 
     }
@@ -50,7 +55,6 @@ func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, 
      }
      //for every ack received, mark as accepting data
      if (!packet.SYN) && packet.ACK {
-
 		 //add to map
 		 packet.updateResponse(DATA)
 		 packet.updateTimestamp()
@@ -64,7 +68,7 @@ func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, 
 	//for every s/a send the appropriate ack
 	if packet.SYN && packet.ACK {
 
-		SendAck( handshakes, packet, ipMeta, timeoutQueue, writingQueue )
+		SendAck( handshakes, packet, ipMeta, timeoutQueue, retransmitQueue, writingQueue )
 
 	}
 
