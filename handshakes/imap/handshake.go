@@ -2,9 +2,9 @@ package imap
 
 import (
 	"lzr"
-    "unicode"
-    "strings"
-    "unicode/utf8"
+	//"unicode"
+	"strings"
+	"unicode/utf8"
 )
 
 // Handshake implements the lzr.Handshake interface
@@ -17,7 +17,9 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
 }
 
 func (h *HandshakeMod) Verify( data string ) string {
-	if strings.Contains( ToLower(data), "imap" ) {
+	if data == "" || !isASCII(data) {
+		return ""
+	} else if strings.Contains( ToLower(data), "imap" ) {
 		return "imap"
 	}
     return ""
@@ -32,28 +34,22 @@ func RegisterHandshake() {
 //https://github.com/golang/go/issues/17859
 
 func ToLower(s string) string {
-    if s == "" { // quick return for empty strings
-        return s
-    }
-    if isASCII(s) { // optimize for ascii condition
-        b := make([]byte, len(s))
-        for i, c := range s {
-            if c >= 'A' && c <= 'Z' {
-                c += 32
-            }
-            b[i] = byte(c)
-        }
-        return string(b)
-    }
-    //should i even call ToLower for non-ascii??
-    return strings.Map(unicode.ToLower, s)
+		b := make([]byte, len(s))
+		for i, c := range s {
+			if c >= 'A' && c <= 'Z' {
+				c += 32
+			}
+			b[i] = byte(c)
+		}
+		return string(b)
 }
 
 func isASCII(s string) bool {
-    for i := 0; i < len(s); i++ {
-        if s[i] >= utf8.RuneSelf {
-            return false
-        }
-    }
-    return true
+	for i := 0; i < len(s); i++ {
+		if s[i] >= utf8.RuneSelf {
+			return false
+		}
+	}
+	return true
 }
+
