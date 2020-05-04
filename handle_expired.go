@@ -4,12 +4,12 @@ import (
 	//"fmt"
 )
 
-func handleExpired( handshakes []string, packet * packet_metadata, ipMeta * pState, 
+func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState, 
 	timeoutQueue chan *packet_metadata, writingQueue chan *packet_metadata ) {
 
 	// first close the existing connection unless
 	// its already been terminated
-	if !packet.RST {
+	if !( packet.RST && !packet.ACK) {
 
 		rst := constructRST( packet )
 		err = handle.WritePacketData(rst)
@@ -19,7 +19,7 @@ func handleExpired( handshakes []string, packet * packet_metadata, ipMeta * pSta
 	//grab which handshake
 	handshakeNum := ipMeta.getHandshake( packet )
 	//if we are all out of handshakes to try, so sad. 
-	if handshakeNum >= (len( handshakes ) - 1){
+	if handshakeNum >= (len( opts.Handshakes ) - 1){
 		packet.syncHandshakeNum( handshakeNum )
 		//remove from state, we are done now
 		packet = ipMeta.remove(packet)

@@ -6,7 +6,7 @@ import (
 )
 
 
-func HandleTimeout( handshakes []string, packet *packet_metadata, ipMeta * pState,
+func HandleTimeout( opts *options, packet *packet_metadata, ipMeta * pState,
 	timeoutQueue chan *packet_metadata, retransmitQueue  chan *packet_metadata,
 	writingQueue  chan *packet_metadata ) {
 
@@ -18,22 +18,23 @@ func HandleTimeout( handshakes []string, packet *packet_metadata, ipMeta * pStat
 
     //send again with just data (not apart of handshake)
     if (packet.ExpectedRToLZR == DATA || packet.ExpectedRToLZR == ACK) {
-        if packet.Counter < 1 {
+        if packet.Counter < opts.RetransmitNum {
             packet.incrementCounter()
 
 
 			//grab which handshake
 			handshakeNum := ipMeta.getHandshake( packet )
-			handshake := GetHandshake( handshakes[ handshakeNum ] )
+			handshake := GetHandshake( opts.Handshakes[ handshakeNum ] )
 
 			//if packet counter is 0 then dont specify the push flag just yet
-			dataPacket,_ := constructData( handshake, packet,true,!(packet.Counter  == 0))
+			dataPacket,payload := constructData( handshake, packet,true,!(packet.Counter  == 0))
 
             err = handle.WritePacketData( dataPacket )
             if err != nil {
                 log.Fatal(err)
             }
 		    packet.updateTimestamp()
+			packet.updateResponseL( payload )
 		    ipMeta.update( packet )
 
 		    packet.updateTimestamp()
@@ -43,7 +44,7 @@ func HandleTimeout( handshakes []string, packet *packet_metadata, ipMeta * pStat
 	}
 
 	//this handshake timed-out 
-	handleExpired( handshakes, packet, ipMeta, timeoutQueue, writingQueue )
+	handleExpired( opts, packet, ipMeta, timeoutQueue, writingQueue )
 
     return
 

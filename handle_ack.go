@@ -7,8 +7,9 @@ import (
 
 
 
-func SendAck( handshakes []string, synack  *packet_metadata, ipMeta * pState, 
+func SendAck( opts *options, synack  *packet_metadata, ipMeta * pState, 
 timeoutQueue  chan *packet_metadata, retransmitQueue chan *packet_metadata, writingQueue  chan *packet_metadata ) {
+
 
 	//TODO: check that ip_metadata contains what we want (saddr,seq,ack,window)
 	if synack.windowZero() {
@@ -19,10 +20,10 @@ timeoutQueue  chan *packet_metadata, retransmitQueue chan *packet_metadata, writ
 
 	//grab which handshake
 	handshakeNum := ipMeta.getHandshake(synack)
-	handshake := GetHandshake( handshakes[ handshakeNum ] )
+	handshake := GetHandshake( opts.Handshakes[ handshakeNum ] )
 
 	//Send Ack with Data
-	ack, payload := constructData( handshake, synack, true, false )
+	ack, payload := constructData( handshake, synack, true, false)
 	//add to map
 	synack.updateResponse( ACK )
 	synack.updateResponseL( payload )
@@ -33,6 +34,7 @@ timeoutQueue  chan *packet_metadata, retransmitQueue chan *packet_metadata, writ
 		log.Fatal(err)
 		panic(err)
 	}
+
 	synack.updateTimestamp()
 	retransmitQueue <-synack
 	return

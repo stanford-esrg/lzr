@@ -31,7 +31,7 @@ func LZRMain() {
 	}
 
 	//initalize
-	ipMeta := lzr.ConstructPacketStateMap()
+	ipMeta := lzr.ConstructPacketStateMap( options )
     f := lzr.InitFile( options.Filename )
 
     writingQueue := lzr.ConstructWritingQueue( options.Workers )
@@ -40,7 +40,7 @@ func LZRMain() {
 	timeoutQueue := lzr.ConstructTimeoutQueue( options.Workers )
     retransmitQueue := lzr.ConstructRetransmitQueue( options.Workers )
     timeoutIncoming := lzr.PollTimeoutRoutine(
-        &ipMeta,timeoutQueue, retransmitQueue, options.Workers, options.Timeout, options.Retransmit )
+        &ipMeta,timeoutQueue, retransmitQueue, options.Workers, options.Timeout, options.RetransmitSec )
     done := false
 	writing := false
 
@@ -63,7 +63,7 @@ func LZRMain() {
     for i := 0; i < options.Workers; i ++ {
         go func( i int ) {
 	        for input := range zmapIncoming {
-				        lzr.SendAck( options.Handshakes, input, &ipMeta, timeoutQueue,
+				        lzr.SendAck( options, input, &ipMeta, timeoutQueue,
 							retransmitQueue, writingQueue )
                         ipMeta.FinishProcessing( input )
             }
@@ -97,7 +97,7 @@ func LZRMain() {
                             pcapIncoming <- input
                             continue
                         }
-				        lzr.HandlePcap(options.Handshakes, input, &ipMeta, timeoutQueue,
+				        lzr.HandlePcap(options, input, &ipMeta, timeoutQueue,
 							retransmitQueue, writingQueue )
                         ipMeta.FinishProcessing( input )
             }
@@ -118,7 +118,7 @@ func LZRMain() {
                         timeoutIncoming <- input
                         continue
                     }
-                    lzr.HandleTimeout( options.Handshakes, input, &ipMeta, timeoutQueue, retransmitQueue, writingQueue )
+                    lzr.HandleTimeout( options, input, &ipMeta, timeoutQueue, retransmitQueue, writingQueue )
                     ipMeta.FinishProcessing( input )
 		    }
     }()

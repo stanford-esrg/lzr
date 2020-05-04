@@ -58,7 +58,6 @@ func constructSYN( p *packet_metadata ) []byte {
     }
 
 	tcpLayer := &layers.TCP{
-		//change srcport slightly
         SrcPort: layers.TCPPort(p.Dport),
         DstPort: layers.TCPPort(p.Sport),
 		Seq: uint32(p.Seqnum),
@@ -94,7 +93,9 @@ func constructData( handshake Handshake, p *packet_metadata, ack bool, push bool
     //data := []byte("\n")
 
     data := handshake.GetData( string(p.Saddr) )
-
+	/*if !push {
+		data = []byte("")
+	}*/
 	ethernetLayer := constructEthLayer()
 
     ipLayer := &layers.IPv4{

@@ -9,7 +9,7 @@ import (
 
 
 
-func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, timeoutQueue  chan *packet_metadata, 
+func HandlePcap( opts *options, packet *packet_metadata, ipMeta * pState, timeoutQueue  chan *packet_metadata, 
     retransmitQueue chan *packet_metadata, writingQueue chan *packet_metadata ) {
 
 
@@ -31,6 +31,7 @@ func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, 
 
      //exit condition
      if len(packet.Data) > 0 {
+
 		handshakeNum := ipMeta.getHandshake( packet )
 		packet.syncHandshakeNum( handshakeNum )
         //packet.fingerprintData()
@@ -49,7 +50,7 @@ func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, 
     //deal with closed connection 
     if packet.RST || packet.FIN {
 
-		handleExpired( handshakes,packet, ipMeta, timeoutQueue, writingQueue )
+		handleExpired( opts,packet, ipMeta, timeoutQueue, writingQueue )
 		return
 
      }
@@ -68,7 +69,7 @@ func HandlePcap( handshakes []string, packet *packet_metadata, ipMeta * pState, 
 	//for every s/a send the appropriate ack
 	if packet.SYN && packet.ACK {
 
-		SendAck( handshakes, packet, ipMeta, timeoutQueue, retransmitQueue, writingQueue )
+		SendAck( opts, packet, ipMeta, timeoutQueue, retransmitQueue, writingQueue )
 
 	}
 

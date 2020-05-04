@@ -6,7 +6,7 @@ import (
     "time"
 	"encoding/json"
     "log"
-	"math"
+	//"math"
 	//"fmt"
 )
 
@@ -43,7 +43,7 @@ type packet_metadata struct {
     PUSH            bool
     ValFail         bool		`json:"-"`
 
-    HandshakeNum	int			`json:"-"`
+    HandshakeNum	int
     Fingerprint     string		`json:"fingerprint,omitempty"`
 	Timestamp	    time.Time
     LZRResponseL    int			`json:"-"`
@@ -85,7 +85,6 @@ func convertToPacketM ( packet *gopacket.Packet ) ( *packet_metadata ) {
             ipLayer := (*packet).Layer(layers.LayerTypeIPv4)
             ip, _ := ipLayer.(*layers.IPv4)
             metapacket := ReadLayers(ip,tcp)
-			
             return metapacket
         }
         return nil
@@ -111,8 +110,8 @@ func (packet * packet_metadata) updatePacketFlow()  {
 	//creating a new sourceport to send from 
 	//and incrementing the handshake we are trying
 
-	newsrcprt := math.Mod(float64(packet.Dport),65535)+1
-	packet.Dport = int(newsrcprt)
+	//newsrcprt := math.Mod(float64(packet.Dport),65535)+1
+	//packet.Dport = int(newsrcprt)
 	packet.HandshakeNum += 1
 	packet.ExpectedRToLZR = SYN_ACK
 	packet.Seqnum = packet.Acknum
@@ -194,7 +193,6 @@ func (packet * packet_metadata) getValidationFail() bool {
 
 func (packet * packet_metadata) fingerprintData() {
 
-    //return fingerprintResponse( payload )
     packet.Fingerprint = fingerprintResponse( packet.Data )
 
 }
