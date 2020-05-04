@@ -73,11 +73,14 @@ func addToSummary( packet *packet_metadata ) {
 
 func ( f *output_file ) Record( packet packet_metadata, handshakes []string ) {
 
-	/*if packet.Data != "" {
-		fmt.Println( packet.Saddr + ", , " + handshakes[ packet.HandshakeNum ] )
-	}*/
-
     packet.fingerprintData()
+
+	if FeedZGrab() {
+		if packet.Fingerprint != "" {
+			fmt.Println( packet.Saddr + ", , " + handshakes[ packet.HandshakeNum ] )
+		}
+	}
+
 	addToSummary( &packet )
 
     out, _ := json.Marshal( packet )

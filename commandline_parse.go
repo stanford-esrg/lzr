@@ -101,3 +101,7 @@ func Parse() *options {
 func DebugOn() bool {
 	return *debug
 }
+
+func FeedZGrab() bool {
+	return *feedZGrab
+}
