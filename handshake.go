@@ -40,6 +40,9 @@ func hiearchizeFingerprint( fingerprint string ) string {
 
 	if strings.Contains( fingerprint, "ipp" ) {
 		return "ipp"
+	}else if (strings.Contains( fingerprint, "dns") &&
+		strings.Contains( fingerprint, "http")) {
+		return "http"
 	}else {
 		fmt.Println("WARNING: NEW MULTI-FINGERPRINT:", fingerprint)
 		return fingerprint
