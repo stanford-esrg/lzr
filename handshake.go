@@ -1,5 +1,10 @@
 package lzr
 
+import (
+	"fmt"
+	"strings"
+)
+
 var (
 
 	handshakes map[string]Handshake
@@ -28,10 +33,25 @@ func GetHandshake( name string ) Handshake {
 	return h
 }
 
+// implement a hiearchy where when responses match
+// for two fingerprints, we choose the more specific one
+// e.g., protocols implemented on http
+func hiearchizeFingerprint( fingerprint string ) string {
+
+	if strings.Contains( fingerprint, "ipp" ) {
+		return "ipp"
+	}else {
+		fmt.Println("WARNING: NEW MULTI-FINGERPRINT:", fingerprint)
+		return fingerprint
+	}
+
+}
+
 //TODO: implement some type of hiearchy for labeling
 func fingerprintResponse( data string ) string {
 	fingerprint := ""
 	tfingerprint := ""
+	multiprint := false
 	for hname, hand := range handshakes {
 		tfingerprint = hand.Verify( data )
 		if tfingerprint != "" {
@@ -39,9 +59,13 @@ func fingerprintResponse( data string ) string {
 			if fingerprint == "" {
 				fingerprint += tfingerprint
 			} else {
+				multiprint = true
 				fingerprint += ("-" + tfingerprint)
 			}
 		}
+	}
+	if multiprint {
+		return hiearchizeFingerprint( fingerprint )
 	}
 	return fingerprint
 }
