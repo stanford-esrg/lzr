@@ -43,6 +43,7 @@ type packet_metadata struct {
     PUSH            bool
     ValFail         bool		`json:"-"`
 
+	Key				string		`json:"-"`
     HandshakeNum	int
     Fingerprint     string		`json:"fingerprint,omitempty"`
 	Timestamp	    time.Time
@@ -77,14 +78,14 @@ func ReadLayers( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
 	return packet
 }
 
-
-func convertToPacketM ( packet *gopacket.Packet ) ( *packet_metadata ) {
+func convertToPacketM ( packet *gopacket.Packet ) *packet_metadata {
         tcpLayer := (*packet).Layer(layers.LayerTypeTCP)
         if tcpLayer != nil {
             tcp, _ := tcpLayer.(*layers.TCP)
             ipLayer := (*packet).Layer(layers.LayerTypeIPv4)
             ip, _ := ipLayer.(*layers.IPv4)
             metapacket := ReadLayers(ip,tcp)
+			metapacket.Key = constructKey( metapacket )
             return metapacket
         }
         return nil
@@ -101,6 +102,7 @@ func convertToPacket ( input string ) *packet_metadata  {
             log.Fatal(err)
             return nil
         }
+		synack.Key = constructKey( synack )
         return synack
 }
 

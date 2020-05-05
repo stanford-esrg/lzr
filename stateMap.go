@@ -15,13 +15,19 @@ func ConstructPacketStateMap( opts *options ) pState {
 }
 
 
+func constructKey( packet *packet_metadata ) string {
+
+	return packet.Saddr+packet.Daddr+string(packet.Sport)+string(packet.Dport)
+
+}
+
 func (ipMeta * pState) metaContains( p * packet_metadata ) bool {
-    return ipMeta.Has(p.Saddr)
+    return ipMeta.Has(p.Key)
 }
 
 
 func (ipMeta * pState) find(p * packet_metadata) ( *packet_metadata, bool ) {
-    ps, ok := ipMeta.Get(p.Saddr)
+    ps, ok := ipMeta.Get(p.Key)
 	if ok {
 		return ps.Packet, ok
 	}
@@ -30,7 +36,7 @@ func (ipMeta * pState) find(p * packet_metadata) ( *packet_metadata, bool ) {
 
 func (ipMeta * pState) update( p * packet_metadata ) {
 
-    ps, ok := ipMeta.Get(p.Saddr)
+    ps, ok := ipMeta.Get(p.Key)
 	if !ok {
 		ps = &packet_state {
 			Packet: p,
@@ -40,30 +46,30 @@ func (ipMeta * pState) update( p * packet_metadata ) {
 	} else {
 		ps.Packet = p
 	}
-    ipMeta.Insert( p.Saddr, ps )
+    ipMeta.Insert( p.Key, ps )
 }
 
 
 func (ipMeta * pState) incHandshake( p * packet_metadata ) bool {
-    ps, ok := ipMeta.Get(p.Saddr)
+    ps, ok := ipMeta.Get(p.Key)
 	if ok {
 		ps.HandshakeNum += 1
-		ipMeta.Insert( p.Saddr, ps )
+		ipMeta.Insert( p.Key, ps )
 	}
 	return ok
 }
 
 func (ipMeta * pState) updateAck( p * packet_metadata ) bool {
-    ps, ok := ipMeta.Get(p.Saddr)
+    ps, ok := ipMeta.Get(p.Key)
     if ok {
         ps.Ack = true
-        ipMeta.Insert( p.Saddr, ps )
+        ipMeta.Insert( p.Key, ps )
     }
     return ok
 }
 
 func (ipMeta * pState) getAck( p * packet_metadata ) bool {
-    ps, ok := ipMeta.Get(p.Saddr)
+    ps, ok := ipMeta.Get(p.Key)
     if ok {
         return ps.Ack
     }
@@ -71,7 +77,7 @@ func (ipMeta * pState) getAck( p * packet_metadata ) bool {
 }
 
 func (ipMeta * pState) getHandshake( p * packet_metadata ) int {
-    ps, ok := ipMeta.Get(p.Saddr)
+    ps, ok := ipMeta.Get(p.Key)
     if ok {
         return ps.HandshakeNum
     }
@@ -80,12 +86,12 @@ func (ipMeta * pState) getHandshake( p * packet_metadata ) int {
 
 func (ipMeta * pState) incrementCounter( p * packet_metadata ) bool {
 
-    ps, ok := ipMeta.Get(p.Saddr)
+    ps, ok := ipMeta.Get(p.Key)
     if !ok {
         return false
     }
 	ps.Packet.incrementCounter()
-    ipMeta.Insert( ps.Packet.Saddr, ps )
+    ipMeta.Insert( ps.Packet.Key, ps )
     return true
 
 }
@@ -93,14 +99,14 @@ func (ipMeta * pState) incrementCounter( p * packet_metadata ) bool {
 
 func (ipMeta * pState) remove( packet *packet_metadata ) *packet_metadata {
 	packet.ACKed = ipMeta.getAck( packet )
-    ipMeta.Remove( packet.Saddr )
+    ipMeta.Remove( packet.Key )
     return packet
 }
 
 func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 
 	//first check that IP itself is being scanned
-    ps, ok := ipMeta.Get(pRecv.Saddr)
+    ps, ok := ipMeta.Get(pRecv.Key)
 	if !ok {
 		return false
 	}

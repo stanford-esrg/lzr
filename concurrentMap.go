@@ -6,8 +6,6 @@ import (
 	//"fmt"
 )
 
-
-
 var SHARD_COUNT = 4096
 
 // A "thread" safe map of type string:Anything.
@@ -97,10 +95,10 @@ func (m pState) Remove(key string) {
 //is Processing for goPackets
 func (m pState) IsStartProcessing( p * packet_metadata ) ( bool,bool ) {
     // Get shard
-    shard := m.GetShard(p.Saddr)
+    shard := m.GetShard(p.Key)
     shard.Lock()
     // Get item from shard.
-    p_out, ok := shard.items[p.Saddr]
+    p_out, ok := shard.items[p.Key]
     if !ok {
 		shard.Unlock()
         return false,false
@@ -118,10 +116,10 @@ func (m pState) IsStartProcessing( p * packet_metadata ) ( bool,bool ) {
 func (m pState) StartProcessing( p * packet_metadata ) bool {
 
     // Get shard
-    shard := m.GetShard(p.Saddr)
+    shard := m.GetShard(p.Key)
     shard.RLock()
     // See if element is within shard.
-    p_out, ok := shard.items[p.Saddr]
+    p_out, ok := shard.items[p.Key]
     if !ok {
 		shard.RUnlock()
         return false
@@ -135,10 +133,10 @@ func (m pState) StartProcessing( p * packet_metadata ) bool {
 func (m pState) FinishProcessing( p * packet_metadata ) bool {
 
     // Get shard
-    shard := m.GetShard(p.Saddr)
+    shard := m.GetShard(p.Key)
     shard.Lock()
     // See if element is within shard.
-    p_out, ok := shard.items[p.Saddr]
+    p_out, ok := shard.items[p.Key]
     if !ok {
 		shard.Unlock()
         return false
