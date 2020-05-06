@@ -46,7 +46,7 @@ func init() {
   debug = flag.Bool("d", false, "debug printing on (defaut off)")
   haf = flag.Bool("haf", true, "HyperACKtive filtering off (default on)")
   feedZGrab = flag.Bool("feedZGrab", false, "send to zgrab ip and fingerprint")
-  workers = flag.Int("w", 1000 , "number of worker threads for each channel")
+  workers = flag.Int("w", 1 , "number of worker threads for each channel")
   timeout = flag.Int("t", 5, "number of seconds to wait in timeout queue for last retransmission")
   retransmitSec = flag.Int("rt", 1 , "number of seconds until re-transmitting packet")
   retransmitNum = flag.Int("rn", 1 , "number of data packets to re-transmit")
