@@ -6,7 +6,8 @@ import (
     "time"
 	"encoding/json"
     "log"
-	//"math"
+	"math/rand"
+	"math"
 	//"fmt"
 )
 
@@ -43,7 +44,6 @@ type packet_metadata struct {
     PUSH            bool
     ValFail         bool		`json:"-"`
 
-	Key				string		`json:"-"`
     HandshakeNum	int
     Fingerprint     string		`json:"fingerprint,omitempty"`
 	Timestamp	    time.Time
@@ -51,6 +51,7 @@ type packet_metadata struct {
 	ExpectedRToLZR  string		`json:"expectedRToLZR,omitempty"`
     Data            string		`json:"data,omitempty"`
     Processing      bool		`json:"-"`
+    HyperACKtive    bool		`json:"HyperACKtive,omitempty"`
 }
 
 
@@ -85,14 +86,12 @@ func convertToPacketM ( packet *gopacket.Packet ) *packet_metadata {
             ipLayer := (*packet).Layer(layers.LayerTypeIPv4)
             ip, _ := ipLayer.(*layers.IPv4)
             metapacket := ReadLayers(ip,tcp)
-			metapacket.Key = constructKey( metapacket )
             return metapacket
         }
         return nil
 }
 
 func convertToPacket ( input string ) *packet_metadata  {
-
 
         synack := &packet_metadata{}
         //expecting ip,sequence number, acknumber,windowsize
@@ -102,12 +101,39 @@ func convertToPacket ( input string ) *packet_metadata  {
             log.Fatal(err)
             return nil
         }
-		synack.Key = constructKey( synack )
         return synack
 }
 
+func randInt(min int, max int) int {
+    return min + rand.Intn(max-min)
+}
 
-func (packet * packet_metadata) updatePacketFlow()  {
+//create a packet to filter out nets like canada
+func createFilterPacket( packet *packet_metadata ) *packet_metadata {
+
+	rand.Seed(time.Now().UTC().UnixNano())
+    packetFilter := &packet_metadata{
+        Saddr: packet.Saddr,
+        Daddr: packet.Daddr,
+        Dport: int(math.Mod(float64(packet.Dport),65535)+1),
+		Sport: randInt(32768, 61000),
+        Seqnum: int(rand.Uint32()),
+        Acknum: 0,
+        Window: packet.Window,
+        SYN: true,
+        Timestamp: time.Now(),
+        Counter: 0,
+        Processing: true,
+        HandshakeNum: 0,
+		HyperACKtive: true,
+		ExpectedRToLZR: SYN_ACK,
+    }
+    return packetFilter
+
+}
+
+
+func ( packet * packet_metadata ) updatePacketFlow()  {
 
 	//creating a new sourceport to send from 
 	//and incrementing the handshake we are trying

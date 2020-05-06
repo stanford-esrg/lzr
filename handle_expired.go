@@ -19,28 +19,47 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 	//grab which handshake
 	handshakeNum := ipMeta.getHandshake( packet )
 	//if we are all out of handshakes to try, so sad. 
-	if handshakeNum >= (len( opts.Handshakes ) - 1){
+	if (packet.HyperACKtive  || (handshakeNum >= (len( opts.Handshakes ) - 1))){
+
 		packet.syncHandshakeNum( handshakeNum )
 		//remove from state, we are done now
 		packet = ipMeta.remove(packet)
-		writingQueue <- packet
+		if !packet.HyperACKtive {
+			writingQueue <- packet
+		}
 
 	} else { // lets try another handshake
-		packet.updatePacketFlow()
-		ipMeta.incHandshake( packet )
-		packet.updateResponse( SYN_ACK )
-		packet.updateTimestamp()
-		ipMeta.update( packet )
-		syn := constructSYN( packet )
-		// send SYN packet if so and start the whole process again
-		err = handle.WritePacketData(syn)
-		if err != nil {
-			panic(err)
+
+		//lets also filter for cananda-like things
+		if ( handshakeNum == 0 &&  HyperACKtiveFiltering() ) {
+
+			highPortPacket := createFilterPacket( packet )
+			sendOffSyn( highPortPacket, ipMeta, timeoutQueue )
 
 		}
-		//wait for a s/a
-		packet.updateTimestamp()
-        timeoutQueue <- packet
+
+		packet.updatePacketFlow()
+        ipMeta.incHandshake( packet )
+		sendOffSyn( packet, ipMeta, timeoutQueue )
 	}
+
+}
+
+func sendOffSyn(packet * packet_metadata, ipMeta * pState,
+    timeoutQueue chan *packet_metadata ) {
+
+        packet.updateResponse( SYN_ACK )
+        packet.updateTimestamp()
+        ipMeta.update( packet )
+        syn := constructSYN( packet )
+        // send SYN packet if so and start the whole process again
+        err = handle.WritePacketData(syn)
+        if err != nil {
+            panic(err)
+
+        }
+        //wait for a s/a
+        packet.updateTimestamp()
+        timeoutQueue <- packet
 
 }

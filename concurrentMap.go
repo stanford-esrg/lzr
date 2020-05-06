@@ -91,14 +91,16 @@ func (m pState) Remove(key string) {
 	shard.Unlock()
 }
 
+
 /* FOR PACKET_METADATA */
 //is Processing for goPackets
 func (m pState) IsStartProcessing( p * packet_metadata ) ( bool,bool ) {
     // Get shard
-    shard := m.GetShard(p.Key)
+	pKey := constructKey(p)
+    shard := m.GetShard(pKey)
     shard.Lock()
     // Get item from shard.
-    p_out, ok := shard.items[p.Key]
+    p_out, ok := shard.items[pKey]
     if !ok {
 		shard.Unlock()
         return false,false
@@ -116,10 +118,11 @@ func (m pState) IsStartProcessing( p * packet_metadata ) ( bool,bool ) {
 func (m pState) StartProcessing( p * packet_metadata ) bool {
 
     // Get shard
-    shard := m.GetShard(p.Key)
+	pKey := constructKey(p)
+    shard := m.GetShard(pKey)
     shard.RLock()
     // See if element is within shard.
-    p_out, ok := shard.items[p.Key]
+    p_out, ok := shard.items[pKey]
     if !ok {
 		shard.RUnlock()
         return false
@@ -133,10 +136,11 @@ func (m pState) StartProcessing( p * packet_metadata ) bool {
 func (m pState) FinishProcessing( p * packet_metadata ) bool {
 
     // Get shard
-    shard := m.GetShard(p.Key)
+	pKey := constructKey(p)
+    shard := m.GetShard(pKey)
     shard.Lock()
     // See if element is within shard.
-    p_out, ok := shard.items[p.Key]
+    p_out, ok := shard.items[pKey]
     if !ok {
 		shard.Unlock()
         return false

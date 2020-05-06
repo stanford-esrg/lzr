@@ -10,6 +10,7 @@ var (
 
     filename		*string
 	debug			*bool
+	haf				*bool
 	feedZGrab		*bool
     workers			*int
     timeout			*int
@@ -24,6 +25,7 @@ type options struct {
 
     Filename		string
 	Debug			bool
+	Haf				bool
 	FeedZGrab		bool
     Workers			int
     Timeout			int
@@ -41,7 +43,8 @@ func init() {
   fname := "default_"+string(time.Now().Format("20060102150405"))+".json"
   filename = flag.String("f", fname , "json file name")
 
-  debug = flag.Bool("d", false, "debug printing on")
+  debug = flag.Bool("d", false, "debug printing on (defaut off)")
+  haf = flag.Bool("haf", true, "HyperACKtive filtering off (default on)")
   feedZGrab = flag.Bool("feedZGrab", false, "send to zgrab ip and fingerprint")
   workers = flag.Int("w", 1000 , "number of worker threads for each channel")
   timeout = flag.Int("t", 5, "number of seconds to wait in timeout queue for last retransmission")
@@ -58,6 +61,7 @@ func Parse() *options {
     opt := &options{
         Filename: *filename,
 		Debug: *debug,
+		Haf: *haf,
 		FeedZGrab: *feedZGrab,
         Workers: *workers,
         Timeout: *timeout,
@@ -87,6 +91,9 @@ func Parse() *options {
 	if *debug {
 		fmt.Println("++Debug turned on")
 	}
+	if *haf {
+		fmt.Println("++HyperACKtiveFiltering turned on")
+	}
 	if *feedZGrab {
 		fmt.Println("++Feeding ZGrab with fingerprints")
 	}
@@ -104,4 +111,8 @@ func DebugOn() bool {
 
 func FeedZGrab() bool {
 	return *feedZGrab
+}
+
+func HyperACKtiveFiltering() bool {
+	return *haf
 }

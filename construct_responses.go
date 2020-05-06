@@ -45,6 +45,9 @@ func constructEthLayer() (eth *layers.Ethernet) {
 
 }
 
+/* NOTE: constructing RESPONSE SYN. 
+ * so Daddr/Saddr etc will be inverted in the process
+ */
 func constructSYN( p *packet_metadata ) []byte {
 
 	ethernetLayer := constructEthLayer()
@@ -88,6 +91,9 @@ func constructSYN( p *packet_metadata ) []byte {
 
 
 
+/* NOTE: constructing RESPONSE. 
+ * so Daddr/Saddr etc will be inverted in the process
+ */
 func constructData( handshake Handshake, p *packet_metadata, ack bool, push bool) ([]byte, []byte) {
 
     //data := []byte("\n")
@@ -139,6 +145,9 @@ func constructData( handshake Handshake, p *packet_metadata, ack bool, push bool
 }
 
 
+/* NOTE: constructing RESPONSE. 
+ * so Daddr/Saddr etc will be inverted in the process
+ */
 func constructRST( ack *packet_metadata ) []byte {
 
 	ethernetLayer := constructEthLayer()

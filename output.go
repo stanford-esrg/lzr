@@ -29,6 +29,7 @@ type summary struct {
 	Fin				int
 	Resp_ack		int
 	Resp_push		int
+	HyperACKtive	int
 }
 
 
@@ -45,6 +46,11 @@ func Summarize( t time.Duration ) {
 func addToSummary( packet *packet_metadata ) {
 
 	summaryLZR.TotalResponses  += 1
+
+	if packet.HyperACKtive {
+		summaryLZR.HyperACKtive +=1
+		return
+	}
 	if packet.Window == 0 {
 		summaryLZR.ZeroWindow += 1
 	}

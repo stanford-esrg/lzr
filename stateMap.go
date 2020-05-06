@@ -1,42 +1,49 @@
 package lzr
 
 import (
+	"strconv"
 	"fmt"
 )
 
 /* keeps state by storing the packet that was received 
- * and within the packet stores the expected response 
+ * and within the packet stores the expected response. 
  * storing received as to what was sent b/c want to know
  * perhaps need to wait some more 
  */
 func ConstructPacketStateMap( opts *options ) pState {
-    ipMeta := NewpState()
-    return ipMeta
+	ipMeta := NewpState()
+	return ipMeta
 }
 
 
 func constructKey( packet *packet_metadata ) string {
-
-	return packet.Saddr+packet.Daddr+string(packet.Sport)+string(packet.Dport)
-
+	if packet.HyperACKtive {
+		return packet.Saddr + ":" + strconv.Itoa(packet.Sport)
+	}
+	return packet.Saddr
 }
 
 func (ipMeta * pState) metaContains( p * packet_metadata ) bool {
-    return ipMeta.Has(p.Key)
+
+	pKey := constructKey(p)
+	return ipMeta.Has(pKey)
+
 }
 
 
 func (ipMeta * pState) find(p * packet_metadata) ( *packet_metadata, bool ) {
-    ps, ok := ipMeta.Get(p.Key)
+	pKey := constructKey(p)
+	ps, ok := ipMeta.Get(pKey)
 	if ok {
 		return ps.Packet, ok
 	}
-    return nil,ok
+	return nil,ok
 }
 
 func (ipMeta * pState) update( p * packet_metadata ) {
 
-    ps, ok := ipMeta.Get(p.Key)
+	pKey := constructKey(p)
+	ps, ok := ipMeta.Get(pKey)
 	if !ok {
 		ps = &packet_state {
 			Packet: p,
@@ -46,91 +53,123 @@ func (ipMeta * pState) update( p * packet_metadata ) {
 	} else {
 		ps.Packet = p
 	}
-    ipMeta.Insert( p.Key, ps )
+	ipMeta.Insert( pKey, ps )
 }
 
 
 func (ipMeta * pState) incHandshake( p * packet_metadata ) bool {
-    ps, ok := ipMeta.Get(p.Key)
+	pKey := constructKey(p)
+	ps, ok := ipMeta.Get(pKey)
 	if ok {
 		ps.HandshakeNum += 1
-		ipMeta.Insert( p.Key, ps )
+		ipMeta.Insert( pKey, ps )
 	}
 	return ok
 }
 
 func (ipMeta * pState) updateAck( p * packet_metadata ) bool {
-    ps, ok := ipMeta.Get(p.Key)
-    if ok {
-        ps.Ack = true
-        ipMeta.Insert( p.Key, ps )
-    }
-    return ok
+	pKey := constructKey(p)
+	ps, ok := ipMeta.Get(pKey)
+	if ok {
+		ps.Ack = true
+		ipMeta.Insert( pKey, ps )
+	}
+	return ok
 }
 
 func (ipMeta * pState) getAck( p * packet_metadata ) bool {
-    ps, ok := ipMeta.Get(p.Key)
-    if ok {
-        return ps.Ack
-    }
-    return false
+	pKey := constructKey(p)
+	ps, ok := ipMeta.Get(pKey)
+	if ok {
+		return ps.Ack
+	}
+	return false
 }
 
 func (ipMeta * pState) getHandshake( p * packet_metadata ) int {
-    ps, ok := ipMeta.Get(p.Key)
-    if ok {
-        return ps.HandshakeNum
-    }
-    return 0
+	pKey := constructKey(p)
+	ps, ok := ipMeta.Get(pKey)
+	if ok {
+		return ps.HandshakeNum
+	}
+	return 0
 }
 
 func (ipMeta * pState) incrementCounter( p * packet_metadata ) bool {
 
-    ps, ok := ipMeta.Get(p.Key)
-    if !ok {
-        return false
-    }
+	pKey := constructKey(p)
+	ps, ok := ipMeta.Get(pKey)
+	if !ok {
+		return false
+	}
 	ps.Packet.incrementCounter()
-    ipMeta.Insert( ps.Packet.Key, ps )
-    return true
+	ipMeta.Insert( pKey, ps )
+	return true
 
 }
 
 
 func (ipMeta * pState) remove( packet *packet_metadata ) *packet_metadata {
 	packet.ACKed = ipMeta.getAck( packet )
-    ipMeta.Remove( packet.Key )
-    return packet
+	packetKey := constructKey(packet)
+	ipMeta.Remove( packetKey )
+	return packet
+}
+
+func verifySA( pMap *packet_metadata, pRecv *packet_metadata ) bool {
+
+	if pRecv.SYN && pRecv.ACK {
+		if ( pRecv.Acknum == pMap.Seqnum + 1 ) {
+			return true
+		}
+	} else {
+
+		if ((pRecv.Seqnum == ( pMap.Seqnum )) || (pRecv.Seqnum == ( pMap.Seqnum + 1 ))) {
+			if ( pRecv.Acknum == ( pMap.Acknum + pMap.LZRResponseL ) ) {
+				return true
+			}
+			if pRecv.Acknum == 0 { //for RSTs
+				return true
+			}
+		}
+	}
+	return false
+
 }
 
 func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 
+	pRecvKey := constructKey(pRecv)
 	//first check that IP itself is being scanned
-    ps, ok := ipMeta.Get(pRecv.Key)
+	ps, ok := ipMeta.Get(pRecvKey)
 	if !ok {
 		return false
 	}
 	pMap := ps.Packet
 
-	//second check that 4-tuple matches
-	//TODO: check seq & ack and check state that we expect(?)
+	//second check that 4-tuple matches with default packet
 	if (( pMap.Saddr == pRecv.Saddr ) && (pMap.Dport == pRecv.Dport) &&
-    (pMap.Sport == pRecv.Sport) ) { // && (pRecv.Acknum == pMap.Seqnum + 1)) {
+		(pMap.Sport == pRecv.Sport) ) {
 
-		if pRecv.SYN && pRecv.ACK {
-			if ( pRecv.Acknum == pMap.Seqnum + 1 ) {
-				return true
-			}
-		} else {
-
-			if ((pRecv.Seqnum == ( pMap.Seqnum )) || (pRecv.Seqnum == ( pMap.Seqnum + 1 ))) {
-
-				if ( pRecv.Acknum == ( pMap.Acknum + pMap.LZRResponseL ) ) {
-					return true
-				}
-			}
+		if verifySA( pMap, pRecv) {
+			return true
 		}
 	}
+
+	//lets re-query for the ACKtive packets
+	pRecv.HyperACKtive = true
+	pRecvKey = constructKey(pRecv)
+	ps, ok = ipMeta.Get( pRecvKey )
+	if !ok {
+		return false
+	}
+	pMap = ps.Packet
+
+	if verifySA( pMap, pRecv) {
+		return true
+	}
+	pRecv.HyperACKtive = false
+
 	if DebugOn() {
 		fmt.Println(pMap.Saddr, "====")
 		fmt.Println("recv seq num:", pRecv.Seqnum)
