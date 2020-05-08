@@ -20,9 +20,9 @@ func (h *HandshakeMod) Verify( data string ) string {
 		return ""
 	}
 	if bytes.Equal([]byte(data[0:4]),[]byte{0x5a,0x47,0x00,0x00}) {
-		return "memcached_binary"
+		return "modbus"
 	}
-	return "modbus"
+	return ""
 
 }
 

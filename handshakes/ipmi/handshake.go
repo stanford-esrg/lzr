@@ -2,7 +2,6 @@ package ipmi
 
 import (
 	"bytes"
-	//"strings"
 	"lzr"
 )
 
