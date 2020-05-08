@@ -93,7 +93,7 @@ func LZRMain() {
                             continue
                         }
                         //if another thread is processing, put input back
-                        if !processing {
+                        if processing {
                             pcapIncoming <- input
                             continue
                         }
@@ -114,7 +114,7 @@ func LZRMain() {
                     if !inMap {
                         continue
                     }
-                    if !processing {
+                    if processing {
                         timeoutIncoming <- input
                         continue
                     }
