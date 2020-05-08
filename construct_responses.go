@@ -99,9 +99,9 @@ func constructData( handshake Handshake, p *packet_metadata, ack bool, push bool
     //data := []byte("\n")
 
     data := handshake.GetData( string(p.Saddr) )
-	/*if !push {
+	if PushDOnly() && !push {
 		data = []byte("")
-	}*/
+	}
 	ethernetLayer := constructEthLayer()
 
     ipLayer := &layers.IPv4{
@@ -128,17 +128,16 @@ func constructData( handshake Handshake, p *packet_metadata, ack bool, push bool
         FixLengths:       true,
     }
     tcpLayer.SetNetworkLayerForChecksum(ipLayer)
-
-    // And create the packet with the layers
-    if err := gopacket.SerializeLayers(buffer, options,
+	// And create the packet with the layers
+	if err := gopacket.SerializeLayers(buffer, options,
 		ethernetLayer,
-        ipLayer,
-        tcpLayer,
-        gopacket.Payload(data),
-    ); err != nil {
-        log.Fatal(err)
-
+		ipLayer,
+		tcpLayer,
+		gopacket.Payload(data),
+	);err != nil {
+		log.Fatal(err)
 	}
+
     outPacket := buffer.Bytes()
     return outPacket,data
 

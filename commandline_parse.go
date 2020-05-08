@@ -11,6 +11,7 @@ var (
     filename		*string
 	debug			*bool
 	haf				*bool
+	pushDOnly		*bool
 	feedZGrab		*bool
     workers			*int
     timeout			*int
@@ -26,6 +27,7 @@ type options struct {
     Filename		string
 	Debug			bool
 	Haf				bool
+	PushDOnly		*bool
 	FeedZGrab		bool
     Workers			int
     Timeout			int
@@ -39,20 +41,20 @@ type options struct {
 
 // Basic flag declarations are available for string, integer, and boolean options.
 func init() {
-  //port = flag.Int("port", 3000, "port number")
   fname := "default_"+string(time.Now().Format("20060102150405"))+".json"
   filename = flag.String("f", fname , "json file name")
 
   debug = flag.Bool("d", false, "debug printing on (defaut off)")
   haf = flag.Bool("haf", true, "HyperACKtive filtering off (default on)")
-  feedZGrab = flag.Bool("feedZGrab", false, "send to zgrab ip and fingerprint")
+  pushDOnly = flag.Bool("pushDataOnly", false, "Don't attach data to ack but rather to push only (default off)")
+  feedZGrab = flag.Bool("feedZGrab", false, "send to zgrab ip and fingerprint (default off)")
   workers = flag.Int("w", 1 , "number of worker threads for each channel")
   timeout = flag.Int("t", 5, "number of seconds to wait in timeout queue for last retransmission")
   retransmitSec = flag.Int("rt", 1 , "number of seconds until re-transmitting packet")
   retransmitNum = flag.Int("rn", 1 , "number of data packets to re-transmit")
   cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
   memprofile = flag.String("memprofile", "", "write memory profile to this file")
-  handshake = flag.String("h", "http" , "handshakes to scan with")
+  handshake = flag.String("handshakes", "http" , "handshakes to scan with")
 }
 
 func Parse() *options {
@@ -115,4 +117,8 @@ func FeedZGrab() bool {
 
 func HyperACKtiveFiltering() bool {
 	return *haf
+}
+
+func PushDOnly() bool {
+	return *pushDOnly
 }

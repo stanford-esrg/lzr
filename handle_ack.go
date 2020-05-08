@@ -23,7 +23,7 @@ timeoutQueue  chan *packet_metadata, retransmitQueue chan *packet_metadata, writ
 	handshake := GetHandshake( opts.Handshakes[ handshakeNum ] )
 
 	//Send Ack with Data
-	ack, payload := constructData( handshake, synack, true, false)
+	ack, payload := constructData( handshake, synack, true, false )
 	//add to map
 	synack.updateResponse( ACK )
 	synack.updateResponseL( payload )
