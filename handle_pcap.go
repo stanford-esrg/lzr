@@ -27,8 +27,6 @@ func HandlePcap( opts *options, packet *packet_metadata, ipMeta * pState, timeou
 	retransmitQueue chan *packet_metadata, writingQueue chan *packet_metadata ) {
 
 
-	//packet.PCapTracker -= 1
-
 	//verify 
 	if !(ipMeta.verifyScanningIP( packet )) {
 		packet.incrementCounter()
@@ -45,6 +43,14 @@ func HandlePcap( opts *options, packet *packet_metadata, ipMeta * pState, timeou
 
 	 //exit condition
 	 if len(packet.Data) > 0 {
+
+		ipMeta.updateData( packet )
+
+		// if not stopping here, send off to handle_expire
+		if ForceAllHandshakes() {
+			handleExpired( opts,packet, ipMeta, timeoutQueue, writingQueue )
+			return
+		}
 
 		handshakeNum := ipMeta.getHandshake( packet )
 		packet.syncHandshakeNum( handshakeNum )

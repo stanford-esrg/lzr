@@ -22,6 +22,7 @@ var (
 type packet_state struct {
 	HandshakeNum	int
 	Ack				bool
+	Data			bool
 	Packet			*packet_metadata
 }
 
@@ -138,8 +139,8 @@ func ( packet * packet_metadata ) updatePacketFlow()  {
 	//creating a new sourceport to send from 
 	//and incrementing the handshake we are trying
 
-	//newsrcprt := math.Mod(float64(packet.Dport),65535)+1
-	//packet.Dport = int(newsrcprt)
+	newsrcprt := math.Mod(float64(packet.Dport),65535)+1
+	packet.Dport = int(newsrcprt)
 	packet.HandshakeNum += 1
 	packet.ExpectedRToLZR = SYN_ACK
 	packet.Seqnum = packet.Acknum

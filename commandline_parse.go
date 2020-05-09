@@ -8,34 +8,36 @@ import (
 
 var (
 
-    filename		*string
-	debug			*bool
-	haf				*bool
-	pushDOnly		*bool
-	feedZGrab		*bool
-    workers			*int
-    timeout			*int
-    retransmitSec   *int
-    retransmitNum   *int
-	cpuprofile		*string
-	memprofile		*string
-	handshake		*string
+    filename			*string
+	debug				*bool
+	haf					*bool
+	pushDOnly			*bool
+	forceAllHandshakes	*bool
+	feedZGrab			*bool
+    workers				*int
+    timeout				*int
+    retransmitSec		*int
+    retransmitNum		*int
+	cpuprofile			*string
+	memprofile			*string
+	handshake			*string
 )
 
 type options struct {
 
-    Filename		string
-	Debug			bool
-	Haf				bool
-	PushDOnly		*bool
-	FeedZGrab		bool
-    Workers			int
-    Timeout			int
-    RetransmitSec	int
-    RetransmitNum	int
-	CPUProfile		string
-	MemProfile		string
-	Handshakes		[]string
+    Filename			string
+	Debug				bool
+	Haf					bool
+	PushDOnly			bool
+	ForceAllHandshakes	bool
+	FeedZGrab			bool
+    Workers				int
+    Timeout				int
+    RetransmitSec		int
+    RetransmitNum		int
+	CPUProfile			string
+	MemProfile			string
+	Handshakes			[]string
 }
 
 
@@ -47,6 +49,7 @@ func init() {
   debug = flag.Bool("d", false, "debug printing on (defaut off)")
   haf = flag.Bool("haf", true, "HyperACKtive filtering off (default on)")
   pushDOnly = flag.Bool("pushDataOnly", false, "Don't attach data to ack but rather to push only (default off)")
+  forceAllHandshakes = flag.Bool("forceAllHandshakes", false, "Complete all handshakes even if data is returned early on (default off). This also turns off HyperACKtive filtering.")
   feedZGrab = flag.Bool("feedZGrab", false, "send to zgrab ip and fingerprint (default off)")
   workers = flag.Int("w", 1 , "number of worker threads for each channel")
   timeout = flag.Int("t", 5, "number of seconds to wait in timeout queue for last retransmission")
@@ -65,6 +68,8 @@ func Parse() *options {
 		Debug: *debug,
 		Haf: *haf,
 		FeedZGrab: *feedZGrab,
+		PushDOnly: *pushDOnly,
+		ForceAllHandshakes: *forceAllHandshakes,
         Workers: *workers,
         Timeout: *timeout,
         RetransmitSec: *retransmitSec,
@@ -82,6 +87,11 @@ func Parse() *options {
 			i += 1
 		}
 	}
+
+	if *forceAllHandshakes {
+		*haf = false
+	}
+
     fmt.Println("++Writing results to file:", *filename)
     fmt.Println("++Handshakes:", *handshake)
 	if *memprofile != "" {
@@ -98,6 +108,12 @@ func Parse() *options {
 	}
 	if *feedZGrab {
 		fmt.Println("++Feeding ZGrab with fingerprints")
+	}
+	if *pushDOnly {
+		fmt.Println("++Sending Data only with Push Flag (not in ack)")
+	}
+	if *forceAllHandshakes {
+		fmt.Println("++Force completing all handshakes")
 	}
     fmt.Println("++Worker threads:", *workers)
     fmt.Println("++Timeout Interval (s):", *timeout)
@@ -121,4 +137,8 @@ func HyperACKtiveFiltering() bool {
 
 func PushDOnly() bool {
 	return *pushDOnly
+}
+
+func ForceAllHandshakes() bool {
+	return *forceAllHandshakes
 }
