@@ -145,7 +145,13 @@ func ( packet * packet_metadata ) updatePacketFlow()  {
 	packet.ExpectedRToLZR = SYN_ACK
 	packet.Seqnum = packet.Acknum
 	packet.Acknum = 0
-
+	packet.Data = ""
+	packet.Fingerprint = ""
+	packet.SYN = false
+	packet.ACK = false
+	packet.PUSH = false
+	packet.RST = false
+	packet.FIN = false
 }
 
 func (packet * packet_metadata) windowZero() bool {

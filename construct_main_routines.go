@@ -22,9 +22,9 @@ var (
 )
 
 
-func ConstructWritingQueue( workers int ) chan *packet_metadata {
+func ConstructWritingQueue( workers int ) chan packet_metadata {
 
-    writingQueue := make(chan *packet_metadata,10000)// 4* workers)
+    writingQueue := make(chan packet_metadata,10000)// 4* workers)
     return writingQueue
 }
 

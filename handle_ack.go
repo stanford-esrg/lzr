@@ -8,13 +8,13 @@ import (
 
 
 func SendAck( opts *options, synack  *packet_metadata, ipMeta * pState, 
-timeoutQueue  chan *packet_metadata, retransmitQueue chan *packet_metadata, writingQueue  chan *packet_metadata ) {
+timeoutQueue  chan *packet_metadata, retransmitQueue chan *packet_metadata, writingQueue  chan packet_metadata ) {
 
 
 	//TODO: check that ip_metadata contains what we want (saddr,seq,ack,window)
 	if synack.windowZero() {
 		//not a real s/a
-		writingQueue <- synack
+		writingQueue <- *synack
 		return
 	}
 

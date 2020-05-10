@@ -5,7 +5,7 @@ import (
 )
 
 func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
-	timeoutQueue chan *packet_metadata, writingQueue chan *packet_metadata ) {
+	timeoutQueue chan *packet_metadata, writingQueue chan packet_metadata ) {
 
 	// first close the existing connection unless
 	// its already been terminated
@@ -18,15 +18,15 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 
 	//grab which handshake
 	handshakeNum := ipMeta.getHandshake( packet )
-
-	//if we are all out of handshakes to try, so sad. 
-	if ( packet.HyperACKtive  || (handshakeNum >= (len( opts.Handshakes ) - 1)) ){
+	//if we are all not trying anymore handshakes, so sad. 
+	if ( packet.ExpectedRToLZR == SYN_ACK ||
+		packet.HyperACKtive  || (handshakeNum >= (len( opts.Handshakes ) - 1)) ){
 
 		packet.syncHandshakeNum( handshakeNum )
 
 		//document failure if its a handshake response that hasnt succeeded before
-		if !packet.HyperACKtive && !( ForceAllHandshakes() && ipMeta.getData( packet ) ) {
-			writingQueue <- packet
+		if !packet.HyperACKtive && !( ForceAllHandshakes() && ipMeta.getData( packet ) && len(packet.Data) == 0 ) {
+			writingQueue <- *packet
 		}
 
 		//remove from state, we are done now
@@ -45,7 +45,7 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 		//record all succesful fingerprints if forcing all handshakes
 		if ForceAllHandshakes() && len(packet.Data) > 0 {
 			packet.syncHandshakeNum( handshakeNum )
-			writingQueue <- packet
+			writingQueue <- *packet
 		}
 
 		packet.updatePacketFlow()

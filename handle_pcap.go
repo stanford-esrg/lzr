@@ -6,7 +6,7 @@ import (
 )
 
 
-func closeConnection( packet *packet_metadata, ipMeta * pState, writingQueue chan *packet_metadata, write bool ) {
+func closeConnection( packet *packet_metadata, ipMeta * pState, writingQueue chan packet_metadata, write bool ) {
 
 	//close connection
 	rst := constructRST(packet)
@@ -17,14 +17,14 @@ func closeConnection( packet *packet_metadata, ipMeta * pState, writingQueue cha
 	//remove from state, we are done now
 	packet = ipMeta.remove(packet)
 	if write {
-		writingQueue <- packet
+		writingQueue <- *packet
 	}
 	return
 }
 
 
 func HandlePcap( opts *options, packet *packet_metadata, ipMeta * pState, timeoutQueue	chan *packet_metadata,
-	retransmitQueue chan *packet_metadata, writingQueue chan *packet_metadata ) {
+	retransmitQueue chan *packet_metadata, writingQueue chan packet_metadata ) {
 
 
 	//verify 
@@ -43,7 +43,7 @@ func HandlePcap( opts *options, packet *packet_metadata, ipMeta * pState, timeou
 
 	 //exit condition
 	 if len(packet.Data) > 0 {
-
+		packet.updateResponse(DATA)
 		ipMeta.updateData( packet )
 
 		// if not stopping here, send off to handle_expire
