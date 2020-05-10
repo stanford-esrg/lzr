@@ -19,7 +19,12 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
 func (h *HandshakeMod) Verify( data string ) string {
 	if data == "" || !isASCII(data) {
 		return ""
-	} else if strings.Contains( ToLower(data), "ssh" ) {
+	}
+
+	dl :=  ToLower(data)
+	if strings.Contains( dl, "ssh" ) &&
+		!strings.Contains( dl, "not implemented") &&
+		!strings.Contains( dl, "bad") {
 		return "ssh"
 	}
     return ""
