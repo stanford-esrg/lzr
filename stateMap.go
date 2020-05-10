@@ -182,6 +182,7 @@ func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 	pRecvKey = constructKey(pRecv)
 	ps, ok = ipMeta.Get( pRecvKey )
 	if !ok {
+		pRecv.HyperACKtive = false
 		return false
 	}
 	pMap = ps.Packet

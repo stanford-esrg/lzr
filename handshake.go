@@ -54,7 +54,11 @@ func hiearchizeFingerprint( fingerprint string ) string {
 	}else if (strings.Contains( fingerprint, "ftp") &&
 		strings.Contains( fingerprint, "ssh")) {
 		return "ssh"
-	}else {
+	//probs tls with HTTPS text
+	} else if (strings.Contains( fingerprint, "tls") &&
+		strings.Contains( fingerprint, "http")) {
+		return "tls"
+	} else {
 		fmt.Println("WARNING: NEW MULTI-FINGERPRINT:", fingerprint)
 		return fingerprint
 	}
@@ -66,21 +70,26 @@ func fingerprintResponse( data string ) string {
 	fingerprint := ""
 	tfingerprint := ""
 	multiprint := false
-	for hname, hand := range handshakes {
+	for _, hand := range handshakes {
 		tfingerprint = hand.Verify( data )
 		if tfingerprint != "" {
-			fingerprintMap[hname] += 1
+
+			//fingerprintMap[hname] += 1
+
+			//concat fingerprints together 
 			if fingerprint == "" {
 				fingerprint += tfingerprint
 			} else {
 				multiprint = true
 				fingerprint += ("-" + tfingerprint)
 			}
+
 		}
 	}
 	if multiprint {
-		return hiearchizeFingerprint( fingerprint )
+		fingerprint = hiearchizeFingerprint( fingerprint )
 	}
+	fingerprintMap[fingerprint] += 1
 	return fingerprint
 }
 

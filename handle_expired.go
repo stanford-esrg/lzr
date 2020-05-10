@@ -12,7 +12,7 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 	if !( packet.RST && !packet.ACK ) {
 
 		rst := constructRST( packet )
-		err = handle.WritePacketData( rst )
+		_ = handle.WritePacketData( rst )
 
 	}
 
@@ -31,7 +31,6 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 
 		//remove from state, we are done now
 		packet = ipMeta.remove( packet )
-
 	} else { // lets try another handshake
 
 		//lets also filter for cananda-like things
@@ -39,6 +38,7 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 
 			highPortPacket := createFilterPacket( packet )
 			sendOffSyn( highPortPacket, ipMeta, timeoutQueue )
+			ipMeta.FinishProcessing( highPortPacket )
 
 		}
 
@@ -63,7 +63,7 @@ func sendOffSyn(packet * packet_metadata, ipMeta * pState,
         ipMeta.update( packet )
         syn := constructSYN( packet )
         // send SYN packet if so and start the whole process again
-        err = handle.WritePacketData(syn)
+        err := handle.WritePacketData(syn)
         if err != nil {
             panic(err)
 

@@ -51,7 +51,7 @@ func LZRMain() {
             select {
                 case input := <-writingQueue:
 					writing = true
-                    f.Record( *input, options.Handshakes )
+                    f.Record( input, options.Handshakes )
 					writing = false
                 }
         }
@@ -85,15 +85,15 @@ func LZRMain() {
     }
     //read from pcap
     for i := 0; i < options.Workers; i ++ {
-        go func() {
+        go func( i int ) {
             for input := range pcapIncoming {
-                        inMap, processing := ipMeta.IsStartProcessing( input )
+                        inMap, startProcessing := ipMeta.IsStartProcessing( input )
                         //if not in map, return
                         if !inMap {
                             continue
                         }
                         //if another thread is processing, put input back
-                        if processing {
+                        if !startProcessing {
                             pcapIncoming <- input
                             continue
                         }
@@ -101,20 +101,20 @@ func LZRMain() {
 							retransmitQueue, writingQueue )
                         ipMeta.FinishProcessing( input )
             }
-        }()
+        }(i)
     }
 
     //read from timeout
     go func() {
 
         for input := range timeoutIncoming {
-                    inMap, processing := ipMeta.IsStartProcessing( input )
+                    inMap, startProcessing := ipMeta.IsStartProcessing( input )
                     //if another thread is processing, put input back
                     //if not in map, return
                     if !inMap {
                         continue
                     }
-                    if processing {
+                    if !startProcessing {
                         timeoutIncoming <- input
                         continue
                     }
