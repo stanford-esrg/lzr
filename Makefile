@@ -13,6 +13,11 @@ lzr: $(GO_FILES)
 	rm -f lzr
 	ln -s cmd/lzr/lzr$(EXECUTABLE_EXTENSION) lzr
 
+lzr_race: $(GO_FILES)
+	cd cmd/lzr && go build -race && cd ../..
+	rm -f lzr
+	ln -s cmd/lzr/lzr$(EXECUTABLE_EXTENSION) lzr
+
 clean:
 	cd cmd/lzr && go clean
 	rm -f lzr
