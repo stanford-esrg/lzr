@@ -65,7 +65,7 @@ func constructSYN( p *packet_metadata ) []byte {
         DstPort: layers.TCPPort(p.Sport),
 		Seq: uint32(p.Seqnum),
 		Ack: uint32(p.Acknum),
-		Window: 65535,
+		Window: uint16(p.Window), //65535,
 		SYN: true,
     }
 
@@ -117,7 +117,7 @@ func constructData( handshake Handshake, p *packet_metadata, ack bool, push bool
         DstPort: layers.TCPPort(p.Sport),
 		Seq: uint32(p.Acknum),
 		Ack: uint32(p.Seqnum+1),
-		Window: 65535,
+		Window: uint16(p.Window),
 		ACK: ack,
 		PSH: push,
     }

@@ -19,7 +19,8 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 	//grab which handshake
 	handshakeNum := ipMeta.getHandshake( packet )
 	//if we are all not trying anymore handshakes, so sad. 
-	if ( packet.ExpectedRToLZR == SYN_ACK ||
+	//if ( packet.ExpectedRToLZR == SYN_ACK ||
+	if (
 		packet.HyperACKtive  || (handshakeNum >= (len( opts.Handshakes ) - 1)) ){
 
 		packet.syncHandshakeNum( handshakeNum )
