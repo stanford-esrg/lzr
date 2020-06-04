@@ -46,11 +46,11 @@ func init() {
   fname := "default_"+string(time.Now().Format("20060102150405"))+".json"
   filename = flag.String("f", fname , "json file name")
 
-  debug = flag.Bool("d", false, "debug printing on (defaut off)")
-  haf = flag.Bool("haf", true, "HyperACKtive filtering off (default on)")
-  pushDOnly = flag.Bool("pushDataOnly", false, "Don't attach data to ack but rather to push only (default off)")
-  forceAllHandshakes = flag.Bool("forceAllHandshakes", false, "Complete all handshakes even if data is returned early on (default off). This also turns off HyperACKtive filtering.")
-  feedZGrab = flag.Bool("feedZGrab", false, "send to zgrab ip and fingerprint (default off)")
+  debug = flag.Bool("d", false, "debug printing on")
+  haf = flag.Bool("haf", true, "HyperACKtive filtering off")
+  pushDOnly = flag.Bool("pushDataOnly", false, "Don't attach data to ack but rather to push only")
+  forceAllHandshakes = flag.Bool("forceAllHandshakes", false, "Complete all handshakes even if data is returned early on. This also turns off HyperACKtive filtering.")
+  feedZGrab = flag.Bool("feedZGrab", false, "send to zgrab ip and fingerprint")
   workers = flag.Int("w", 1 , "number of worker threads for each channel")
   timeout = flag.Int("t", 5, "number of seconds to wait in timeout queue for last retransmission")
   retransmitSec = flag.Int("rt", 1 , "number of seconds until re-transmitting packet")
