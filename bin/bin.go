@@ -11,6 +11,22 @@ import (
 	"fmt"
 )
 
+var prevRemaining int
+var timeCounter int
+
+//TODO: eventually figure out whats triggering stragglers 
+func earlyExit( remaining int, timeout int ) bool {
+
+	fmt.Fprintln(os.Stderr,"Finishing Last:", remaining)
+	if prevRemaining == remaining && timeout > timeCounter {
+		return true
+	}
+	timeCounter += 1
+	prevRemaining = remaining
+	return false
+}
+
+
 func LZRMain() {
     // create a context that can be cancelled
     //ctx, cancel := context.WithCancel(context.Background())
@@ -60,6 +76,7 @@ func LZRMain() {
     //read from zmap
 	var zmapDone sync.WaitGroup
 	zmapDone.Add(options.Workers)
+
     for i := 0; i < options.Workers; i ++ {
         go func( i int ) {
 	        for input := range zmapIncoming {
@@ -76,7 +93,10 @@ func LZRMain() {
 					}
 					//slow down to prevent CPU busy looping
 					time.Sleep(1*time.Second)
-				    fmt.Fprintln(os.Stderr,"Finishing Last:", ipMeta.Count())
+					if earlyExit( ipMeta.Count(), options.Timeout) {
+						zmapDone.Done()
+						return
+					}
 				}
 			}
 			zmapDone.Done()
