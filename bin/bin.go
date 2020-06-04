@@ -76,7 +76,7 @@ func LZRMain() {
 					}
 					//slow down to prevent CPU busy looping
 					time.Sleep(1*time.Second)
-					fmt.Println("Finishing Last:",ipMeta.Count())
+				    fmt.Fprintln(os.Stderr,"Finishing Last:", ipMeta.Count())
 				}
 			}
 			zmapDone.Done()

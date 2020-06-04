@@ -40,7 +40,7 @@ func ConstructZMapRoutine( workers int ) chan *packet_metadata {
 			//Read from ZMap
 			input, err := reader.ReadString(byte('\n'))
 			if err != nil && err == io.EOF {
-				fmt.Println("ZMAP CLOSED")
+                fmt.Fprintln(os.Stderr,"ZMap Finished")
                 close(zmapIncoming)
 				return
 			}
