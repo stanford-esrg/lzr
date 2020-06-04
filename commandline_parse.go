@@ -2,6 +2,7 @@ package lzr
 import (
   "flag"
   "fmt"
+  "os"
   "time"
   "strings"
 )
@@ -92,34 +93,34 @@ func Parse() *options {
 		*haf = false
 	}
 
-    fmt.Println("++Writing results to file:", *filename)
-    fmt.Println("++Handshakes:", *handshake)
+    fmt.Fprintln(os.Stderr,"++Writing results to file:", *filename)
+    fmt.Fprintln(os.Stderr,"++Handshakes:", *handshake)
 	if *memprofile != "" {
-		fmt.Println("++Writing memprofile to file:", *memprofile)
+		fmt.Fprintln(os.Stderr,"++Writing memprofile to file:", *memprofile)
 	}
 	if *cpuprofile != "" {
-		fmt.Println("++Writing cpuprofile to file:", *cpuprofile)
+		fmt.Fprintln(os.Stderr,"++Writing cpuprofile to file:", *cpuprofile)
 	}
 	if *debug {
-		fmt.Println("++Debug turned on")
+		fmt.Fprintln(os.Stderr,"++Debug turned on")
 	}
 	if *haf {
-		fmt.Println("++HyperACKtiveFiltering turned on")
+		fmt.Fprintln(os.Stderr,"++HyperACKtiveFiltering turned on")
 	}
 	if *feedZGrab {
-		fmt.Println("++Feeding ZGrab with fingerprints")
+		fmt.Fprintln(os.Stderr,"++Feeding ZGrab with fingerprints")
 	}
 	if *pushDOnly {
-		fmt.Println("++Sending Data only with Push Flag (not in ack)")
+		fmt.Fprintln(os.Stderr,"++Sending Data only with Push Flag (not in ack)")
 	}
 	if *forceAllHandshakes {
-		fmt.Println("++Force completing all handshakes")
+		fmt.Fprintln(os.Stderr,"++Force completing all handshakes")
 	}
-    fmt.Println("++Worker threads:", *workers)
-    fmt.Println("++Timeout Interval (s):", *timeout)
-    fmt.Println("++Retransmit Interval (s):", *retransmitSec)
-    fmt.Println("++Number of Retransmitions:", *retransmitNum)
-    //fmt.Println("port:", *port)
+    fmt.Fprintln(os.Stderr,"++Worker threads:", *workers)
+    fmt.Fprintln(os.Stderr,"++Timeout Interval (s):", *timeout)
+    fmt.Fprintln(os.Stderr,"++Retransmit Interval (s):", *retransmitSec)
+    fmt.Fprintln(os.Stderr,"++Number of Retransmitions:", *retransmitNum)
+    //fmt.Fprintln(os.Stderr,"port:", *port)
     return opt
 }
 
