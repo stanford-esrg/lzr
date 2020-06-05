@@ -95,6 +95,7 @@ func LZRMain() {
 					time.Sleep(1*time.Second)
 					if earlyExit( ipMeta.Count(), options.Timeout) {
 						zmapDone.Done()
+						done=true
 						return
 					}
 				}
