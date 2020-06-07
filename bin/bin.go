@@ -93,11 +93,12 @@ func LZRMain() {
 					}
 					//slow down to prevent CPU busy looping
 					time.Sleep(1*time.Second)
-					if earlyExit( ipMeta.Count(), options.Timeout) {
+					fmt.Fprintln(os.Stderr,"Finishing Last:", ipMeta.Count())
+					/*if earlyExit( ipMeta.Count(), options.Timeout) {
 						zmapDone.Done()
 						done=true
 						return
-					}
+					}*/
 				}
 			}
 			zmapDone.Done()
