@@ -83,7 +83,7 @@ func ( f *output_file ) Record( packet packet_metadata, handshakes []string ) {
 
 	if FeedZGrab() {
 		if packet.Fingerprint != "" {
-			fmt.Println( packet.Saddr + ", , " + packet.Fingerprint )
+			fmt.Println( packet.Saddr + ", ," + packet.Fingerprint )
 		}
 	}
 
