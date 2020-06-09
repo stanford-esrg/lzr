@@ -27,14 +27,16 @@ func HandlePcap( opts *options, packet *packet_metadata, ipMeta * pState, timeou
 	retransmitQueue chan *packet_metadata, writingQueue chan packet_metadata ) {
 
 
-	//verify 
-	if !(ipMeta.verifyScanningIP( packet )) {
+	//verify
+	verified := ipMeta.verifyScanningIP( packet )
+	if !verified {
 		packet.incrementCounter()
 		packet.updateTimestamp()
 		packet.validationFail()
 		timeoutQueue <-packet
 		return
 	}
+
 	//for every ack received, mark as accepting data
 	if (!packet.SYN) && packet.ACK {
 		ipMeta.updateAck( packet )
@@ -56,8 +58,8 @@ func HandlePcap( opts *options, packet *packet_metadata, ipMeta * pState, timeou
 		closeConnection( packet, ipMeta, writingQueue, true)
 
 		if HyperACKtiveFiltering() && handshakeNum > 0 {
-			//remove potential hyperactive counterpart
-			packet.HyperACKtive = true
+			//remove potential non/hyperactive counterpart
+			packet.HyperACKtive = !packet.HyperACKtive
 			closeConnection( packet, ipMeta, writingQueue, false)
 		}
 		return

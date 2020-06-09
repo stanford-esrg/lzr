@@ -158,6 +158,8 @@ func verifySA( pMap *packet_metadata, pRecv *packet_metadata ) bool {
 
 }
 
+//TODO: eventually remove the act of updating packet with hyperactive flag to 
+// another packet func
 func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 
 	pRecvKey := constructKey(pRecv)

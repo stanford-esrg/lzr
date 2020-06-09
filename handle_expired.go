@@ -53,6 +53,7 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 		if ( handshakeNum == 0 &&  HyperACKtiveFiltering() ) {
 			highPortPacket := createFilterPacket( packet )
 			sendOffSyn( highPortPacket, ipMeta, timeoutQueue )
+			ipMeta.incHandshake( highPortPacket )
 			ipMeta.FinishProcessing( highPortPacket )
 		}
 
