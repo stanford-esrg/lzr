@@ -1,12 +1,12 @@
 package lzr
 
 import (
-    "encoding/json"
-    "log"
-    "os"
+	"encoding/json"
+	"log"
+	"os"
 	"bufio"
 	"time"
-    "fmt"
+	"fmt"
 )
 
 var (
@@ -34,12 +34,12 @@ type summary struct {
 
 
 func Summarize( t time.Duration ) {
-	fmt.Println( "Runtime:",t )
+	fmt.Fprintln(os.Stderr, "Runtime:", t)
 	out, _ := json.Marshal( summaryLZR )
-	fmt.Println( string(out) )
+	fmt.Fprintln(os.Stderr, string(out))
 	//print out fingerprints
 	for k, v := range GetFingerprints() {
-		fmt.Println(k +":", v)
+		fmt.Fprintln(os.Stderr, k +":", v)
 	}
 }
 
@@ -57,19 +57,19 @@ func addToSummary( packet *packet_metadata ) {
 	if packet.ACKed {
 		summaryLZR.ACKed += 1
 	}
-    if packet.RST {
-        summaryLZR.Rst += 1
-    }
-    if packet.FIN {
-        summaryLZR.Fin += 1
-    }
+	if packet.RST {
+		summaryLZR.Rst += 1
+	}
+	if packet.FIN {
+		summaryLZR.Fin += 1
+	}
 	if packet.ExpectedRToLZR == SYN_ACK {
 		summaryLZR.No_SYNACK += 1
 	}
 	if packet.Data != "" {
 		summaryLZR.Data += 1
 	}
-	if packet.Counter == 0  && packet.ACKed {
+	if packet.Counter == 0	&& packet.ACKed {
 		summaryLZR.Resp_ack += 1
 	}
 	if packet.Counter == 1 && packet.ACKed {
@@ -79,7 +79,7 @@ func addToSummary( packet *packet_metadata ) {
 
 func ( f *output_file ) Record( packet packet_metadata, handshakes []string ) {
 
-    packet.fingerprintData()
+	packet.fingerprintData()
 
 	if FeedZGrab() {
 		if packet.Fingerprint != "" {
@@ -89,36 +89,36 @@ func ( f *output_file ) Record( packet packet_metadata, handshakes []string ) {
 
 	addToSummary( &packet )
 
-    out, _ := json.Marshal( packet )
-    _,err := (f.F).WriteString( string(out) )
-    if err != nil {
-        f.F.Flush()
-        panic(err)
+	out, _ := json.Marshal( packet )
+	_,err := (f.F).WriteString( string(out) )
+	if err != nil {
+		f.F.Flush()
+		panic(err)
 		log.Fatal(err)
 	}
-    _,err = (f.F).WriteString( "\n" )
-    if err != nil {
-        f.F.Flush()
-        panic(err)
+	_,err = (f.F).WriteString( "\n" )
+	if err != nil {
+		f.F.Flush()
+		panic(err)
 		log.Fatal(err)
 	}
-    return
+	return
 }
 
 
 func InitFile( fname string ) *output_file {
 
-    f, err := os.OpenFile( fname, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777 )
+	f, err := os.OpenFile( fname, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777 )
 
-    if err != nil {
-        panic(err)
+	if err != nil {
+		panic(err)
 		log.Fatal(err)
-    }
+	}
 
-    o := &output_file{
+	o := &output_file{
 		F: bufio.NewWriter(f),
-    }
+	}
 
-    return o
+	return o
 }
 
