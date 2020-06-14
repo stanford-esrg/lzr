@@ -25,12 +25,9 @@ func AddHandshake( name string, h Handshake ) {
 
 }
 
-func GetHandshake( name string ) Handshake {
+func GetHandshake( name string ) (Handshake,bool) {
 	h, ok := handshakes[name]
-	if !ok {
-		panic(name + " not found")
-	}
-	return h
+	return h,ok
 }
 
 // implement a hiearchy where when responses match

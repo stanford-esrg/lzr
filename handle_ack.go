@@ -20,7 +20,7 @@ timeoutQueue  chan *packet_metadata, retransmitQueue chan *packet_metadata, writ
 
 	//grab which handshake
 	handshakeNum := ipMeta.getHandshake(synack)
-	handshake := GetHandshake( opts.Handshakes[ handshakeNum ] )
+	handshake, _ := GetHandshake( opts.Handshakes[ handshakeNum ] )
 
 	//Send Ack with Data
 	ack, payload := constructData( handshake, synack, true, false )

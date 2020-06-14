@@ -61,7 +61,9 @@ func init() {
   handshake = flag.String("handshakes", "http" , "handshakes to scan with")
 }
 
-func Parse() *options {
+
+
+func Parse() (*options,bool) {
 
     flag.Parse()
     opt := &options{
@@ -80,10 +82,25 @@ func Parse() *options {
 		Handshakes: make([]string, strings.Count(*handshake,",")+1),
     }
 	if !strings.Contains( *handshake, ",")	{
+
+		_, ok := GetHandshake(*handshake)
+
+		if !ok {
+			fmt.Fprintln(os.Stderr,"--Handshake not found:", *handshake)
+			return nil,false
+		}
+
 		opt.Handshakes[0] = *handshake
 	} else {
 		i := 0
 		for _, h := range strings.Split( *handshake, "," ) {
+
+			_, ok := GetHandshake(h)
+			if !ok {
+				fmt.Fprintln(os.Stderr,"--Handshake not found:", h)
+				return nil,false
+			}
+
 			opt.Handshakes[i] = h
 			i += 1
 		}
@@ -121,7 +138,7 @@ func Parse() *options {
     fmt.Fprintln(os.Stderr,"++Retransmit Interval (s):", *retransmitSec)
     fmt.Fprintln(os.Stderr,"++Number of Retransmitions:", *retransmitNum)
     //fmt.Fprintln(os.Stderr,"port:", *port)
-    return opt
+    return opt,true
 }
 
 func DebugOn() bool {

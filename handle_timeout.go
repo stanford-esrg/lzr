@@ -24,7 +24,7 @@ func HandleTimeout( opts *options, packet *packet_metadata, ipMeta * pState,
 
 			//grab which handshake
 			handshakeNum := ipMeta.getHandshake( packet )
-			handshake := GetHandshake( opts.Handshakes[ handshakeNum ] )
+			handshake, _ := GetHandshake( opts.Handshakes[ handshakeNum ] )
 
 			//if packet counter is 0 then dont specify the push flag just yet
 			dataPacket,payload := constructData( handshake, packet,true,!(packet.Counter  == 0))

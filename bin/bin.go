@@ -14,19 +14,6 @@ import (
 var prevRemaining int
 var timeCounter int
 
-//TODO: eventually figure out whats triggering stragglers 
-func earlyExit( remaining int, timeout int ) bool {
-
-	fmt.Fprintln(os.Stderr,"Finishing Last:", remaining)
-	if prevRemaining == remaining && timeout > timeCounter {
-		return true
-	}
-	timeCounter += 1
-	prevRemaining = remaining
-	return false
-}
-
-
 func LZRMain() {
     // create a context that can be cancelled
     //ctx, cancel := context.WithCancel(context.Background())
@@ -34,7 +21,11 @@ func LZRMain() {
 	start := time.Now()
 
     //read in config 
-    options := lzr.Parse()
+    options, ok := lzr.Parse()
+	if !ok {
+		fmt.Fprintln(os.Stderr,"Failed to parse command line options, exiting.")
+		return
+	}
 
 	//For CPUProfiling
 	if options.CPUProfile != "" {
