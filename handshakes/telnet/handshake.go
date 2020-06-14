@@ -15,14 +15,15 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
 }
 
 func (h *HandshakeMod) Verify( data string ) string {
-
 	if len(data) < 2 {
 		return ""
 	}
 	if ( data[0] != byte(0xff) ) {
 		return ""
 	}
-	if ( data[1] == byte(0xfe) || data[1] == byte(0xfd) || data[1] == byte(0xfc) || data[1] == byte(0xfb) ) {
+	if (  data[1] == byte(0xff) || data[1] == byte(0xfe) ||
+			data[1] == byte(0xfd) || data[1] == byte(0xfc) ||
+				data[1] == byte(0xfb) ) {
 		return "telnet"
 	}
 
