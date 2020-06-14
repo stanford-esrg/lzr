@@ -2,6 +2,7 @@ package dnp3
 
 import (
 	"lzr"
+    "encoding/binary"
 )
 
 // Handshake implements the lzr.Handshake interface
@@ -11,13 +12,17 @@ type HandshakeMod struct {
 
 
 func (h *HandshakeMod) GetData( dst string ) []byte {
-    data := makeLinkRequestBatch(0x0000, 1, 0x0000, 100)
-    return data
+    return  GetFirstData()
 }
 
 func (h *HandshakeMod) Verify( data string ) string {
 
-	return verifyDNP3( data )
+    data_bytes := []byte(data)
+    if len(data_bytes) >= 10 && binary.BigEndian.Uint16(data_bytes[0:2]) == 0x0564 {
+        return "dnp3"
+    }
+
+    return ""
 
 }
 
