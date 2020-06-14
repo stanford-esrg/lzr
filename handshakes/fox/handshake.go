@@ -11,7 +11,6 @@ type HandshakeMod struct {
 }
 
 const (
-    // ORIGINAL_QUERY is the hex encoding of the query that will be sent to each server.
     ORIGINAL_QUERY = "666f7820612031202d3120666f782068656c6c6f0a7b0a" +
         "666f782e76657273696f6e3d733a312e300a69643d693a310a686f73744e" +
         "616d653d733a7870766d2d306f6d64633031786d790a686f737441646472" +
@@ -30,7 +29,6 @@ const (
         "3742420a766d557569643d733a38623533306263382d373663352d343133" +
         "392d613265612d3066616264333934643330350a6272616e6449643d733a" +
         "76796b6f6e0a7d3b3b0a"
-    // RESPONSE_PREFIX is the prefix that will identify a Fox service.
     RESPONSE_PREFIX = "fox a 0 -1 fox hello"
 )
 
@@ -48,6 +46,6 @@ func (h *HandshakeMod) Verify( data string ) string {
 
 func RegisterHandshake() {
 	var h HandshakeMod
-	lzr.AddHandshake( "x11", &h )
+	lzr.AddHandshake( "fox", &h )
 }
 
