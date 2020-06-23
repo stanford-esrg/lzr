@@ -2,6 +2,7 @@ package telnet
 
 import (
 	"lzr"
+	"strings"
 )
 
 // Handshake implements the lzr.Handshake interface
@@ -15,6 +16,9 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
 }
 
 func (h *HandshakeMod) Verify( data string ) string {
+	if strings.Contains( ToLower(data), "telnet" ) {
+		return "telnet"
+	}
 	if len(data) < 2 {
 		return ""
 	}
@@ -29,6 +33,21 @@ func (h *HandshakeMod) Verify( data string ) string {
 
 	return ""
 }
+
+//more efficient string toLower
+//https://github.com/golang/go/issues/17859
+
+func ToLower(s string) string {
+                b := make([]byte, len(s))
+                for i, c := range s {
+                        if c >= 'A' && c <= 'Z' {
+                                c += 32
+                        }
+                        b[i] = byte(c)
+                }
+                return string(b)
+}
+
 
 func RegisterHandshake() {
 	var h HandshakeMod
