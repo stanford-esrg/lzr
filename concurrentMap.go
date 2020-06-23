@@ -3,8 +3,8 @@ package lzr
 
 import (
 	"sync"
-	"fmt"
-	"os"
+	//"fmt"
+	//"os"
 )
 
 var SHARD_COUNT = 4096
@@ -62,9 +62,9 @@ func (m pState) Count() int {
 		shard := m[i]
 		shard.RLock()
 		count += len(shard.items)
-		if len(shard.items) != 0{
+		/*if len(shard.items) != 0{
 			fmt.Fprintln(os.Stderr,shard.items)
-		}
+		}*/
 		shard.RUnlock()
 	}
 	return count
