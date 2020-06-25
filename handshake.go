@@ -35,6 +35,19 @@ func GetHandshake( name string ) (Handshake,bool) {
 // e.g., protocols implemented on http
 func hiearchizeFingerprint( fingerprint string ) string {
 
+
+	// prioritize for the handshake being sent
+	// so if scanning for http ipp will return as http
+	// but if scanning for ipp then http+ipp will return ipp
+
+	req_handshakes := GetAllHandshakes()
+	for  _, h := range req_handshakes {
+		if strings.Contains( fingerprint, h ) {
+			return h
+		}
+	}
+
+
 	if strings.Contains( fingerprint, "ipp" ) {
 		return "ipp"
 	} else if strings.Contains( fingerprint, "kubernetes") {
@@ -70,9 +83,6 @@ func fingerprintResponse( data string ) string {
 	for _, hand := range handshakes {
 		tfingerprint = hand.Verify( data )
 		if tfingerprint != "" {
-
-			//fingerprintMap[hname] += 1
-
 			//concat fingerprints together 
 			if fingerprint == "" {
 				fingerprint += tfingerprint

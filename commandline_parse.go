@@ -22,6 +22,7 @@ var (
 	cpuprofile			*string
 	memprofile			*string
 	handshake			*string
+	handshakeArr		[]string
 )
 
 type options struct {
@@ -105,6 +106,7 @@ func Parse() (*options,bool) {
 			i += 1
 		}
 	}
+	handshakeArr = opt.Handshakes
 
 	if *forceAllHandshakes {
 		*haf = false
@@ -159,4 +161,8 @@ func PushDOnly() bool {
 
 func ForceAllHandshakes() bool {
 	return *forceAllHandshakes
+}
+
+func GetAllHandshakes()  []string {
+	return handshakeArr
 }
