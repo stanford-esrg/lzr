@@ -22,6 +22,14 @@ func (h *HandshakeMod) Verify( data string ) string {
 	} else if strings.Contains( ToLower(data), "ftp" ) {
 		return "ftp"
 	}
+	if strings.Contains( data[0:3], "220" ) ||
+		strings.Contains( data[0:3], "421" ) ||
+		strings.Contains( data[0:3], "530" ) ||
+		strings.Contains( data[0:3], "550" ) ||
+		strings.Contains( data[0:3], "230" ) {
+		return "ftp"
+	}
+
     return ""
 }
 
