@@ -16,18 +16,22 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
 }
 
 func (h *HandshakeMod) Verify( data string ) string {
-	if strings.Contains( ToLower(data), "telnet" ) {
-		return "telnet"
-	}
 	if len(data) < 2 {
 		return ""
 	}
-	if ( data[0] != byte(0xff) ) {
-		return ""
+	if strings.Contains( ToLower(data), "telnet" ) {
+		return "telnet"
 	}
+
 	if (  data[1] == byte(0xff) || data[1] == byte(0xfe) ||
 			data[1] == byte(0xfd) || data[1] == byte(0xfc) ||
 				data[1] == byte(0xfb) ) {
+		return "telnet"
+	}
+	//response to HTTP
+	if strings.Contains( data, "Auth Result") &&
+		strings.Contains( data, "Server Time") &&
+		strings.Contains( data, "IP Address") {
 		return "telnet"
 	}
 
