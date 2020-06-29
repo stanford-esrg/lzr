@@ -29,11 +29,11 @@ func (h *HandshakeMod) Verify( data string ) string {
 		return "telnet"
 	}
 	//response to HTTP
-	if strings.Contains( data, "Auth Result") &&
+	/*if strings.Contains( data, "Auth Result") &&
 		strings.Contains( data, "Server Time") &&
 		strings.Contains( data, "IP Address") {
 		return "telnet"
-	}
+	}*/
 
 	return ""
 }
