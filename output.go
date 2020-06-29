@@ -28,7 +28,6 @@ type summary struct {
 	Rst				int
 	Fin				int
 	Resp_ack		int
-	Resp_push		int
 	HyperACKtive	int
 }
 
@@ -69,11 +68,8 @@ func addToSummary( packet *packet_metadata ) {
 	if packet.Data != "" {
 		summaryLZR.Data += 1
 	}
-	if packet.Counter == 0	&& packet.ACKed {
+	if  !packet.SYN	&& packet.ACK {
 		summaryLZR.Resp_ack += 1
-	}
-	if packet.Counter == 1 && packet.ACKed {
-		summaryLZR.Resp_push += 1
 	}
 }
 
