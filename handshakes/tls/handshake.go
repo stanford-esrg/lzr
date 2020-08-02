@@ -2,10 +2,8 @@ package tls
 
 import (
 	"bytes"
-	//"strings"
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"math/rand"
-	//"fmt"
 )
 
 // Handshake implements the lzr.Handshake interface
@@ -25,7 +23,6 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
 
 func (h *HandshakeMod) Verify( data string ) string {
 
-	//TODO: fill in
 	datab := []byte(data)
 	if len(datab) < 3 {
 		return ""

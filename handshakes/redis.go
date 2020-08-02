@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/redis"
+import "github.com/stanford-esrg/lzr/handshakes/redis"
 
 func init() {
 	redis.RegisterHandshake()

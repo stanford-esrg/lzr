@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/imap"
+import "github.com/stanford-esrg/lzr/handshakes/imap"
 
 func init() {
 	imap.RegisterHandshake()

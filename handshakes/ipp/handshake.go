@@ -4,7 +4,7 @@ import (
     "net/http"
     "net/http/httputil"
 	"strings"
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 )
 
 // Handshake implements the lzr.Handshake interface

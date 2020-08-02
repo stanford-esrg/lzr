@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/smtp"
+import "github.com/stanford-esrg/lzr/handshakes/smtp"
 
 func init() {
 	smtp.RegisterHandshake()

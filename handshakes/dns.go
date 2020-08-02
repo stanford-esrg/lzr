@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/dns"
+import "github.com/stanford-esrg/lzr/handshakes/dns"
 
 func init() {
 	dns.RegisterHandshake()

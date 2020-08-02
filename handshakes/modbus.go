@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/modbus"
+import "github.com/stanford-esrg/lzr/handshakes/modbus"
 
 func init() {
 	modbus.RegisterHandshake()

@@ -1,7 +1,7 @@
 package rtsp
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"strings"
 )
 

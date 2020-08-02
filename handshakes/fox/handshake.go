@@ -1,7 +1,7 @@
 package fox
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"encoding/hex"
 	"strings"
 )

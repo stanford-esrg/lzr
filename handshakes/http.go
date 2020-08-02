@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/http"
+import "github.com/stanford-esrg/lzr/handshakes/http"
 
 func init() {
 	http.RegisterHandshake()

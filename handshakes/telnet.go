@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/telnet"
+import "github.com/stanford-esrg/lzr/handshakes/telnet"
 
 func init() {
 	telnet.RegisterHandshake()

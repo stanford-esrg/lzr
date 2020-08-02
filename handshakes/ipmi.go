@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/ipmi"
+import "github.com/stanford-esrg/lzr/handshakes/ipmi"
 
 func init() {
 	ipmi.RegisterHandshake()

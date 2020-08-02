@@ -1,7 +1,7 @@
 package dnp3
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
     "encoding/binary"
 )
 

@@ -1,7 +1,7 @@
 package imap
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	//"unicode"
 	"strings"
 	"unicode/utf8"

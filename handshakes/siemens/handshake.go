@@ -1,7 +1,7 @@
 package siemens
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"encoding/hex"
 )
 

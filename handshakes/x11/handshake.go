@@ -1,7 +1,7 @@
 package x11
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 )
 
 // Handshake implements the lzr.Handshake interface

@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/mqtt"
+import "github.com/stanford-esrg/lzr/handshakes/mqtt"
 
 func init() {
 	mqtt.RegisterHandshake()

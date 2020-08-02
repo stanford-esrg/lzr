@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/smb"
+import "github.com/stanford-esrg/lzr/handshakes/smb"
 
 func init() {
 	smb.RegisterHandshake()

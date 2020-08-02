@@ -1,7 +1,7 @@
 package pop3
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"strings"
 	"unicode/utf8"
 )

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"lzr/bin"
-	_ "lzr/handshakes"
+	"github.com/stanford-esrg/lzr/bin"
+	_ "github.com/stanford-esrg/lzr/handshakes"
 )
 
 // main wraps the "true" main, bin.LZRMain()

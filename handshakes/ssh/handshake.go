@@ -1,7 +1,7 @@
 package ssh
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	//"unicode"
 	"strings"
 	"unicode/utf8"

@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/tls"
+import "github.com/stanford-esrg/lzr/handshakes/tls"
 
 func init() {
 	tls.RegisterHandshake()

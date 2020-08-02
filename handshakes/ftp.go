@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/ftp"
+import "github.com/stanford-esrg/lzr/handshakes/ftp"
 
 func init() {
 	ftp.RegisterHandshake()

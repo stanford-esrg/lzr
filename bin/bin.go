@@ -7,7 +7,7 @@ import (
 	"sync"
 	"os"
 	"log"
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"fmt"
 )
 

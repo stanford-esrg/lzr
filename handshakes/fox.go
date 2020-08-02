@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/fox"
+import "github.com/stanford-esrg/lzr/handshakes/fox"
 
 func init() {
 	fox.RegisterHandshake()

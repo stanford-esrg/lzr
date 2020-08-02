@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/vnc"
+import "github.com/stanford-esrg/lzr/handshakes/vnc"
 
 func init() {
 	vnc.RegisterHandshake()

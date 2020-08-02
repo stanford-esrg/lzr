@@ -1,7 +1,7 @@
 package telnet
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"strings"
 )
 

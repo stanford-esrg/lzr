@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/siemens"
+import "github.com/stanford-esrg/lzr/handshakes/siemens"
 
 func init() {
 	siemens.RegisterHandshake()

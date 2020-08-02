@@ -1,7 +1,7 @@
 package amqp
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"strings"
 )
 

@@ -1,7 +1,7 @@
 package smb
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"strings"
 	"encoding/hex"
 )

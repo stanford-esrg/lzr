@@ -1,7 +1,7 @@
 package smtp
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"strings"
 )
 

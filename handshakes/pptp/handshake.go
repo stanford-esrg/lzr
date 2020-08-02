@@ -1,7 +1,7 @@
 package pptp
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
     "encoding/binary"
 	"strings"
 )

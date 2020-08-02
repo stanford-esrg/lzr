@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/mssql"
+import "github.com/stanford-esrg/lzr/handshakes/mssql"
 
 func init() {
 	mssql.RegisterHandshake()

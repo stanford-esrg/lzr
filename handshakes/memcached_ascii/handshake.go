@@ -1,7 +1,7 @@
 package memcached_ascii
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"strings"
 )
 

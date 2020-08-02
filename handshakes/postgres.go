@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/postgres"
+import "github.com/stanford-esrg/lzr/handshakes/postgres"
 
 func init() {
 	postgres.RegisterHandshake()

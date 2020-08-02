@@ -1,7 +1,7 @@
 package memcached_binary
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"strings"
 )
 

@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/rdp"
+import "github.com/stanford-esrg/lzr/handshakes/rdp"
 
 func init() {
 	rdp.RegisterHandshake()

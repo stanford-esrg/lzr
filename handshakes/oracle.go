@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/oracle"
+import "github.com/stanford-esrg/lzr/handshakes/oracle"
 
 func init() {
 	oracle.RegisterHandshake()

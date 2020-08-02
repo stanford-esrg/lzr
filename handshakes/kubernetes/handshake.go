@@ -3,7 +3,7 @@ package kubernetes
 import (
 	"strings"
 	//"fmt"
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"math/rand"
 )
 

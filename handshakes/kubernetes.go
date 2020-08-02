@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/kubernetes"
+import "github.com/stanford-esrg/lzr/handshakes/kubernetes"
 
 func init() {
 	kubernetes.RegisterHandshake()

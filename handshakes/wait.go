@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/wait"
+import "github.com/stanford-esrg/lzr/handshakes/wait"
 
 func init() {
 	wait.RegisterHandshake()

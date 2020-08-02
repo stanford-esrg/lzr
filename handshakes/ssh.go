@@ -1,6 +1,6 @@
 package handshakes
 
-import "lzr/handshakes/ssh"
+import "github.com/stanford-esrg/lzr/handshakes/ssh"
 
 func init() {
 	ssh.RegisterHandshake()

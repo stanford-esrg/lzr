@@ -4,7 +4,7 @@ import (
     "gopkg.in/mgo.v2/bson"
     "encoding/binary"
 	"strings"
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 )
 
 // Handshake implements the lzr.Handshake interface

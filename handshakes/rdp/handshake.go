@@ -1,7 +1,7 @@
 package rdp
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"bytes"
 	"encoding/hex"
 )

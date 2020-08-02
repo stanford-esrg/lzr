@@ -1,7 +1,7 @@
 package dns
 
 import (
-	"lzr"
+	"github.com/stanford-esrg/lzr"
 	"strings"
 )
 
