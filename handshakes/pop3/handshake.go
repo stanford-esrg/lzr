@@ -18,7 +18,8 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
 func (h *HandshakeMod) Verify( data string ) string {
     if data == "" || !isASCII(data) {
         return ""
-    } else if strings.Contains( ToLower(data), "pop3" ) || strings.Contains( data, "+OK") {
+    } else if strings.Contains( ToLower(data), "pop3" ) ||
+		strings.Contains( data, "+OK") || strings.Contains( data, "* OK") {
         return "pop3"
     }
     return ""

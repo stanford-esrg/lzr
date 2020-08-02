@@ -2,6 +2,7 @@ package memcached_binary
 
 import (
 	"lzr"
+	"strings"
 )
 
 // Handshake implements the lzr.Handshake interface
@@ -20,6 +21,9 @@ func (h *HandshakeMod) Verify( data string ) string {
 		return ""
 	}
 	if int([]byte(data)[0]) == 0x81 {
+		return "memcached_binary"
+	}
+	if strings.Contains( data, "ERROR\r\n") {
 		return "memcached_binary"
 	}
 	return ""

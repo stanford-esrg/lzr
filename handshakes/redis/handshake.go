@@ -20,6 +20,10 @@ func (h *HandshakeMod) Verify( data string ) string {
 		strings.Contains( data, "Redis" ) {
          return "redis"
 	}
+	//thats how it deals with wrong handshake
+	if strings.Contains( data, "-ERR unknown" ) {
+		return "redis"
+	}
     return ""
 }
 
