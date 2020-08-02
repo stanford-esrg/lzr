@@ -78,5 +78,5 @@ HyperACKtive Note: If a host responds both on the expected port and on the rando
 
 ## LZR's Algorithm
 
-![](etc/lzr_flow.pdf)
+![](etc/LZRAlg.png)
 
