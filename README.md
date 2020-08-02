@@ -3,16 +3,16 @@ LZR
 
 LZR is a shim that works in tangent with [ZMap](https://github.com/zmap/zmap) to efficiently detect and fingerprint unexpected services running on unexpected ports. LZR can detect up 18 unique protocols simoultaneously with just two extra packets and can fingerprint over 35 different protocols. LZR can also be used as a filter between ZMap and [ZGrab](https://github.com/zmap/zgrab2) to specify to ZGrab which L7 handshake to complete. LZR can make ZGrab perform 55x faster while discovering 50% of services that running 35 unique Layer 7 handshakes can discover.
 
-To learn more about how LZR's system and performance read [this (coming soon)](todo).
+To learn more about how LZR's system and performance read this (coming soon).
 
 ## Building
 
-Install and set up ZMap (see https://github.com/zmap/zmap).
+Install and set up ZMap (see https://github.com/zmap/zmap). If also performing full L7 handshakes, set up ZGrab (https://github.com/zmap/zgrab2).
 
 Set up `$GOPATH` (see https://golang.org/doc/code.html).
 ```
-$ go get github.com/stanford-esrg/LZR
-$ cd $GOPATH/src/github.com/stanford-esrg/LZR
+$ go get github.com/stanford-esrg/lzr
+$ cd $GOPATH/src/github.com/stanford-esrg/lzr
 ```
 
 LZR intercepts connections which ZMap opens; in order to ensure that the kernel does not interfere with LZR, LZR requires a source-ip to be specified for which the kernel drops all RSTs for traffic targeted to the source-ip. The chosen source-ip&mdash;which both ZMap and LZR will use&mdash;should be passed in as a parameter to make, so the appropriate iptables rule can be set.
