@@ -1,11 +1,11 @@
 package lzr
 
 import (
-    "github.com/google/gopacket"
-    "github.com/google/gopacket/layers"
-    "time"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"time"
 	"encoding/json"
-    "log"
+	"log"
 	"math/rand"
 	"math"
 	//"fmt"
@@ -28,108 +28,108 @@ type packet_state struct {
 
 type packet_metadata struct {
 
-	Saddr		    string		`json:"saddr"`
-	Daddr		    string		`json:"daddr"`
-	Sport		    int			`json:"sport"`
-	Dport		    int			`json:"dport"`
-	Seqnum		    int			`json:"seqnum"`
-	Acknum		    int			`json:"acknum"`
-	Window		    int			`json:"window"`
-	Counter		    int
+	Saddr			string		`json:"saddr"`
+	Daddr			string		`json:"daddr"`
+	Sport			int			`json:"sport"`
+	Dport			int			`json:"dport"`
+	Seqnum			int			`json:"seqnum"`
+	Acknum			int			`json:"acknum"`
+	Window			int			`json:"window"`
+	Counter			int
 
-    ACK             bool
-    ACKed           bool
-    SYN             bool
-    RST             bool
-    FIN             bool
-    PUSH            bool
-    ValFail         bool		`json:"-"`
+	ACK				bool
+	ACKed			bool
+	SYN				bool
+	RST				bool
+	FIN				bool
+	PUSH			bool
+	ValFail			bool		`json:"-"`
 
-    HandshakeNum	int
-    Fingerprint     string		`json:"fingerprint,omitempty"`
-	Timestamp	    time.Time
-    LZRResponseL    int			`json:"-"`
-	ExpectedRToLZR  string		`json:"expectedRToLZR,omitempty"`
-    Data            string		`json:"data,omitempty"`
-    Processing      bool		`json:"-"`
-    HyperACKtive    bool		`json:"HyperACKtive,omitempty"`
+	HandshakeNum	int
+	Fingerprint		string		`json:"fingerprint,omitempty"`
+	Timestamp		time.Time
+	LZRResponseL	int			`json:"-"`
+	ExpectedRToLZR	string		`json:"expectedRToLZR,omitempty"`
+	Data			string		`json:"data,omitempty"`
+	Processing		bool		`json:"-"`
+	HyperACKtive	bool		`json:"HyperACKtive,omitempty"`
 }
 
 
 func ReadLayers( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
 
-    packet := &packet_metadata{
-        Saddr: ip.SrcIP.String(),
-        Daddr: ip.DstIP.String(),
-        Sport: int(tcp.SrcPort),
-        Dport: int(tcp.DstPort),
-        Seqnum: int(tcp.Seq),
-        Acknum: int(tcp.Ack),
-        Window: int(tcp.Window),
-        ACK: tcp.ACK,
-        SYN: tcp.SYN,
-        RST: tcp.RST,
-        FIN: tcp.FIN,
-        PUSH: tcp.PSH,
-        Data: string(tcp.Payload),
-        Timestamp: time.Now(),
-        Counter: 0,
+	packet := &packet_metadata{
+		Saddr: ip.SrcIP.String(),
+		Daddr: ip.DstIP.String(),
+		Sport: int(tcp.SrcPort),
+		Dport: int(tcp.DstPort),
+		Seqnum: int(tcp.Seq),
+		Acknum: int(tcp.Ack),
+		Window: int(tcp.Window),
+		ACK: tcp.ACK,
+		SYN: tcp.SYN,
+		RST: tcp.RST,
+		FIN: tcp.FIN,
+		PUSH: tcp.PSH,
+		Data: string(tcp.Payload),
+		Timestamp: time.Now(),
+		Counter: 0,
 		Processing: true,
 		HandshakeNum: 0,
-    }
+	}
 	return packet
 }
 
 func convertToPacketM ( packet *gopacket.Packet ) *packet_metadata {
-        tcpLayer := (*packet).Layer(layers.LayerTypeTCP)
-        if tcpLayer != nil {
-            tcp, _ := tcpLayer.(*layers.TCP)
-            ipLayer := (*packet).Layer(layers.LayerTypeIPv4)
-            ip, _ := ipLayer.(*layers.IPv4)
-            metapacket := ReadLayers(ip,tcp)
-            return metapacket
-        }
-        return nil
+		tcpLayer := (*packet).Layer(layers.LayerTypeTCP)
+		if tcpLayer != nil {
+			tcp, _ := tcpLayer.(*layers.TCP)
+			ipLayer := (*packet).Layer(layers.LayerTypeIPv4)
+			ip, _ := ipLayer.(*layers.IPv4)
+			metapacket := ReadLayers(ip,tcp)
+			return metapacket
+		}
+		return nil
 }
 
-func convertToPacket ( input string ) *packet_metadata  {
+func convertToPacket ( input string ) *packet_metadata	{
 
-        synack := &packet_metadata{}
-        //expecting ip,sequence number, acknumber,windowsize
-        err := json.Unmarshal( []byte(input),synack )
+		synack := &packet_metadata{}
+		//expecting ip,sequence number, acknumber,windowsize
+		err := json.Unmarshal( []byte(input),synack )
 		synack.Processing = true
-        if err != nil {
-            log.Fatal(err)
-            return nil
-        }
-        return synack
+		if err != nil {
+			log.Fatal(err)
+			return nil
+		}
+		return synack
 }
 
 func randInt(min int, max int) int {
-    return min + rand.Intn(max-min)
+	return min + rand.Intn(max-min)
 }
 
 //create a packet to filter out nets like canada
 func createFilterPacket( packet *packet_metadata ) *packet_metadata {
 
 	rand.Seed(time.Now().UTC().UnixNano())
-    packetFilter := &packet_metadata{
-        Saddr: packet.Saddr,
-        Daddr: packet.Daddr,
-        Dport: int(math.Mod(float64(packet.Dport),65535)+1),
+	packetFilter := &packet_metadata{
+		Saddr: packet.Saddr,
+		Daddr: packet.Daddr,
+		Dport: int(math.Mod(float64(packet.Dport),65535)+1),
 		Sport: randInt(32768, 61000),
-        Seqnum: int(rand.Uint32()),
-        Acknum: 0,
-        Window: packet.Window,
-        SYN: true,
-        Timestamp: time.Now(),
-        Counter: 0,
-        Processing: true,
-        HandshakeNum: 0,
+		Seqnum: int(rand.Uint32()),
+		Acknum: 0,
+		Window: packet.Window,
+		SYN: true,
+		Timestamp: time.Now(),
+		Counter: 0,
+		Processing: true,
+		HandshakeNum: 0,
 		HyperACKtive: true,
 		ExpectedRToLZR: SYN_ACK,
-    }
-    return packetFilter
+	}
+	return packetFilter
 
 }
 
@@ -155,10 +155,10 @@ func ( packet * packet_metadata ) updatePacketFlow()  {
 }
 
 func (packet * packet_metadata) windowZero() bool {
-    if packet.Window == 0 {
-        return true
-    }
-    return false
+	if packet.Window == 0 {
+		return true
+	}
+	return false
 }
 
 func (packet * packet_metadata) syncHandshakeNum( h int ) {
@@ -168,7 +168,7 @@ func (packet * packet_metadata) syncHandshakeNum( h int ) {
 }
 
 func (packet * packet_metadata) getHandshakeNum() int {
-    return packet.HandshakeNum
+	return packet.HandshakeNum
 
 }
 
@@ -185,7 +185,7 @@ func (packet * packet_metadata) updateResponseL( data []byte ) {
 }
 func (packet * packet_metadata) incrementCounter() {
 
-    packet.Counter += 1
+	packet.Counter += 1
 
 }
 
@@ -197,13 +197,13 @@ func (packet * packet_metadata) updateTimestamp() {
 
 func (packet * packet_metadata) startProcessing() {
 
-    packet.Processing = true
+	packet.Processing = true
 
 }
 
 func (packet * packet_metadata) finishedProcessing() {
 
-    packet.Processing = false
+	packet.Processing = false
 
 }
 
@@ -216,19 +216,19 @@ func (packet * packet_metadata) updateData( payload string ) {
 
 func (packet * packet_metadata) validationFail() {
 
-    packet.ValFail = true
+	packet.ValFail = true
 
 }
 
 func (packet * packet_metadata) getValidationFail() bool {
 
-    return packet.ValFail
+	return packet.ValFail
 
 }
 
 func (packet * packet_metadata) fingerprintData() {
 
-    packet.Fingerprint = fingerprintResponse( packet.Data )
+	packet.Fingerprint = fingerprintResponse( packet.Data )
 
 }
 
