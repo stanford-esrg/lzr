@@ -11,8 +11,8 @@ Install and set up ZMap (see https://github.com/zmap/zmap).
 
 Set up `$GOPATH` (see https://golang.org/doc/code.html).
 ```
-$ go get github.com/stanford-esrg/LZR
-$ cd $GOPATH/src/github.com/stanford-esrg/LZR
+$ go get github.com/stanford-esrg/lzr
+$ cd $GOPATH/src/github.com/stanford-esrg/lzr
 ```
 
 LZR intercepts connections which ZMap opens; in order to ensure that the kernel does not interfere with LZR, LZR requires a source-ip to be specified for which the kernel drops all RSTs for traffic targeted to the source-ip. The chosen source-ip&mdash;which both ZMap and LZR will use&mdash;should be passed in as a parameter to make, so the appropriate iptables rule can be set.
