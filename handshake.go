@@ -37,6 +37,7 @@ func hiearchizeFingerprint( fingerprint string ) string {
 
 
 	// prioritize for the handshake being sent
+	// or for handshake which was asked to be prioritized
 	// so if scanning for http ipp will return as http
 	// but if scanning for ipp then http+ipp will return ipp
 

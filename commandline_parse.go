@@ -9,20 +9,22 @@ import (
 
 var (
 
-    filename			*string
-	debug				*bool
-	haf					*bool
-	pushDOnly			*bool
-	forceAllHandshakes	*bool
-	feedZGrab			*bool
-    workers				*int
-    timeout				*int
-    retransmitSec		*int
-    retransmitNum		*int
-	cpuprofile			*string
-	memprofile			*string
-	handshake			*string
-	handshakeArr		[]string
+    filename				*string
+	debug					*bool
+	haf						*bool
+	pushDOnly				*bool
+	forceAllHandshakes		*bool
+	feedZGrab				*bool
+    workers					*int
+    timeout					*int
+    retransmitSec			*int
+    retransmitNum			*int
+	cpuprofile				*string
+	memprofile				*string
+	handshake				*string
+	priorityFingerprint		*string
+	priorityFingerprintArr	[]string
+	handshakeArr			[]string
 )
 
 type options struct {
@@ -40,6 +42,7 @@ type options struct {
 	CPUProfile			string
 	MemProfile			string
 	Handshakes			[]string
+	PriorityFingerprint	[]string
 }
 
 
@@ -60,8 +63,43 @@ func init() {
   cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
   memprofile = flag.String("memprofile", "", "write memory profile to this file")
   handshake = flag.String("handshakes", "http" , "handshakes to scan with")
+  priorityFingerprint = flag.String("priorityFingerprint", "" , "fingerprint to prioritize when multiple match")
 }
 
+
+func checkAndParse( handshake *string, optHandshakes *[]string ) ( []string, bool ) {
+
+	if *handshake == "" {
+		return nil, true
+	}
+
+    if !strings.Contains( *handshake, ",")  {
+
+        _, ok := GetHandshake(*handshake)
+
+        if !ok {
+            fmt.Fprintln(os.Stderr,"--Handshake not found:", *handshake)
+            return nil,false
+        }
+
+        (*optHandshakes)[0] = *handshake
+    } else {
+        i := 0
+        for _, h := range strings.Split( *handshake, "," ) {
+
+            _, ok := GetHandshake(h)
+            if !ok {
+                fmt.Fprintln(os.Stderr,"--Handshake not found:", h)
+                return nil,false
+            }
+
+            (*optHandshakes)[i] = h
+            i += 1
+        }
+    }
+	return *optHandshakes, true
+
+}
 
 
 func Parse() (*options,bool) {
@@ -81,32 +119,19 @@ func Parse() (*options,bool) {
 		CPUProfile: *cpuprofile,
 		MemProfile: *memprofile,
 		Handshakes: make([]string, strings.Count(*handshake,",")+1),
+		PriorityFingerprint: make([]string, strings.Count(*priorityFingerprint,",")+1),
     }
-	if !strings.Contains( *handshake, ",")	{
 
-		_, ok := GetHandshake(*handshake)
-
-		if !ok {
-			fmt.Fprintln(os.Stderr,"--Handshake not found:", *handshake)
-			return nil,false
-		}
-
-		opt.Handshakes[0] = *handshake
-	} else {
-		i := 0
-		for _, h := range strings.Split( *handshake, "," ) {
-
-			_, ok := GetHandshake(h)
-			if !ok {
-				fmt.Fprintln(os.Stderr,"--Handshake not found:", h)
-				return nil,false
-			}
-
-			opt.Handshakes[i] = h
-			i += 1
-		}
+	success := false
+	handshakeArr, success = checkAndParse( handshake, &(opt.Handshakes) )
+	if !success {
+		return nil, false
 	}
-	handshakeArr = opt.Handshakes
+
+	priorityFingerprintArr, success = checkAndParse( priorityFingerprint, &(opt.PriorityFingerprint) )
+	if !success {
+		return nil, false
+	}
 
 	if *forceAllHandshakes {
 		*haf = false
@@ -114,6 +139,9 @@ func Parse() (*options,bool) {
 
     fmt.Fprintln(os.Stderr,"++Writing results to file:", *filename)
     fmt.Fprintln(os.Stderr,"++Handshakes:", *handshake)
+	if *priorityFingerprint != "" {
+		fmt.Fprintln(os.Stderr,"++Prioritizing Fingerprints:", *priorityFingerprint)
+	}
 	if *memprofile != "" {
 		fmt.Fprintln(os.Stderr,"++Writing memprofile to file:", *memprofile)
 	}
@@ -164,5 +192,9 @@ func ForceAllHandshakes() bool {
 }
 
 func GetAllHandshakes()  []string {
+
+	if priorityFingerprintArr != nil {
+		return priorityFingerprintArr
+	}
 	return handshakeArr
 }
