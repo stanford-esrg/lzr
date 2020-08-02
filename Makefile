@@ -7,6 +7,7 @@ endif
 GO_FILES = $(shell find . -type f -name '*.go')
 
 all: lzr
+	sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s $(ip) -j DROP
 
 lzr: $(GO_FILES)
 	cd cmd/lzr && go build && cd ../..
@@ -21,3 +22,5 @@ lzr_race: $(GO_FILES)
 clean:
 	cd cmd/lzr && go clean
 	rm -f lzr
+	@echo "Don't forget to delete iptables rule using:"
+	@echo "sudo iptables -L --line-numbers && sudo iptables -D OUTPUT \TK"
