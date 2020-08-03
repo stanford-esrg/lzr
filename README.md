@@ -1,7 +1,7 @@
 LZR
 =========
 
-LZR detects and fingerprints unexpected services running on unexpected ports by working with [ZMap](https://github.com/zmap/zmap). LZR can detect up 18 unique protocols simoultaneously with just two extra packets and can fingerprint over 35 different protocols. LZR can make ZGrab perform 55x faster while discovering 50% of services that running 35 unique Layer 7 handshakes can discover.
+LZR quickly detects and fingerprints unexpected services running on unexpected ports by working with [ZMap](https://github.com/zmap/zmap). LZR can detect up 18 unique protocols simoultaneously with just two extra packets and can fingerprint over 35 different protocols. LZR can make ZGrab perform 55x faster while discovering 50% of services that running 35 unique Layer 7 handshakes can discover.
 
 To learn more about how LZR's system and performance read this (coming soon).
 
