@@ -25,7 +25,8 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
 
 func (h *HandshakeMod) Verify( data string ) string {
 
-	if strings.Contains( data, "HTTP" ) {
+	if strings.Contains( data, "HTTP" ) || strings.Contains( data, "html" ) ||
+		strings.Contains( data, "HTML") || strings.Contains( data, "<h1>" ) {
          return "http"
 	}
 	return ""
