@@ -1,7 +1,7 @@
 LZR
 =========
 
-LZR is a shim that works in tangent with [ZMap](https://github.com/zmap/zmap) to efficiently detect and fingerprint unexpected services running on unexpected ports. LZR can detect up 18 unique protocols simoultaneously with just two extra packets and can fingerprint over 35 different protocols. LZR can also be used as a filter between ZMap and [ZGrab](https://github.com/zmap/zgrab2) to specify to ZGrab which L7 handshake to complete. LZR can make ZGrab perform 55x faster while discovering 50% of services that running 35 unique Layer 7 handshakes can discover.
+LZR quickly detects and fingerprints unexpected services running on unexpected ports by working with [ZMap](https://github.com/zmap/zmap). LZR can detect up 18 unique protocols simoultaneously with just two extra packets and can fingerprint over 35 different protocols. LZR can make ZGrab perform 55x faster while discovering 50% of services that running 35 unique Layer 7 handshakes can discover.
 
 To learn more about how LZR's system and performance read this (coming soon).
 
@@ -54,7 +54,7 @@ Usage of ./lzr:
   -forceAllHandshakes
     	Complete all handshakes even if data is returned early on. This also turns off HyperACKtive filtering.
   -haf
-    	HyperACKtive filtering off (default true)
+    	HyperACKtive filtering on
   -handshakes string
     	handshakes to scan with (default "http")
   -memprofile string
