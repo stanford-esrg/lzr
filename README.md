@@ -54,7 +54,7 @@ Usage of ./lzr:
   -forceAllHandshakes
     	Complete all handshakes even if data is returned early on. This also turns off HyperACKtive filtering.
   -haf
-    	HyperACKtive filtering off (default true)
+    	HyperACKtive filtering on
   -handshakes string
     	handshakes to scan with (default "http")
   -memprofile string
