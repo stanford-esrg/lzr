@@ -9,16 +9,16 @@ import (
 
 var (
 
-    filename				*string
+	filename				*string
 	debug					*bool
 	haf						*bool
 	pushDOnly				*bool
 	forceAllHandshakes		*bool
 	feedZGrab				*bool
-    workers					*int
-    timeout					*int
-    retransmitSec			*int
-    retransmitNum			*int
+	workers					*int
+	timeout					*int
+	retransmitSec			*int
+	retransmitNum			*int
 	cpuprofile				*string
 	memprofile				*string
 	handshake				*string
@@ -29,16 +29,16 @@ var (
 
 type options struct {
 
-    Filename			string
+	Filename			string
 	Debug				bool
 	Haf					bool
 	PushDOnly			bool
 	ForceAllHandshakes	bool
 	FeedZGrab			bool
-    Workers				int
-    Timeout				int
-    RetransmitSec		int
-    RetransmitNum		int
+	Workers				int
+	Timeout				int
+	RetransmitSec		int
+	RetransmitNum		int
 	CPUProfile			string
 	MemProfile			string
 	Handshakes			[]string
@@ -52,7 +52,7 @@ func init() {
   filename = flag.String("f", fname , "json file name")
 
   debug = flag.Bool("d", false, "debug printing on")
-  haf = flag.Bool("haf", true, "HyperACKtive filtering off")
+  haf = flag.Bool("haf", false, "HyperACKtive filtering on")
   pushDOnly = flag.Bool("pushDataOnly", false, "Don't attach data to ack but rather to push only")
   forceAllHandshakes = flag.Bool("forceAllHandshakes", false, "Complete all handshakes even if data is returned early on. This also turns off HyperACKtive filtering.")
   feedZGrab = flag.Bool("feedZGrab", false, "send to zgrab ip and fingerprint")
@@ -73,30 +73,30 @@ func checkAndParse( handshake *string, optHandshakes *[]string ) ( []string, boo
 		return nil, true
 	}
 
-    if !strings.Contains( *handshake, ",")  {
+	if !strings.Contains( *handshake, ",")	{
 
-        _, ok := GetHandshake(*handshake)
+		_, ok := GetHandshake(*handshake)
 
-        if !ok {
-            fmt.Fprintln(os.Stderr,"--Handshake not found:", *handshake)
-            return nil,false
-        }
+		if !ok {
+			fmt.Fprintln(os.Stderr,"--Handshake not found:", *handshake)
+			return nil,false
+		}
 
-        (*optHandshakes)[0] = *handshake
-    } else {
-        i := 0
-        for _, h := range strings.Split( *handshake, "," ) {
+		(*optHandshakes)[0] = *handshake
+	} else {
+		i := 0
+		for _, h := range strings.Split( *handshake, "," ) {
 
-            _, ok := GetHandshake(h)
-            if !ok {
-                fmt.Fprintln(os.Stderr,"--Handshake not found:", h)
-                return nil,false
-            }
+			_, ok := GetHandshake(h)
+			if !ok {
+				fmt.Fprintln(os.Stderr,"--Handshake not found:", h)
+				return nil,false
+			}
 
-            (*optHandshakes)[i] = h
-            i += 1
-        }
-    }
+			(*optHandshakes)[i] = h
+			i += 1
+		}
+	}
 	return *optHandshakes, true
 
 }
@@ -104,23 +104,23 @@ func checkAndParse( handshake *string, optHandshakes *[]string ) ( []string, boo
 
 func Parse() (*options,bool) {
 
-    flag.Parse()
-    opt := &options{
-        Filename: *filename,
+	flag.Parse()
+	opt := &options{
+		Filename: *filename,
 		Debug: *debug,
 		Haf: *haf,
 		FeedZGrab: *feedZGrab,
 		PushDOnly: *pushDOnly,
 		ForceAllHandshakes: *forceAllHandshakes,
-        Workers: *workers,
-        Timeout: *timeout,
-        RetransmitSec: *retransmitSec,
-        RetransmitNum: *retransmitNum,
+		Workers: *workers,
+		Timeout: *timeout,
+		RetransmitSec: *retransmitSec,
+		RetransmitNum: *retransmitNum,
 		CPUProfile: *cpuprofile,
 		MemProfile: *memprofile,
 		Handshakes: make([]string, strings.Count(*handshake,",")+1),
 		PriorityFingerprint: make([]string, strings.Count(*priorityFingerprint,",")+1),
-    }
+	}
 
 	success := false
 	handshakeArr, success = checkAndParse( handshake, &(opt.Handshakes) )
@@ -137,8 +137,8 @@ func Parse() (*options,bool) {
 		*haf = false
 	}
 
-    fmt.Fprintln(os.Stderr,"++Writing results to file:", *filename)
-    fmt.Fprintln(os.Stderr,"++Handshakes:", *handshake)
+	fmt.Fprintln(os.Stderr,"++Writing results to file:", *filename)
+	fmt.Fprintln(os.Stderr,"++Handshakes:", *handshake)
 	if *priorityFingerprint != "" {
 		fmt.Fprintln(os.Stderr,"++Prioritizing Fingerprints:", *priorityFingerprint)
 	}
@@ -163,12 +163,12 @@ func Parse() (*options,bool) {
 	if *forceAllHandshakes {
 		fmt.Fprintln(os.Stderr,"++Force completing all handshakes")
 	}
-    fmt.Fprintln(os.Stderr,"++Worker threads:", *workers)
-    fmt.Fprintln(os.Stderr,"++Timeout Interval (s):", *timeout)
-    fmt.Fprintln(os.Stderr,"++Retransmit Interval (s):", *retransmitSec)
-    fmt.Fprintln(os.Stderr,"++Number of Retransmitions:", *retransmitNum)
-    //fmt.Fprintln(os.Stderr,"port:", *port)
-    return opt,true
+	fmt.Fprintln(os.Stderr,"++Worker threads:", *workers)
+	fmt.Fprintln(os.Stderr,"++Timeout Interval (s):", *timeout)
+	fmt.Fprintln(os.Stderr,"++Retransmit Interval (s):", *retransmitSec)
+	fmt.Fprintln(os.Stderr,"++Number of Retransmitions:", *retransmitNum)
+	//fmt.Fprintln(os.Stderr,"port:", *port)
+	return opt,true
 }
 
 func DebugOn() bool {
