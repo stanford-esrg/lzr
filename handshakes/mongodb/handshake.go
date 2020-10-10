@@ -45,7 +45,8 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
 
 func (h *HandshakeMod) Verify( data string ) string {
 
-    if strings.Contains( data, "maxBsonObjectSize" ){
+    if strings.Contains( data, "maxBsonObjectSize" ) || 
+		strings.Contains( data, "MongoDB" ){
          return "mongodb"
     }
     return ""
