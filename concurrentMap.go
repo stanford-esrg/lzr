@@ -1,4 +1,7 @@
-//https://github.com/orcaman/concurrent-map/blob/master/concurrent_map.go
+// includes code from 
+// https://github.com/orcaman/concurrent-map/blob/master/concurrent_map.go
+// which is licensed under the MIT license (Copyright (c) 2014 streamrail)
+
 package lzr
 
 import (
