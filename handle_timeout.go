@@ -10,8 +10,11 @@ func HandleTimeout( opts *options, packet *packet_metadata, ipMeta * pState,
 	timeoutQueue chan *packet_metadata, retransmitQueue  chan *packet_metadata,
 	writingQueue  chan packet_metadata ) {
 
+	//fmt.Println("Handling timeout")
+	//fmt.Println(packet)
     //if packet has already been dealt with, return
     if !ipMeta.metaContains( packet ) {
+		//fmt.Println("packet has already been dealt with in handle timeout! returning!")
         return
     }
 

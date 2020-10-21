@@ -20,39 +20,43 @@ var (
 )
 
 type packet_state struct {
-	HandshakeNum	int
-	Ack				bool
-	Data			bool
-	Packet			*packet_metadata
+	HandshakeNum		int
+	Ack					bool
+	Data				bool
+	HyperACKtive		bool
+	EphemeralFilters	[]packet_metadata
+	EphemeralRespNum	int
+	ParentSport			int			//used for filter packets
+	Packet				*packet_metadata
 }
 
 type packet_metadata struct {
 
-	Saddr			string		`json:"saddr"`
-	Daddr			string		`json:"daddr"`
-	Sport			int			`json:"sport"`
-	Dport			int			`json:"dport"`
-	Seqnum			int			`json:"seqnum"`
-	Acknum			int			`json:"acknum"`
-	Window			int			`json:"window"`
-	Counter			int
+	Saddr				string		`json:"saddr"`
+	Daddr				string		`json:"daddr"`
+	Sport				int			`json:"sport"`
+	Dport				int			`json:"dport"`
+	Seqnum				int			`json:"seqnum"`
+	Acknum				int			`json:"acknum"`
+	Window				int			`json:"window"`
+	Counter				int
 
-	ACK				bool
-	ACKed			bool
-	SYN				bool
-	RST				bool
-	FIN				bool
-	PUSH			bool
-	ValFail			bool		`json:"-"`
+	ACK					bool
+	ACKed				bool
+	SYN					bool
+	RST					bool
+	FIN					bool
+	PUSH				bool
+	ValFail				bool		`json:"-"`
 
-	HandshakeNum	int
-	Fingerprint		string		`json:"fingerprint,omitempty"`
-	Timestamp		time.Time
-	LZRResponseL	int			`json:"-"`
-	ExpectedRToLZR	string		`json:"expectedRToLZR,omitempty"`
-	Data			string		`json:"data,omitempty"`
-	Processing		bool		`json:"-"`
-	HyperACKtive	bool		`json:"HyperACKtive,omitempty"`
+	HandshakeNum		int
+	Fingerprint			string		`json:"fingerprint,omitempty"`
+	Timestamp			time.Time
+	LZRResponseL		int			`json:"-"`
+	ExpectedRToLZR		string		`json:"expectedRToLZR,omitempty"`
+	Data				string		`json:"data,omitempty"`
+	Processing			bool		`json:"-"`
+	HyperACKtive		bool		`json:"ackingFirewall,omitempty"`
 }
 
 
@@ -155,7 +159,7 @@ func ( packet * packet_metadata ) updatePacketFlow()  {
 }
 
 func (packet * packet_metadata) windowZero() bool {
-	if packet.Window == 0 {
+	if packet.Window == 0 && packet.SYN && packet.ACK {
 		return true
 	}
 	return false
@@ -231,4 +235,11 @@ func (packet * packet_metadata) fingerprintData() {
 	packet.Fingerprint = fingerprintResponse( packet.Data )
 
 }
+
+func (packet * packet_metadata) setHyperACKtive( ackingFirewall bool ) {
+
+	packet.HyperACKtive = ackingFirewall
+
+}
+
 

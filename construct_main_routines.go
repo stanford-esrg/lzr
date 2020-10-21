@@ -137,12 +137,15 @@ func timeoutAlg(  ipMeta * pState, queue chan *packet_metadata, timeoutIncoming 
 	            p, ok := ipMeta.find( packet )
                 //if no longer in map
 	            if !ok {
+					//fmt.Println("not found")
                     continue
                 }
                 //if state hasnt changed
 				if p.ExpectedRToLZR != packet.ExpectedRToLZR {
+					//fmt.Println("state hasnt changed")
                     continue
                 } else {
+					//fmt.Println("will deal with")
                     timeoutIncoming <-packet
                 }
             }

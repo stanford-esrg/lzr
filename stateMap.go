@@ -17,11 +17,13 @@ func ConstructPacketStateMap( opts *options ) pState {
 
 
 func constructKey( packet *packet_metadata ) string {
-	if packet.HyperACKtive {
-		return packet.Saddr + ":" + strconv.Itoa(packet.Sport)
-	}
-	return packet.Saddr
+	return packet.Saddr + ":" + strconv.Itoa(packet.Sport)
 }
+
+func constructParentKey( packet *packet_metadata, parentSport int ) string {
+    return packet.Saddr + ":" + strconv.Itoa(parentSport)
+}
+
 
 func (ipMeta * pState) metaContains( p * packet_metadata ) bool {
 
@@ -84,6 +86,88 @@ func (ipMeta * pState) getAck( p * packet_metadata ) bool {
 		return ps.Ack
 	}
 	return false
+}
+
+func (ipMeta * pState) incEphemeralResp( p * packet_metadata, sport int) bool {
+    pKey := constructParentKey(p, sport)
+    ps, ok := ipMeta.Get(pKey)
+    if ok {
+        ps.EphemeralRespNum += 1
+        ipMeta.Insert( pKey, ps )
+    }
+    return ok
+}
+
+
+func (ipMeta * pState) getEphemeralRespNum( p * packet_metadata ) int {
+    pKey := constructKey(p)
+    ps, ok := ipMeta.Get(pKey)
+    if ok {
+        return ps.EphemeralRespNum
+    }
+    return 0
+}
+
+func (ipMeta * pState) getHyperACKtiveStatus( p * packet_metadata ) bool {
+    pKey := constructKey(p)
+    ps, ok := ipMeta.Get(pKey)
+    if ok {
+        return ps.HyperACKtive
+    }
+    return false
+}
+
+func (ipMeta * pState) setHyperACKtiveStatus( p * packet_metadata ) bool {
+    pKey := constructKey(p)
+    ps, ok := ipMeta.Get(pKey)
+    if ok {
+        ps.HyperACKtive = true
+        ipMeta.Insert( pKey, ps )
+    }
+    return ok
+}
+
+func (ipMeta * pState) setParentSport( p * packet_metadata, sport int ) bool {
+    pKey := constructKey(p)
+    ps, ok := ipMeta.Get(pKey)
+    if ok {
+        ps.ParentSport = sport
+        ipMeta.Insert( pKey, ps )
+    }
+    return ok
+}
+
+func (ipMeta * pState) getParentSport( p * packet_metadata) int {
+    pKey := constructKey(p)
+    ps, ok := ipMeta.Get(pKey)
+    if ok {
+        return ps.ParentSport
+	}
+	return 0
+}
+
+
+func (ipMeta * pState) recordEphemeral( p * packet_metadata, ephemerals []packet_metadata ) bool {
+
+    pKey := constructKey(p)
+    ps, ok := ipMeta.Get(pKey)
+    if ok {
+		ps.EphemeralFilters = append( ps.EphemeralFilters, ephemerals... )
+        ipMeta.Insert( pKey, ps )
+    }
+	return ok
+
+}
+
+func (ipMeta * pState) getEphemeralFilters( p * packet_metadata ) ([]packet_metadata, bool) {
+
+    pKey := constructKey(p)
+    ps, ok := ipMeta.Get(pKey)
+    if ok {
+		return ps.EphemeralFilters, ok
+    }
+    return nil, ok
+
 }
 
 func (ipMeta * pState) updateData( p * packet_metadata ) bool {
@@ -179,7 +263,7 @@ func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 		}
 	}
 
-	//lets re-query for the ACKtive packets
+	/*//lets re-query for the ACKtive packets
 	pRecv.HyperACKtive = true
 	pRecvKey = constructKey(pRecv)
 	ps, ok = ipMeta.Get( pRecvKey )
@@ -193,7 +277,7 @@ func ( ipMeta * pState ) verifyScanningIP( pRecv *packet_metadata ) bool {
 		return true
 	}
 	pRecv.HyperACKtive = false
-
+	*/
 	if DebugOn() {
 		fmt.Println(pMap.Saddr, "====")
 		fmt.Println("recv seq num:", pRecv.Seqnum)

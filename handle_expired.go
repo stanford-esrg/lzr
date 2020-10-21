@@ -7,6 +7,7 @@ import (
 func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 	timeoutQueue chan *packet_metadata, writingQueue chan packet_metadata ) {
 
+
 	// first close the existing connection unless
 	// its already been terminated
 	if !( packet.RST && !packet.ACK ) {
@@ -18,6 +19,7 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 
 	//grab which handshake
 	handshakeNum := ipMeta.getHandshake( packet )
+
 	//if we are all not trying anymore handshakes, so sad. 
 	//if ( packet.ExpectedRToLZR == SYN_ACK ||
 	if ( packet.HyperACKtive  || (handshakeNum >= (len( opts.Handshakes ) - 1)) ){
@@ -48,13 +50,17 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 		ipMeta.incHandshake( packet )
 		sendOffSyn( packet, ipMeta, timeoutQueue )
 
-
 		//lets also filter for cananda-like things
 		if ( handshakeNum == 0 &&  HyperACKtiveFiltering() ) {
-			highPortPacket := createFilterPacket( packet )
-			sendOffSyn( highPortPacket, ipMeta, timeoutQueue )
-			ipMeta.incHandshake( highPortPacket )
-			ipMeta.FinishProcessing( highPortPacket )
+			for i := 0; i < getNumFilters(); i++ {
+				highPortPacket := createFilterPacket( packet )
+				sendOffSyn( highPortPacket, ipMeta, timeoutQueue )
+				ipMeta.incHandshake( highPortPacket )
+				ipMeta.setHyperACKtiveStatus( highPortPacket )
+
+				ipMeta.setParentSport( highPortPacket, packet.Sport )
+				ipMeta.FinishProcessing( highPortPacket )
+			}
 		}
 
 	}
@@ -76,6 +82,7 @@ func sendOffSyn(packet * packet_metadata, ipMeta * pState,
 		}
 		//wait for a s/a
 		packet.updateTimestamp()
+		ipMeta.FinishProcessing( packet )
 		timeoutQueue <- packet
 
 }

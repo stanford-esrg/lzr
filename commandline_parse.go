@@ -11,7 +11,7 @@ var (
 
 	filename				*string
 	debug					*bool
-	haf						*bool
+	haf						*int
 	pushDOnly				*bool
 	forceAllHandshakes		*bool
 	feedZGrab				*bool
@@ -31,7 +31,7 @@ type options struct {
 
 	Filename			string
 	Debug				bool
-	Haf					bool
+	Haf					int
 	PushDOnly			bool
 	ForceAllHandshakes	bool
 	FeedZGrab			bool
@@ -52,7 +52,7 @@ func init() {
   filename = flag.String("f", fname , "json file name")
 
   debug = flag.Bool("d", false, "debug printing on")
-  haf = flag.Bool("haf", false, "HyperACKtive filtering on")
+  haf = flag.Int("haf", 0, "number of random ephemeral probes to send to filter ACKing firewalls")
   pushDOnly = flag.Bool("pushDataOnly", false, "Don't attach data to ack but rather to push only")
   forceAllHandshakes = flag.Bool("forceAllHandshakes", false, "Complete all handshakes even if data is returned early on. This also turns off HyperACKtive filtering.")
   feedZGrab = flag.Bool("feedZGrab", false, "send to zgrab ip and fingerprint")
@@ -134,7 +134,7 @@ func Parse() (*options,bool) {
 	}
 
 	if *forceAllHandshakes {
-		*haf = false
+		*haf = 0
 	}
 
 	fmt.Fprintln(os.Stderr,"++Writing results to file:", *filename)
@@ -151,7 +151,7 @@ func Parse() (*options,bool) {
 	if *debug {
 		fmt.Fprintln(os.Stderr,"++Debug turned on")
 	}
-	if *haf {
+	if *haf > 0 {
 		fmt.Fprintln(os.Stderr,"++HyperACKtiveFiltering turned on")
 	}
 	if *feedZGrab {
@@ -180,6 +180,10 @@ func FeedZGrab() bool {
 }
 
 func HyperACKtiveFiltering() bool {
+	return *haf != 0
+}
+
+func getNumFilters() int {
 	return *haf
 }
 

@@ -100,6 +100,8 @@ func LZRMain() {
     for i := 0; i < options.Workers; i ++ {
         go func( i int ) {
             for input := range pcapIncoming {
+						//fmt.Println("pcap incoming")
+						//fmt.Println(input)
                         inMap, startProcessing := ipMeta.IsStartProcessing( input )
                         //if not in map, return
                         if !inMap {
@@ -113,6 +115,8 @@ func LZRMain() {
 				        lzr.HandlePcap(options, input, &ipMeta, timeoutQueue,
 							retransmitQueue, writingQueue )
                         ipMeta.FinishProcessing( input )
+						//fmt.Println("finished pcap:")
+						//fmt.Println(input)
             }
         }(i)
     }

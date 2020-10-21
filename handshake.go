@@ -76,7 +76,6 @@ func hiearchizeFingerprint( fingerprint string ) string {
 
 }
 
-//TODO: implement some type of hiearchy for labeling
 func fingerprintResponse( data string ) string {
 	fingerprint := ""
 	tfingerprint := ""
@@ -96,6 +95,9 @@ func fingerprintResponse( data string ) string {
 	}
 	if multiprint {
 		fingerprint = hiearchizeFingerprint( fingerprint )
+	}
+	if fingerprint == "" {
+		fingerprint = "unknown"
 	}
 	fingerprintMap[fingerprint] += 1
 	return fingerprint
