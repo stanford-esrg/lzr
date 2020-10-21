@@ -39,6 +39,7 @@ func HandlePcap( opts *options, packet *packet_metadata, ipMeta * pState, timeou
 	}
 
 	isHyperACKtive := ipMeta.getHyperACKtiveStatus( packet )
+	handshakeNum := ipMeta.getHandshake( packet )
 
 	//for every ack received, mark as accepting data
 	if (!packet.SYN) && packet.ACK {
@@ -55,12 +56,7 @@ func HandlePcap( opts *options, packet *packet_metadata, ipMeta * pState, timeou
 			return
 		}
 
-		handshakeNum := ipMeta.getHandshake( packet )
 		packet.syncHandshakeNum( handshakeNum )
-
-		/*if HyperACKtiveFiltering() && handshakeNum == 1 {
-			cleanEphState( packet, ipMeta, writingQueue, false)
-		}*/
 
 		closeConnection( packet, ipMeta, writingQueue, true,  isHyperACKtive)
 		return
@@ -77,7 +73,7 @@ func HandlePcap( opts *options, packet *packet_metadata, ipMeta * pState, timeou
 
 	//checking if max filter syn acks reached
 	//( filterACKs + original ACK + this ack)
-     if HyperACKtiveFiltering() && !isHyperACKtive {
+     if handshakeNum == 1 && HyperACKtiveFiltering() && !isHyperACKtive {
 			//fmt.Println( ipMeta.getEphemeralRespNum( packet ) )
 			//fmt.Println(getNumFilters())
             if ipMeta.getEphemeralRespNum( packet )   > getNumFilters() {
@@ -101,7 +97,7 @@ func HandlePcap( opts *options, packet *packet_metadata, ipMeta * pState, timeou
 	//for every s/a send the appropriate ack
 	if packet.SYN && packet.ACK {
 
-		if  HyperACKtiveFiltering() {
+		if  handshakeNum == 1 && HyperACKtiveFiltering() {
 
 			//just close and record
 			if isHyperACKtive {
