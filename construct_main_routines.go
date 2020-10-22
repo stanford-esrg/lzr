@@ -28,11 +28,11 @@ func ConstructWritingQueue( workers int ) chan packet_metadata {
     return writingQueue
 }
 
-func ConstructZMapRoutine( workers int ) chan *packet_metadata {
+func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
 
 
 	//routine to read in from ZMap
-	zmapIncoming := make(chan *packet_metadata,1000000)// 4*workers)
+	incoming := make(chan *packet_metadata,1000000)// 4*workers)
 	go func() {
 		reader := bufio.NewReader(os.Stdin)
 		for {
@@ -40,21 +40,25 @@ func ConstructZMapRoutine( workers int ) chan *packet_metadata {
 			//Read from ZMap
 			input, err := reader.ReadString(byte('\n'))
 			if err != nil && err == io.EOF {
-                fmt.Fprintln(os.Stderr,"ZMap Finished")
-                close(zmapIncoming)
+                fmt.Fprintln(os.Stderr,"Finished Reading Input")
+                close(incoming)
 				return
 			}
-
-            packet := convertToPacket( input )
+			var packet *packet_metadata
+			if ReadZMap () {
+				packet = convertFromZMapToPacket( input )
+			} else {
+				packet = convertFromInputListToPacket( input )
+			}
             if packet == nil {
                 continue
             }
-			zmapIncoming <- packet
+			incoming <- packet
 		}
 
 	}()
 
-    return zmapIncoming
+    return incoming
 }
 
 func ConstructPcapRoutine( workers int ) chan *packet_metadata {

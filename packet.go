@@ -8,6 +8,8 @@ import (
 	"log"
 	"math/rand"
 	"math"
+	"strings"
+	"strconv"
 	//"fmt"
 )
 
@@ -84,29 +86,62 @@ func ReadLayers( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
 	return packet
 }
 
-func convertToPacketM ( packet *gopacket.Packet ) *packet_metadata {
-		tcpLayer := (*packet).Layer(layers.LayerTypeTCP)
-		if tcpLayer != nil {
-			tcp, _ := tcpLayer.(*layers.TCP)
-			ipLayer := (*packet).Layer(layers.LayerTypeIPv4)
-			ip, _ := ipLayer.(*layers.IPv4)
-			metapacket := ReadLayers(ip,tcp)
-			return metapacket
-		}
-		return nil
+func convertToPacketM( packet *gopacket.Packet ) *packet_metadata {
+	tcpLayer := (*packet).Layer(layers.LayerTypeTCP)
+	if tcpLayer != nil {
+		tcp, _ := tcpLayer.(*layers.TCP)
+		ipLayer := (*packet).Layer(layers.LayerTypeIPv4)
+		ip, _ := ipLayer.(*layers.IPv4)
+		metapacket := ReadLayers(ip,tcp)
+		return metapacket
+	}
+	return nil
 }
 
-func convertToPacket ( input string ) *packet_metadata	{
+func convertFromZMapToPacket( input string ) *packet_metadata	{
 
-		synack := &packet_metadata{}
-		//expecting ip,sequence number, acknumber,windowsize
-		err := json.Unmarshal( []byte(input),synack )
-		synack.Processing = true
-		if err != nil {
-			log.Fatal(err)
-			return nil
-		}
-		return synack
+	synack := &packet_metadata{}
+	//expecting ip,sequence number, acknumber,windowsize, sport, dport
+	err := json.Unmarshal( []byte(input),synack )
+	synack.Processing = true
+	if err != nil {
+		log.Fatal(err)
+		return nil
+	}
+	return synack
+}
+
+func convertFromInputListToPacket( input string ) *packet_metadata {
+
+	rand.Seed(time.Now().UTC().UnixNano())
+	//expecting ip, port
+	input = strings.TrimSuffix(input, "\n")
+	s := strings.Split(input,":")
+	saddr, sport_s := s[0], s[1]
+	sport, err := strconv.Atoi(sport_s)
+	if err != nil {
+		panic(err)
+		panic("WRONG INPUT LIST FORMAT.")
+		panic("BAD STUFF IS ABOUT TO HAPPEN")
+	}
+	//note that source and dest are inverted
+	syn := &packet_metadata{
+        Saddr: saddr,
+        Daddr: getSourceIP(),
+        Dport: randInt(32768, 61000),
+        Sport: sport,
+        Seqnum: int(rand.Uint32()),
+        Acknum: 0,
+        Window: 65535,
+        SYN: true,
+        Timestamp: time.Now(),
+        Counter: 0,
+        Processing: true,
+        HandshakeNum: 0,
+        ExpectedRToLZR: SYN_ACK,
+    }
+
+	return syn
 }
 
 func randInt(min int, max int) int {

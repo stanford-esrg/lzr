@@ -10,6 +10,8 @@ import (
 var (
 
 	filename				*string
+	sendSYNs				*bool
+	sourceIP				*string
 	debug					*bool
 	haf						*int
 	pushDOnly				*bool
@@ -30,6 +32,8 @@ var (
 type options struct {
 
 	Filename			string
+	SendSYNs			bool
+	SourceIP			string
 	Debug				bool
 	Haf					int
 	PushDOnly			bool
@@ -49,7 +53,9 @@ type options struct {
 // Basic flag declarations are available for string, integer, and boolean options.
 func init() {
   fname := "default_"+string(time.Now().Format("20060102150405"))+".json"
-  filename = flag.String("f", fname , "json file name")
+  filename = flag.String("f", fname , "json results output file name")
+  sendSYNs = flag.Bool("sendSYNs", false , "will read input from stdin containing a newline-delimited list of ip:port")
+  sourceIP = flag.String("sourceIP", "" , "source IP to send syn packets with (if using list-of-services flag)")
 
   debug = flag.Bool("d", false, "debug printing on")
   haf = flag.Int("haf", 0, "number of random ephemeral probes to send to filter ACKing firewalls")
@@ -107,6 +113,7 @@ func Parse() (*options,bool) {
 	flag.Parse()
 	opt := &options{
 		Filename: *filename,
+		SendSYNs: *sendSYNs,
 		Debug: *debug,
 		Haf: *haf,
 		FeedZGrab: *feedZGrab,
@@ -139,6 +146,12 @@ func Parse() (*options,bool) {
 
 	fmt.Fprintln(os.Stderr,"++Writing results to file:", *filename)
 	fmt.Fprintln(os.Stderr,"++Handshakes:", *handshake)
+	if *sendSYNs {
+		fmt.Fprintln(os.Stderr,"++Sending SYNs")
+	}
+	if *sourceIP != "" {
+		fmt.Fprintln(os.Stderr,"++Using SourceIP:", *sendSYNs)
+	}
 	if *priorityFingerprint != "" {
 		fmt.Fprintln(os.Stderr,"++Prioritizing Fingerprints:", *priorityFingerprint)
 	}
@@ -152,7 +165,7 @@ func Parse() (*options,bool) {
 		fmt.Fprintln(os.Stderr,"++Debug turned on")
 	}
 	if *haf > 0 {
-		fmt.Fprintln(os.Stderr,"++HyperACKtiveFiltering turned on")
+		fmt.Fprintln(os.Stderr,"++Sending ",*haf, " number of filtering packets")
 	}
 	if *feedZGrab {
 		fmt.Fprintln(os.Stderr,"++Feeding ZGrab with fingerprints")
@@ -183,8 +196,16 @@ func HyperACKtiveFiltering() bool {
 	return *haf != 0
 }
 
+func ReadZMap() bool {
+	return *sendSYNs != true
+}
+
 func getNumFilters() int {
 	return *haf
+}
+
+func getSourceIP() string {
+	return *sourceIP
 }
 
 func PushDOnly() bool {

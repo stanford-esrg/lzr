@@ -48,13 +48,13 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 
 		packet.updatePacketFlow()
 		ipMeta.incHandshake( packet )
-		sendOffSyn( packet, ipMeta, timeoutQueue )
+		SendOffSyn( packet, ipMeta, timeoutQueue )
 
 		//lets also filter for cananda-like things
 		if ( handshakeNum == 0 &&  HyperACKtiveFiltering() ) {
 			for i := 0; i < getNumFilters(); i++ {
 				highPortPacket := createFilterPacket( packet )
-				sendOffSyn( highPortPacket, ipMeta, timeoutQueue )
+				SendOffSyn( highPortPacket, ipMeta, timeoutQueue )
 				ipMeta.incHandshake( highPortPacket )
 				ipMeta.setHyperACKtiveStatus( highPortPacket )
 
@@ -67,22 +67,3 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 
 }
 
-func sendOffSyn(packet * packet_metadata, ipMeta * pState,
-	timeoutQueue chan *packet_metadata ) {
-
-		packet.updateResponse( SYN_ACK )
-		packet.updateTimestamp()
-		ipMeta.update( packet )
-		syn := constructSYN( packet )
-		// send SYN packet if so and start the whole process again
-		err := handle.WritePacketData(syn)
-		if err != nil {
-			panic(err)
-
-		}
-		//wait for a s/a
-		packet.updateTimestamp()
-		ipMeta.FinishProcessing( packet )
-		timeoutQueue <- packet
-
-}
