@@ -91,7 +91,9 @@ Usage of ./lzr:
 ```
 
 #### Caveats for specific features
-HyperACKtive Note: If a host responds both on the expected port and on the random ephemeral port, whichever response comes first will dictate whether the host is marked as having an ACKing firewall. 
+Acking Firewall Filtering (-haf): If a host responds both on the expected port and on the random ephemeral port, whichever response comes first will dictate whether the host is marked as having an ACKing firewall. 
+
+Scanning a custom list of services (-sendSYNs): A sending rate feature has not yet been implemented and therefore all SYNs will be sent at once. Please be careful when using this option to not overload the network. 
 
 ## LZR's Algorithm
 
