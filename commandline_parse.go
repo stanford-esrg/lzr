@@ -55,7 +55,7 @@ func init() {
   fname := "default_"+string(time.Now().Format("20060102150405"))+".json"
   filename = flag.String("f", fname , "json results output file name")
   sendSYNs = flag.Bool("sendSYNs", false , "will read input from stdin containing a newline-delimited list of ip:port")
-  sourceIP = flag.String("sourceIP", "" , "source IP to send syn packets with (if using list-of-services flag)")
+  sourceIP = flag.String("sourceIP", "" , "source IP to send syn packets with (if using sendSYNs flag)")
 
   debug = flag.Bool("d", false, "debug printing on")
   haf = flag.Int("haf", 0, "number of random ephemeral probes to send to filter ACKing firewalls")
