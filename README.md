@@ -97,5 +97,5 @@ Scanning a custom list of services (-sendSYNs): A sending rate feature has not y
 
 ## LZR's Algorithm
 
-![](etc/LZRAlg.png)
+![](etc/LZRFlow.png)
 
