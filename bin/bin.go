@@ -42,12 +42,14 @@ func LZRMain() {
     f := lzr.InitFile( options.Filename )
 
     writingQueue := lzr.ConstructWritingQueue( options.Workers )
-    zmapIncoming := lzr.ConstructZMapRoutine( options.Workers )
     pcapIncoming := lzr.ConstructPcapRoutine( options.Workers )
 	timeoutQueue := lzr.ConstructTimeoutQueue( options.Workers )
     retransmitQueue := lzr.ConstructRetransmitQueue( options.Workers )
     timeoutIncoming := lzr.PollTimeoutRoutine(
         &ipMeta,timeoutQueue, retransmitQueue, options.Workers, options.Timeout, options.RetransmitSec )
+	incoming := lzr.ConstructIncomingRoutine( options.Workers )
+	var incomingDone sync.WaitGroup
+	incomingDone.Add(options.Workers)
     done := false
 	writing := false
 
@@ -64,18 +66,21 @@ func LZRMain() {
         }
     }()
     //start all workers
-    //read from zmap
-	var zmapDone sync.WaitGroup
-	zmapDone.Add(options.Workers)
 
-    for i := 0; i < options.Workers; i ++ {
+    //read from zmap
+
+	for i := 0; i < options.Workers; i ++ {
         go func( i int ) {
-	        for input := range zmapIncoming {
-				        lzr.SendAck( options, input, &ipMeta, timeoutQueue,
-							retransmitQueue, writingQueue )
-                        ipMeta.FinishProcessing( input )
+	        for input := range incoming {
+				if lzr.ReadZMap() {
+					lzr.SendAck( options, input, &ipMeta, timeoutQueue,
+						retransmitQueue, writingQueue )
+				} else {
+					 lzr.SendOffSyn( input, &ipMeta, timeoutQueue )
+				}
+				ipMeta.FinishProcessing( input )
             }
-            //ExitCondition: zmap channel closed
+            //ExitCondition: incoming channel closed
 			if (i == options.Workers - 1) {
 				for {
 					if ipMeta.IsEmpty() {
@@ -85,17 +90,14 @@ func LZRMain() {
 					//slow down to prevent CPU busy looping
 					time.Sleep(1*time.Second)
 					fmt.Fprintln(os.Stderr,"Finishing Last:", ipMeta.Count())
-					/*if earlyExit( ipMeta.Count(), options.Timeout) {
-						zmapDone.Done()
-						done=true
-						return
-					}*/
 				}
 			}
-			zmapDone.Done()
+			incomingDone.Done()
 			return
         }(i)
-    }
+	}
+
+
     //read from pcap
     for i := 0; i < options.Workers; i ++ {
         go func( i int ) {
@@ -141,7 +143,8 @@ func LZRMain() {
     }()
 
     //exit gracefully when done
-	zmapDone.Wait()
+	incomingDone.Wait()
+
     for {
        if done && len(writingQueue) == 0 && !writing {
 				if options.MemProfile != "" {
