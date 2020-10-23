@@ -39,6 +39,19 @@ sudo ./lzr --handshakes wait,http,tls -feedZGrab | \
 zgrab multiple -c etc/all.ini 
 ```
 
+To scan a custom list of IP:Port (i.e., using LZR rather than ZMap to open connections):
+
+```
+cat services_list | sudo ./lzr --handshakes http -sendSYNs -sourceIP $source-ip 
+```
+
+The expected input format of an example services list is:
+```
+1.1.1.1:1234
+2.2.2.2:80
+```
+
+
 ## Flags
 ```
 $ ./lzr --help
@@ -48,13 +61,13 @@ Usage of ./lzr:
     	write cpu profile to file
   -d	debug printing on
   -f string
-    	json file name (default "default_20200802194843.json")
+    	json results output file name (default "default_[date].json")
   -feedZGrab
     	send to zgrab ip and fingerprint
   -forceAllHandshakes
     	Complete all handshakes even if data is returned early on. This also turns off HyperACKtive filtering.
-  -haf
-    	HyperACKtive filtering on
+  -haf int
+    	number of random ephemeral probes to send to filter ACKing firewalls
   -handshakes string
     	handshakes to scan with (default "http")
   -memprofile string
@@ -67,6 +80,10 @@ Usage of ./lzr:
     	number of data packets to re-transmit (default 1)
   -rt int
     	number of seconds until re-transmitting packet (default 1)
+  -sendSYNs
+    	will read input from stdin containing a newline-delimited list of ip:port
+  -sourceIP string
+    	source IP to send syn packets with (if using sendSYNs flag)
   -t int
     	number of seconds to wait in timeout queue for last retransmission (default 5)
   -w int
@@ -74,7 +91,7 @@ Usage of ./lzr:
 ```
 
 #### Caveats for specific features
-HyperACKtive Note: If a host responds both on the expected port and on the random ephemeral port, whichever response comes first will dictate whether the host is marked as HyperACKtive. The expected port is contacted first, so unless there is some congestion which causes the packets to be delivered out of order, then the expected port is expected to answer first.  
+HyperACKtive Note: If a host responds both on the expected port and on the random ephemeral port, whichever response comes first will dictate whether the host is marked as having an ACKing firewall. 
 
 ## LZR's Algorithm
 
