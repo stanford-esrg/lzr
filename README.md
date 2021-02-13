@@ -3,7 +3,7 @@ LZR
 
 LZR quickly detects and fingerprints unexpected services running on unexpected ports by working with [ZMap](https://github.com/zmap/zmap). LZR can detect up 18 unique protocols simoultaneously with just two extra packets and can fingerprint over 35 different protocols. 
 
-To learn more about how LZR's system and performance read this (coming soon).
+To learn more about LZR's system and performance, check out the original [paper](https://lizizhikevich.github.io/assets/papers/lzr.pdf) appearing at USENIX Security '21.
 
 ## Building
 
