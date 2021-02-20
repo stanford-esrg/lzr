@@ -30,7 +30,6 @@ import (
 
 var (
     handle       *pcap.Handle
-    device       string = "ens8"
     snapshot_len int32  = 1024
     promiscuous  bool   = false
     err          error
@@ -82,7 +81,7 @@ func ConstructPcapRoutine( workers int ) chan *packet_metadata {
 	pcapIncoming := make(chan *packet_metadata,1000000)//,10)//,4*workers )
 	pcapdQueue := make(chan *gopacket.Packet,1000000)//,10)
 	// Open device
-	handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, pcap.BlockForever)//1*time.Second)
+	handle, err = pcap.OpenLive(getDevice(), snapshot_len, promiscuous, pcap.BlockForever)//1*time.Second)
 	if err != nil {
         panic(err)
 		log.Fatal(err)

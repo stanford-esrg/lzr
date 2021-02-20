@@ -28,6 +28,7 @@ var (
 	filename				*string
 	sendSYNs				*bool
 	sourceIP				*string
+	device					*string
 	debug					*bool
 	haf						*int
 	pushDOnly				*bool
@@ -50,6 +51,7 @@ type options struct {
 	Filename			string
 	SendSYNs			bool
 	SourceIP			string
+	Device				string
 	Debug				bool
 	Haf					int
 	PushDOnly			bool
@@ -72,7 +74,7 @@ func init() {
   filename = flag.String("f", fname , "json results output file name")
   sendSYNs = flag.Bool("sendSYNs", false , "will read input from stdin containing a newline-delimited list of ip:port")
   sourceIP = flag.String("sourceIP", "" , "source IP to send syn packets with (if using sendSYNs flag)")
-
+  device = flag.String("sendInterface", "ens8" , "network interface to send packets on")
   debug = flag.Bool("d", false, "debug printing on")
   haf = flag.Int("haf", 0, "number of random ephemeral probes to send to filter ACKing firewalls")
   pushDOnly = flag.Bool("pushDataOnly", false, "Don't attach data to ack but rather to push only")
@@ -131,6 +133,7 @@ func Parse() (*options,bool) {
 		Filename: *filename,
 		SendSYNs: *sendSYNs,
 		Debug: *debug,
+		Device: *device,
 		Haf: *haf,
 		FeedZGrab: *feedZGrab,
 		PushDOnly: *pushDOnly,
@@ -167,6 +170,9 @@ func Parse() (*options,bool) {
 	}
 	if *sourceIP != "" {
 		fmt.Fprintln(os.Stderr,"++Using SourceIP:", *sendSYNs)
+	}
+	if *device != "ens8" {
+		fmt.Fprintln(os.Stderr,"++Using Sending Interface:", *device)
 	}
 	if *priorityFingerprint != "" {
 		fmt.Fprintln(os.Stderr,"++Prioritizing Fingerprints:", *priorityFingerprint)
@@ -222,6 +228,10 @@ func getNumFilters() int {
 
 func getSourceIP() string {
 	return *sourceIP
+}
+
+func getDevice() string {
+    return *device
 }
 
 func PushDOnly() bool {
