@@ -80,6 +80,8 @@ Usage of ./lzr:
     	number of data packets to re-transmit (default 1)
   -rt int
     	number of seconds until re-transmitting packet (default 1)
+  -sendInterface string
+    	network interface to send packets on (default "ens8")
   -sendSYNs
     	will read input from stdin containing a newline-delimited list of ip:port
   -sourceIP string
