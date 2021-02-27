@@ -17,16 +17,13 @@ package lzr
 
 import (
     "github.com/google/gopacket"
-    //"github.com/google/gopacket/layers"
     "github.com/google/gopacket/pcap"
     "log"
     "io"
     "bufio"
     "os"
-	//"net"
     "time"
     "fmt"
-	//"bytes"
 )
 
 var (
@@ -40,7 +37,7 @@ var (
 
 func InitParams() {
 
-    source_mac = GetSourceMacAddr()
+    source_mac = getSourceMacAddr()
     dest_mac =  getHostMacAddr()
 
 }
@@ -114,7 +111,7 @@ func ConstructPcapRoutine( workers int ) chan *packet_metadata {
 						continue
 					}
 					if dest_mac  == "" {
-						SaveHostMacAddr( packet )
+						saveHostMacAddr( packet )
 					}
 					pcapIncoming <- packet
 				}

@@ -27,11 +27,11 @@ import (
 
 /*  Packet Ops */
 
-func SaveHostMacAddr( packet *packet_metadata ) {
+func saveHostMacAddr( packet *packet_metadata ) {
 	dest_mac = packet.getSourceMac()
 }
 
-func GetSourceMacAddr() (addr string) {
+func getSourceMacAddr() (addr string) {
     interfaces, err := net.Interfaces()
     if err == nil {
         for _, i := range interfaces {
