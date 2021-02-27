@@ -28,7 +28,6 @@ import (
 /*  Packet Ops */
 
 func SaveHostMacAddr( packet *packet_metadata ) {
-
 	dest_mac = packet.getSourceMac()
 }
 
@@ -46,10 +45,6 @@ func GetSourceMacAddr() (addr string) {
     }
     return addr
 }
-
-/*func GetHostMacAddr() (addr net.HardwareAddr) {
-	return net.HardwareAddr{0xa8, 0x1e, 0x84, 0xce, 0x64, 0x5f}
-}*/
 
 func constructEthLayer() (eth *layers.Ethernet) {
 
