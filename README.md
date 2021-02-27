@@ -61,11 +61,13 @@ Usage of ./lzr:
     	write cpu profile to file
   -d	debug printing on
   -f string
-    	json results output file name (default "default_[date].json")
+    	json results output file name (default "default_20210227212802.json")
   -feedZGrab
     	send to zgrab ip and fingerprint
   -forceAllHandshakes
     	Complete all handshakes even if data is returned early on. This also turns off HyperACKtive filtering.
+  -gatewayMac string
+    	gatway Mac Address in format xx:xx:xx:xx:xx:xx
   -haf int
     	number of random ephemeral probes to send to filter ACKing firewalls
   -handshakes string
