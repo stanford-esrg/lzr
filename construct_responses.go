@@ -26,24 +26,23 @@ import (
 
 
 /*  Packet Ops */
-var (
-	source_mac = getSourceMacAddr()
-)
-func getSourceMacAddr() (addr net.HardwareAddr) {
-	interfaces, err := net.Interfaces()
-	if err == nil {
-		for _, i := range interfaces {
-			if i.Flags&net.FlagUp != 0 && bytes.Compare(i.HardwareAddr, nil) != 0 {
-				// Don't use random as we have a real address
-				addr = i.HardwareAddr
-				//break
-			}
-		}
-	}
-	return
+
+func GetSourceMacAddr() (addr net.HardwareAddr) {
+    interfaces, err := net.Interfaces()
+    if err == nil {
+        for _, i := range interfaces {
+            if i.Flags&net.FlagUp != 0 && bytes.Compare(i.HardwareAddr, nil) != 0 {
+                if i.Name != getDevice() {
+                    continue
+                }
+                addr = i.HardwareAddr
+            }
+        }
+    }
+    return
 }
 
-func getHostMacAddr() (addr net.HardwareAddr) {
+func GetHostMacAddr() (addr net.HardwareAddr) {
 	return net.HardwareAddr{0xa8, 0x1e, 0x84, 0xce, 0x64, 0x5f}
 }
 
@@ -51,7 +50,7 @@ func constructEthLayer() (eth *layers.Ethernet) {
 
     ethernetLayer := &layers.Ethernet{
         SrcMAC: source_mac,
-        DstMAC: getHostMacAddr(),
+        DstMAC: dest_mac,
         //EthernetType: layers.EthernetTypeARP,
         EthernetType: layers.EthernetTypeIPv4,
     }

@@ -11,8 +11,6 @@ import (
 	"fmt"
 )
 
-var prevRemaining int
-var timeCounter int
 
 func LZRMain() {
     // create a context that can be cancelled
@@ -40,6 +38,7 @@ func LZRMain() {
 	//initalize
 	ipMeta := lzr.ConstructPacketStateMap( options )
     f := lzr.InitFile( options.Filename )
+	lzr.InitParams()
 
     writingQueue := lzr.ConstructWritingQueue( options.Workers )
     pcapIncoming := lzr.ConstructPcapRoutine( options.Workers )

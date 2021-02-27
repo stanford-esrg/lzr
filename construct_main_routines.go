@@ -23,6 +23,7 @@ import (
     "io"
     "bufio"
     "os"
+	"net"
     "time"
     "fmt"
 	//"bytes"
@@ -33,7 +34,16 @@ var (
     snapshot_len int32  = 1024
     promiscuous  bool   = false
     err          error
+    source_mac   net.HardwareAddr
+    dest_mac     net.HardwareAddr
 )
+
+func InitParams() {
+
+    source_mac = GetSourceMacAddr()
+    dest_mac =  GetHostMacAddr()
+
+}
 
 
 func ConstructWritingQueue( workers int ) chan packet_metadata {
