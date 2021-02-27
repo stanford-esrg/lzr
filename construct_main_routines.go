@@ -23,7 +23,7 @@ import (
     "io"
     "bufio"
     "os"
-	"net"
+	//"net"
     "time"
     "fmt"
 	//"bytes"
@@ -34,14 +34,14 @@ var (
     snapshot_len int32  = 1024
     promiscuous  bool   = false
     err          error
-    source_mac   net.HardwareAddr
-    dest_mac     net.HardwareAddr
+    source_mac   string
+    dest_mac     string
 )
 
 func InitParams() {
 
     source_mac = GetSourceMacAddr()
-    dest_mac =  GetHostMacAddr()
+    dest_mac =  getHostMacAddr()
 
 }
 
@@ -112,6 +112,9 @@ func ConstructPcapRoutine( workers int ) chan *packet_metadata {
 					packet := convertToPacketM( data )
 					if packet == nil {
 						continue
+					}
+					if dest_mac  == "" {
+						SaveHostMacAddr( packet )
 					}
 					pcapIncoming <- packet
 				}

@@ -49,6 +49,8 @@ type packet_state struct {
 
 type packet_metadata struct {
 
+	Smac				string		`json:"-"`
+	Dmac				string		`json:"-"`
 	Saddr				string		`json:"saddr"`
 	Daddr				string		`json:"daddr"`
 	Sport				int			`json:"sport"`
@@ -77,9 +79,11 @@ type packet_metadata struct {
 }
 
 
-func ReadLayers( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
+func ReadLayers( ip *layers.IPv4, tcp *layers.TCP, eth *layers.Ethernet ) *packet_metadata {
 
 	packet := &packet_metadata{
+		Smac: eth.SrcMAC.String(),
+		Dmac: eth.DstMAC.String(),
 		Saddr: ip.SrcIP.String(),
 		Daddr: ip.DstIP.String(),
 		Sport: int(tcp.SrcPort),
@@ -102,13 +106,21 @@ func ReadLayers( ip *layers.IPv4, tcp *layers.TCP ) *packet_metadata {
 }
 
 func convertToPacketM( packet *gopacket.Packet ) *packet_metadata {
+
 	tcpLayer := (*packet).Layer(layers.LayerTypeTCP)
 	if tcpLayer != nil {
 		tcp, _ := tcpLayer.(*layers.TCP)
 		ipLayer := (*packet).Layer(layers.LayerTypeIPv4)
-		ip, _ := ipLayer.(*layers.IPv4)
-		metapacket := ReadLayers(ip,tcp)
-		return metapacket
+		if ipLayer != nil {
+			ip, _ := ipLayer.(*layers.IPv4)
+
+			ethLayer := (*packet).Layer(layers.LayerTypeEthernet)
+			if ethLayer != nil {
+				eth, _ := ethLayer.(*layers.Ethernet)
+				metapacket := ReadLayers(ip,tcp,eth)
+				return metapacket
+			}
+		}
 	}
 	return nil
 }
@@ -139,8 +151,17 @@ func convertFromInputListToPacket( input string ) *packet_metadata {
 		panic("WRONG INPUT LIST FORMAT.")
 		panic("BAD STUFF IS ABOUT TO HAPPEN")
 	}
+	if getHostMacAddr() == "" {
+		panic("Gateway Mac Address required")
+	}
+	if getSourceIP() == "" {
+		 panic("Source IP required")
+	}
+
 	//note that source and dest are inverted
 	syn := &packet_metadata{
+		Smac: source_mac,
+		Dmac: getHostMacAddr(),
         Saddr: saddr,
         Daddr: getSourceIP(),
         Dport: randInt(32768, 61000),
@@ -168,6 +189,8 @@ func createFilterPacket( packet *packet_metadata ) *packet_metadata {
 
 	rand.Seed(time.Now().UTC().UnixNano())
 	packetFilter := &packet_metadata{
+		Smac: packet.Smac,
+		Dmac: packet.Dmac,
 		Saddr: packet.Saddr,
 		Daddr: packet.Daddr,
 		Dport: int(math.Mod(float64(packet.Dport),65535)+1),
@@ -277,6 +300,13 @@ func (packet * packet_metadata) validationFail() {
 func (packet * packet_metadata) getValidationFail() bool {
 
 	return packet.ValFail
+
+}
+
+
+func (packet * packet_metadata) getSourceMac() string {
+
+    return packet.Smac
 
 }
 

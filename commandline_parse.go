@@ -29,6 +29,7 @@ var (
 	sendSYNs				*bool
 	sourceIP				*string
 	device					*string
+	mac						*string
 	debug					*bool
 	haf						*int
 	pushDOnly				*bool
@@ -52,6 +53,7 @@ type options struct {
 	SendSYNs			bool
 	SourceIP			string
 	Device				string
+	Mac					string
 	Debug				bool
 	Haf					int
 	PushDOnly			bool
@@ -75,6 +77,7 @@ func init() {
   sendSYNs = flag.Bool("sendSYNs", false , "will read input from stdin containing a newline-delimited list of ip:port")
   sourceIP = flag.String("sourceIP", "" , "source IP to send syn packets with (if using sendSYNs flag)")
   device = flag.String("sendInterface", "ens8" , "network interface to send packets on")
+  mac = flag.String("gatewayMac", "" , "gatway Mac Address in format xx:xx:xx:xx:xx:xx")
   debug = flag.Bool("d", false, "debug printing on")
   haf = flag.Int("haf", 0, "number of random ephemeral probes to send to filter ACKing firewalls")
   pushDOnly = flag.Bool("pushDataOnly", false, "Don't attach data to ack but rather to push only")
@@ -134,6 +137,7 @@ func Parse() (*options,bool) {
 		SendSYNs: *sendSYNs,
 		Debug: *debug,
 		Device: *device,
+		Mac: *mac,
 		Haf: *haf,
 		FeedZGrab: *feedZGrab,
 		PushDOnly: *pushDOnly,
@@ -173,6 +177,9 @@ func Parse() (*options,bool) {
 	}
 	if *device != "ens8" {
 		fmt.Fprintln(os.Stderr,"++Using Sending Interface:", *device)
+	}
+	if *mac != "" {
+		fmt.Fprintln(os.Stderr,"++Using Gateway Mac:", *mac)
 	}
 	if *priorityFingerprint != "" {
 		fmt.Fprintln(os.Stderr,"++Prioritizing Fingerprints:", *priorityFingerprint)
@@ -232,6 +239,10 @@ func getSourceIP() string {
 
 func getDevice() string {
     return *device
+}
+
+func getHostMacAddr() string {
+	return *mac
 }
 
 func PushDOnly() bool {

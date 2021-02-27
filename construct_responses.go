@@ -27,7 +27,12 @@ import (
 
 /*  Packet Ops */
 
-func GetSourceMacAddr() (addr net.HardwareAddr) {
+func SaveHostMacAddr( packet *packet_metadata ) {
+
+	dest_mac = packet.getSourceMac()
+}
+
+func GetSourceMacAddr() (addr string) {
     interfaces, err := net.Interfaces()
     if err == nil {
         for _, i := range interfaces {
@@ -35,22 +40,25 @@ func GetSourceMacAddr() (addr net.HardwareAddr) {
                 if i.Name != getDevice() {
                     continue
                 }
-                addr = i.HardwareAddr
+                addr = i.HardwareAddr.String()
             }
         }
     }
-    return
+    return addr
 }
 
-func GetHostMacAddr() (addr net.HardwareAddr) {
+/*func GetHostMacAddr() (addr net.HardwareAddr) {
 	return net.HardwareAddr{0xa8, 0x1e, 0x84, 0xce, 0x64, 0x5f}
-}
+}*/
 
 func constructEthLayer() (eth *layers.Ethernet) {
 
+	smac, _ := net.ParseMAC(source_mac)
+	dmac, _ := net.ParseMAC(dest_mac)
+
     ethernetLayer := &layers.Ethernet{
-        SrcMAC: source_mac,
-        DstMAC: dest_mac,
+        SrcMAC: smac,
+        DstMAC: dmac,
         //EthernetType: layers.EthernetTypeARP,
         EthernetType: layers.EthernetTypeIPv4,
     }
