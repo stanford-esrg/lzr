@@ -77,7 +77,7 @@ func init() {
   sendSYNs = flag.Bool("sendSYNs", false , "will read input from stdin containing a newline-delimited list of ip:port")
   sourceIP = flag.String("sourceIP", "" , "source IP to send syn packets with (if using sendSYNs flag)")
   device = flag.String("sendInterface", "ens8" , "network interface to send packets on")
-  mac = flag.String("gatewayMac", "" , "gatway Mac Address in format xx:xx:xx:xx:xx:xx")
+  mac = flag.String("gatewayMac", "" , "gateway Mac Address in format xx:xx:xx:xx:xx:xx")
   debug = flag.Bool("d", false, "debug printing on")
   haf = flag.Int("haf", 0, "number of random ephemeral probes to send to filter ACKing firewalls")
   pushDOnly = flag.Bool("pushDataOnly", false, "Don't attach data to ack but rather to push only")
