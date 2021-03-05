@@ -85,7 +85,7 @@ func hiearchizeFingerprint( fingerprint string ) string {
 		strings.Contains( fingerprint, "http")) {
 		return "tls"
 	} else {
-		fmt.Println("WARNING: NEW MULTI-FINGERPRINT:", fingerprint)
+		//fmt.Println("WARNING: NEW MULTI-FINGERPRINT:", fingerprint)
 		return fingerprint
 	}
 
