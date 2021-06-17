@@ -72,10 +72,12 @@ func LZRMain() {
         go func( i int ) {
 	        for input := range incoming {
 				if lzr.ReadZMap() {
+					toACK := true
+					toPUSH := false
 					lzr.SendAck( options, input, &ipMeta, timeoutQueue,
-						retransmitQueue, writingQueue )
+						retransmitQueue, writingQueue, toACK, toPUSH, lzr.ACK)
 				} else {
-					 lzr.SendOffSyn( input, &ipMeta, timeoutQueue )
+					 lzr.SendSyn( input, &ipMeta, timeoutQueue )
 				}
 				ipMeta.FinishProcessing( input )
             }
