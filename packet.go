@@ -58,6 +58,7 @@ type packet_metadata struct {
 	Seqnum				int			`json:"seqnum"`
 	Acknum				int			`json:"acknum"`
 	Window				int			`json:"window"`
+	TTL					uint8		`json:"ttl"`
 	Counter				int
 
 	ACK					bool
@@ -86,6 +87,7 @@ func ReadLayers( ip *layers.IPv4, tcp *layers.TCP, eth *layers.Ethernet ) *packe
 		Dmac: eth.DstMAC.String(),
 		Saddr: ip.SrcIP.String(),
 		Daddr: ip.DstIP.String(),
+		TTL: ip.TTL,
 		Sport: int(tcp.SrcPort),
 		Dport: int(tcp.DstPort),
 		Seqnum: int(tcp.Seq),
@@ -144,11 +146,14 @@ func convertFromInputListToPacket( input string ) *packet_metadata {
 	//expecting ip, port
 	input = strings.TrimSuffix(input, "\n")
 	s := strings.Split(input,":")
+	if len(s) != 2 {
+		panic("Error parsing input list")
+	}
 	saddr, sport_s := s[0], s[1]
 	sport, err := strconv.Atoi(sport_s)
 	if err != nil {
 		panic(err)
-		panic("WRONG INPUT LIST FORMAT.")
+		panic("Wrong input list format")
 		panic("BAD STUFF IS ABOUT TO HAPPEN")
 	}
 	if getHostMacAddr() == "" {
