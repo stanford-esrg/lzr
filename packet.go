@@ -224,6 +224,7 @@ func ( packet * packet_metadata ) updatePacketFlow()  {
 	newsrcprt := math.Mod(float64(packet.Dport),65535)+1
 	packet.Dport = int(newsrcprt)
 	packet.HandshakeNum += 1
+	packet.Counter = 0
 	packet.ExpectedRToLZR = SYN_ACK
 	packet.Seqnum = packet.Acknum
 	packet.Acknum = 0
