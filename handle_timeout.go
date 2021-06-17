@@ -17,7 +17,6 @@ package lzr
 
 import (
     //"fmt"
-    "log"
 )
 
 
@@ -35,30 +34,18 @@ func HandleTimeout( opts *options, packet *packet_metadata, ipMeta * pState,
 
 
     //send again with just data (not apart of handshake)
-    if (packet.ExpectedRToLZR == DATA || packet.ExpectedRToLZR == ACK) {
-        if packet.Counter < opts.RetransmitNum {
+    if packet.Counter < opts.RetransmitNum {
             packet.incrementCounter()
 
-
-			//grab which handshake
-			handshakeNum := ipMeta.getHandshake( packet )
-			handshake, _ := GetHandshake( opts.Handshakes[ handshakeNum ] )
-
-			//if packet counter is 0 then dont specify the push flag just yet
-			dataPacket,payload := constructData( handshake, packet,true,!(packet.Counter  == 0))
-
-            err = handle.WritePacketData( dataPacket )
-            if err != nil {
-                log.Fatal(err)
-            }
-		    packet.updateTimestamp()
-			packet.updateResponseL( payload )
-		    ipMeta.update( packet )
-
-		    packet.updateTimestamp()
-            timeoutQueue <- packet
-	        return
-        }
+		if ( packet.ExpectedRToLZR == ACK || packet.ExpectedRToLZR == DATA ) {
+			// pass in timeoutQ as retransmitQ to start the timeout clock
+			SendAck( opts, packet, ipMeta, timeoutQueue, timeoutQueue, writingQueue,
+					true, !(packet.Counter  == 0), packet.ExpectedRToLZR )
+		}
+		if ( packet.ExpectedRToLZR == SYN_ACK ) {
+			SendSyn( packet, ipMeta, timeoutQueue )
+		}
+		return
 	}
 
 	//this handshake timed-out 

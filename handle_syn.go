@@ -16,12 +16,12 @@ limitations under the License.
 package lzr
 
 import (
-	//"fmt"
+	"fmt"
 )
 
-func SendOffSyn(packet * packet_metadata, ipMeta * pState,
+func SendSyn(packet * packet_metadata, ipMeta * pState,
 	timeoutQueue chan *packet_metadata ) {
-
+		fmt.Println( packet.Counter )
 		packet.updateResponse( SYN_ACK )
 		packet.updateTimestamp()
 		ipMeta.update( packet )

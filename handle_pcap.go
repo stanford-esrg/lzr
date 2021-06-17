@@ -126,8 +126,10 @@ func HandlePcap( opts *options, packet *packet_metadata, ipMeta * pState, timeou
 				ipMeta.incEphemeralResp( packet, packet.Sport )
 			}
 		}
-
-		SendAck( opts, packet, ipMeta, timeoutQueue, retransmitQueue, writingQueue )
+		toACK := true
+		toPUSH := false
+		SendAck( opts, packet, ipMeta, timeoutQueue, retransmitQueue, writingQueue,
+				toACK, toPUSH, ACK )
 		return
 	}
 

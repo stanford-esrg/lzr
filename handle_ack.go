@@ -23,7 +23,8 @@ import (
 
 
 func SendAck( opts *options, synack  *packet_metadata, ipMeta * pState,
-timeoutQueue  chan *packet_metadata, retransmitQueue chan *packet_metadata, writingQueue  chan packet_metadata ) {
+timeoutQueue  chan *packet_metadata, retransmitQueue chan *packet_metadata,
+writingQueue  chan packet_metadata, toACK bool, toPUSH bool, expectedResponse string ) {
 
 
 	if synack.windowZero() {
@@ -37,9 +38,9 @@ timeoutQueue  chan *packet_metadata, retransmitQueue chan *packet_metadata, writ
 	handshake, _ := GetHandshake( opts.Handshakes[ handshakeNum ] )
 
 	//Send Ack with Data
-	ack, payload := constructData( handshake, synack, true, false )
+	ack, payload := constructData( handshake, synack, toACK, toPUSH )//true, false )
 	//add to map
-	synack.updateResponse( ACK )
+	synack.updateResponse( expectedResponse )//ACK )
 	synack.updateResponseL( payload )
 	synack.updateTimestamp()
 	ipMeta.update( synack )
