@@ -42,7 +42,7 @@ zgrab multiple -c etc/all.ini
 To scan a custom list of IP:Port (i.e., using LZR rather than ZMap to open connections):
 
 ```
-cat services_list | sudo ./lzr --handshakes http -sendSYNs -sourceIP $source-ip 
+cat services_list | sudo ./lzr --handshakes http -sendSYNs -sourceIP $source-ip -gatewayMac $gateway
 ```
 
 The expected input format of an example services list is:
