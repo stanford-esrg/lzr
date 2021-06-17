@@ -42,9 +42,9 @@ zgrab multiple -c etc/all.ini
 To scan a custom list of IP:Port (i.e., using LZR rather than ZMap to open connections):
 
 ```
-cat services_list | sudo ./lzr --handshakes http -sendSYNs -sourceIP $source-ip -gatewayMac $gateway
+<services_list pv -L$PACKETS_PER_SECOND -l --quiet | sudo ./lzr --handshakes http -sendSYNs -sourceIP $source-ip -gatewayMac $gateway
 ```
-
+Note that we use [pv](https://linux.die.net/man/1/pv) to control the sending rate (i.e., the number of services fed to lzr per second). </br>
 The expected input format of an example services list is:
 ```
 1.1.1.1:1234
@@ -96,8 +96,6 @@ Usage of ./lzr:
 
 #### Caveats for specific features
 Acking Firewall Filtering (-haf): If a host responds both on the expected port and on the random ephemeral port, whichever response comes first will dictate whether the host is marked as having an ACKing firewall. 
-
-Scanning a custom list of services (-sendSYNs): A sending rate feature has not yet been implemented and therefore all SYNs will be sent at once. Please be careful when using this option to not overload the network. 
 
 ## LZR's Algorithm
 
