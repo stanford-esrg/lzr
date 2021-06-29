@@ -133,6 +133,8 @@ func convertFromZMapToPacket( input string ) *packet_metadata	{
 	//expecting ip,sequence number, acknumber,windowsize, sport, dport
 	err := json.Unmarshal( []byte(input),synack )
 	synack.Processing = true
+    synack.SYN = true
+    synack.ACK = true
 	if err != nil {
 		log.Fatal(err)
 		return nil
