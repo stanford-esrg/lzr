@@ -7,7 +7,7 @@ To learn more about LZR's system and performance, check out the original [paper]
 
 ## Building
 
-Install and set up ZMap (see https://github.com/zmap/zmap). If also performing full L7 handshakes, set up ZGrab (https://github.com/zmap/zgrab2).
+Install and set up [ZMap](https://github.com/zmap/zmap). If also performing full L7 handshakes, set up [ZGrab](https://github.com/zmap/zgrab2).
 
 Set up `$GOPATH` (see https://golang.org/doc/code.html).
 ```
