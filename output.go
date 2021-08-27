@@ -96,9 +96,6 @@ func ( f *output_file ) Record( packet packet_metadata, handshakes []string ) {
 		if packet.Fingerprint != "" {
 			fmt.Println( packet.Saddr + ", ," + packet.Fingerprint )
 		}
-		// Don't write an output file if we are feeding data to zgrab
-		addToSummary( &packet )
-		return
 	}
 
 	addToSummary( &packet )
