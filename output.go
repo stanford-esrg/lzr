@@ -119,11 +119,16 @@ func ( f *output_file ) Record( packet packet_metadata, handshakes []string ) {
 
 func InitFile( fname string ) *output_file {
 
-	f, err := os.OpenFile( fname, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777 )
-
-	if err != nil {
-		panic(err)
-		log.Fatal(err)
+	var f *os.File
+	if fname == "-" {
+		f = os.Stdout
+	} else {
+		file, err := os.OpenFile( fname, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777 )
+		if err != nil {
+			panic(err)
+			log.Fatal(err)
+		}
+		f = file
 	}
 
 	o := &output_file{

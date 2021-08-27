@@ -73,7 +73,7 @@ type options struct {
 // Basic flag declarations are available for string, integer, and boolean options.
 func init() {
   fname := "default_"+string(time.Now().Format("20060102150405"))+".json"
-  filename = flag.String("f", fname , "json results output file name")
+  filename = flag.String("f", fname , "json results output file name, use '-' for standard output")
   sendSYNs = flag.Bool("sendSYNs", false , "will read input from stdin containing a newline-delimited list of ip:port")
   sourceIP = flag.String("sourceIP", "" , "source IP to send syn packets with (if using sendSYNs flag)")
   device = flag.String("sendInterface", "ens8" , "network interface to send packets on")
