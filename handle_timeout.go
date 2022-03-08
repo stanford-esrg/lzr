@@ -34,7 +34,7 @@ func HandleTimeout( opts *options, packet *packet_metadata, ipMeta * pState,
 
 
     //send again with just data (not apart of handshake)
-    if packet.Counter < opts.RetransmitNum {
+    if ( packet.Counter < opts.RetransmitNum ) && !packet.HyperACKtive {
             packet.incrementCounter()
 
 		if ( packet.ExpectedRToLZR == ACK || packet.ExpectedRToLZR == DATA ) {
