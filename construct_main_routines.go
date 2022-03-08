@@ -33,6 +33,7 @@ var (
     err          error
     source_mac   string
     dest_mac     string
+	QUEUE_SIZE   int32 = 100000000
 )
 
 func InitParams() {
@@ -45,7 +46,7 @@ func InitParams() {
 
 func ConstructWritingQueue( workers int ) chan packet_metadata {
 
-    writingQueue := make(chan packet_metadata,10000)// 4* workers)
+    writingQueue := make(chan packet_metadata, QUEUE_SIZE)
     return writingQueue
 }
 
@@ -53,7 +54,7 @@ func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
 
 
 	//routine to read in from ZMap
-	incoming := make(chan *packet_metadata,1000000)// 4*workers)
+	incoming := make(chan *packet_metadata, QUEUE_SIZE)
 	go func() {
 		reader := bufio.NewReader(os.Stdin)
 		for {
@@ -85,8 +86,8 @@ func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
 func ConstructPcapRoutine( workers int ) chan *packet_metadata {
 
 	//routine to read in from pcap
-	pcapIncoming := make(chan *packet_metadata,1000000)//,10)//,4*workers )
-	pcapdQueue := make(chan *gopacket.Packet,1000000)//,10)
+	pcapIncoming := make(chan *packet_metadata, QUEUE_SIZE)
+	pcapdQueue := make(chan *gopacket.Packet, QUEUE_SIZE)
 	// Open device
 	handle, err = pcap.OpenLive(getDevice(), snapshot_len, promiscuous, pcap.BlockForever)//1*time.Second)
 	if err != nil {
@@ -137,7 +138,7 @@ func PollTimeoutRoutine( ipMeta * pState, timeoutQueue chan *packet_metadata, re
     TIMEOUT_T := time.Duration(timeoutT)*time.Second
     TIMEOUT_R := time.Duration(timeoutR)*time.Second
 
-	timeoutIncoming := make(chan *packet_metadata,1000000)//4*workers)
+	timeoutIncoming := make(chan *packet_metadata, QUEUE_SIZE)
 	//spawn off appropriate routines to poll from timeout & retransmit Queues at specified intervals
 	timeoutAlg(  ipMeta, timeoutQueue, timeoutIncoming, TIMEOUT_T )
 	timeoutAlg(  ipMeta, retransmitQueue, timeoutIncoming, TIMEOUT_R )
@@ -184,7 +185,7 @@ func timeoutAlg(  ipMeta * pState, queue chan *packet_metadata, timeoutIncoming 
 // TimeoutQueueStuff TODO:need to move
 func ConstructRetransmitQueue( workers int ) chan *packet_metadata {
 
-    retransmitQueue := make(chan *packet_metadata, 1000000)
+    retransmitQueue := make(chan *packet_metadata, QUEUE_SIZE)
     return retransmitQueue
 }
 
@@ -193,7 +194,7 @@ func ConstructRetransmitQueue( workers int ) chan *packet_metadata {
 // TimeoutQueueStuff TODO:need to move
 func ConstructTimeoutQueue( workers int ) chan *packet_metadata {
 
-    timeoutQueue := make(chan *packet_metadata, 1000000)
+    timeoutQueue := make(chan *packet_metadata, QUEUE_SIZE)
     return timeoutQueue
 }
 
