@@ -65,7 +65,7 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 		ipMeta.incHandshake( packet )
 		SendSyn( packet, ipMeta, timeoutQueue )
 
-		//lets also filter for cananda-like things
+		//lets also filter for HyperACKtive hosts
 		if ( handshakeNum == 0 &&  HyperACKtiveFiltering() ) {
 			for i := 0; i < getNumFilters(); i++ {
 				highPortPacket := createFilterPacket( packet )
