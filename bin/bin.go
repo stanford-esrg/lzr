@@ -18,7 +18,7 @@ func LZRMain() {
 
 	start := time.Now()
 
-    //read in config 
+    //read in config
     options, ok := lzr.Parse()
 	if !ok {
 		fmt.Fprintln(os.Stderr,"Failed to parse command line options, exiting.")
@@ -83,8 +83,28 @@ func LZRMain() {
             }
             //ExitCondition: incoming channel closed
 			if (i == options.Workers - 1) {
+				// a band-aid has been added to check to see if the number of items
+				// in ipMeta has stayed the same for numHandshakes * timeout*2 time
+				// if so, close. there is some non-deterministic
+				// infinite loop condition that needs to be fixed in which ipMeta
+				// does not empty all the way
+				var infiniteLoop = false
+				var ipMetaSize = ipMeta.Count()
+				var intervalLoop = options.Timeout*lzr.NumHandshakes()*2
+				go func() {
+					for {
+						time.Sleep(time.Duration(intervalLoop)*time.Second)
+						if (ipMetaSize == ipMeta.Count()) {
+							fmt.Fprintln(os.Stderr,"Infinite Loop, Breaking.")
+							infiniteLoop = true
+							return
+						} else {
+							ipMetaSize = ipMeta.Count()
+						}
+					}
+				}()
 				for {
-					if ipMeta.IsEmpty() {
+					if ipMeta.IsEmpty() || infiniteLoop {
 						done=true
 						break
 					}

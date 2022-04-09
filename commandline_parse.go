@@ -260,3 +260,8 @@ func GetAllHandshakes()  []string {
 	}
 	return handshakeArr
 }
+
+func NumHandshakes() int {
+    return len(handshakeArr)
+}
+
