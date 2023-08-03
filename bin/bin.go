@@ -52,7 +52,6 @@ func LZRMain() {
     done := false
 	writing := false
 
-
     // record to file
     go func() {
         for {
@@ -145,9 +144,10 @@ func LZRMain() {
     }
 
     //read from timeout
-    go func() {
+    for i := 0; i < options.Workers; i ++ {
+		go func( i int ) {
 
-        for input := range timeoutIncoming {
+			for input := range timeoutIncoming {
                     inMap, startProcessing := ipMeta.IsStartProcessing( input )
                     //if another thread is processing, put input back
                     //if not in map, return
@@ -161,7 +161,8 @@ func LZRMain() {
                     lzr.HandleTimeout( options, input, &ipMeta, timeoutQueue, retransmitQueue, writingQueue )
                     ipMeta.FinishProcessing( input )
 		    }
-    }()
+    }(i)
+	}
 
     //exit gracefully when done
 	incomingDone.Wait()
