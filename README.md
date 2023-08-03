@@ -30,7 +30,7 @@ sudo zmap --target-port=9002 --output-filter="success = 1 && repeat = 0" \
 sudo ./lzr --handshakes http,tls
 ```
 
-To complete full L7 handshakes of unexpected services on an random port (9002):
+To complete full L7 handshakes of unexpected services on an random port (9002), substitute ``port=x`` in ``etc/all.ini`` with ``port=9002`` and run the following command:
 
 ```
 sudo zmap --target-port=9002 --output-filter="success = 1 && repeat = 0" \
