@@ -21,11 +21,11 @@ import (
 	"time"
 	"encoding/json"
 	"log"
-	"math/rand"
 	"math"
 	"strings"
 	"strconv"
 	//"fmt"
+	//"os"
 )
 
 var (
@@ -142,9 +142,10 @@ func convertFromZMapToPacket( input string ) *packet_metadata	{
 	return synack
 }
 
+
 func convertFromInputListToPacket( input string ) *packet_metadata {
 
-	rand.Seed(time.Now().UTC().UnixNano())
+	t := time.Now()
 	//expecting ip, port
 	input = strings.TrimSuffix(input, "\n")
 	s := strings.Split(input,":")
@@ -171,13 +172,13 @@ func convertFromInputListToPacket( input string ) *packet_metadata {
 		Dmac: getHostMacAddr(),
         Saddr: saddr,
         Daddr: getSourceIP(),
-        Dport: randInt(32768, 61000),
+		Dport: randInt(32768, 61000, t.UnixNano()),
         Sport: sport,
-        Seqnum: int(rand.Uint32()),
+		Seqnum: int(math.Mod(float64(t.UnixNano()),65535)),
         Acknum: 0,
         Window: 65535,
         SYN: true,
-        Timestamp: time.Now(),
+        Timestamp: t,
         Counter: 0,
         Processing: true,
         HandshakeNum: 0,
@@ -187,26 +188,27 @@ func convertFromInputListToPacket( input string ) *packet_metadata {
 	return syn
 }
 
-func randInt(min int, max int) int {
-	return min + rand.Intn(max-min)
+func randInt(min int, max int, cur int64) int {
+	//return min + rand.Intn(max-min)
+	return min + int(math.Mod(float64(cur), float64(max-min)))
 }
 
 //create a packet to filter out nets like canada
 func createFilterPacket( packet *packet_metadata ) *packet_metadata {
 
-	rand.Seed(time.Now().UTC().UnixNano())
+	t := time.Now()
 	packetFilter := &packet_metadata{
 		Smac: packet.Smac,
 		Dmac: packet.Dmac,
 		Saddr: packet.Saddr,
 		Daddr: packet.Daddr,
 		Dport: int(math.Mod(float64(packet.Dport),65535)+1),
-		Sport: randInt(32768, 61000),
-		Seqnum: int(rand.Uint32()),
+		Sport: randInt(32768, 61000, t.UnixNano()),
+		Seqnum: int(math.Mod(float64(t.UnixNano()),65535)),
 		Acknum: 0,
 		Window: packet.Window,
 		SYN: true,
-		Timestamp: time.Now(),
+		Timestamp: t,
 		Counter: 0,
 		Processing: true,
 		HandshakeNum: 0,
