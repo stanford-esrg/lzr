@@ -45,6 +45,7 @@ var (
 	priorityFingerprint		*string
 	priorityFingerprintArr	[]string
 	handshakeArr			[]string
+	recordOnlyData			*bool
 )
 
 type options struct {
@@ -67,6 +68,7 @@ type options struct {
 	MemProfile			string
 	Handshakes			[]string
 	PriorityFingerprint	[]string
+	RecordOnlyData		bool
 }
 
 
@@ -91,6 +93,7 @@ func init() {
   memprofile = flag.String("memprofile", "", "write memory profile to this file")
   handshake = flag.String("handshakes", "http" , "handshakes to scan with")
   priorityFingerprint = flag.String("priorityFingerprint", "" , "fingerprint to prioritize when multiple match")
+  recordOnlyData = flag.Bool("od", false, "record to file only services that send back data")
 }
 
 
@@ -150,6 +153,7 @@ func Parse() (*options,bool) {
 		MemProfile: *memprofile,
 		Handshakes: make([]string, strings.Count(*handshake,",")+1),
 		PriorityFingerprint: make([]string, strings.Count(*priorityFingerprint,",")+1),
+		RecordOnlyData: *recordOnlyData,
 	}
 
 	success := false
@@ -205,6 +209,9 @@ func Parse() (*options,bool) {
 	if *forceAllHandshakes {
 		fmt.Fprintln(os.Stderr,"++Force completing all handshakes")
 	}
+	if *recordOnlyData {
+		fmt.Fprintln(os.Stderr,"++Recording to file only services that return data")
+	}
 	fmt.Fprintln(os.Stderr,"++Worker threads:", *workers)
 	fmt.Fprintln(os.Stderr,"++Timeout Interval (s):", *timeout)
 	fmt.Fprintln(os.Stderr,"++Retransmit Interval (s):", *retransmitSec)
@@ -215,6 +222,10 @@ func Parse() (*options,bool) {
 
 func DebugOn() bool {
 	return *debug
+}
+
+func RecordOnlyData() bool {
+	return *recordOnlyData
 }
 
 func FeedZGrab() bool {
