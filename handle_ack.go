@@ -28,8 +28,12 @@ writingQueue  chan packet_metadata, toACK bool, toPUSH bool, expectedResponse st
 
 
 	if synack.windowZero() {
-		//not a real s/a
-		writingQueue <- *synack
+		if !(RecordOnlyData()) {
+			//not a real s/a
+			writingQueue <- *synack
+		} else {
+			addToSummary(synack)
+		}
 		return
 	}
 

@@ -93,7 +93,7 @@ func init() {
   memprofile = flag.String("memprofile", "", "write memory profile to this file")
   handshake = flag.String("handshakes", "http" , "handshakes to scan with")
   priorityFingerprint = flag.String("priorityFingerprint", "" , "fingerprint to prioritize when multiple match")
-  recordOnlyData = flag.Bool("od", false, "record to file only services that send back data")
+  recordOnlyData = flag.Bool("onlyDataRecord", false, "record to file only services that send back data")
 }
 
 

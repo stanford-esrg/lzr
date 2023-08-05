@@ -42,8 +42,14 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 		packet.syncHandshakeNum( handshakeNum )
 
 		//document failure if its a handshake response that hasnt succeeded before
-		if !packet.HyperACKtive && !( ForceAllHandshakes() && ipMeta.getData( packet ) && len(packet.Data) == 0 ) {
-			writingQueue <- *packet
+		if !packet.HyperACKtive && !( ForceAllHandshakes() && ipMeta.getData( packet ) && !(packet.hasData())) {
+
+			if !(!(packet.hasData()) && RecordOnlyData()) {
+				writingQueue <- *packet
+			} else {
+				addToSummary(packet)
+			}
+
 		}
 
 		//remove from state, we are done now
@@ -56,7 +62,7 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 
 
 		//record all succesful fingerprints if forcing all handshakes
-		if ForceAllHandshakes() && len(packet.Data) > 0 {
+		if ForceAllHandshakes() && packet.hasData() {
 			packet.syncHandshakeNum( handshakeNum )
 			writingQueue <- *packet
 		}

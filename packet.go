@@ -248,6 +248,13 @@ func (packet * packet_metadata) windowZero() bool {
 	return false
 }
 
+func (packet * packet_metadata) hasData() bool {
+	if len(packet.Data) > 0 {
+		return true
+	}
+	return false
+}
+
 func (packet * packet_metadata) syncHandshakeNum( h int ) {
 
 	packet.HandshakeNum = h
