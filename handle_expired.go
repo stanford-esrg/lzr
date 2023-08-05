@@ -20,7 +20,7 @@ import (
 )
 
 func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
-	timeoutQueue chan *packet_metadata, writingQueue chan packet_metadata ) {
+	timeoutQueue chan *packet_metadata, writingQueue chan *packet_metadata ) {
 
 
 	// first close the existing connection unless
@@ -45,7 +45,7 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 		if !packet.HyperACKtive && !( ForceAllHandshakes() && ipMeta.getData( packet ) && !(packet.hasData())) {
 
 			if !(!(packet.hasData()) && RecordOnlyData()) {
-				writingQueue <- *packet
+				writingQueue <- packet
 			} else {
 				addToSummary(packet)
 			}
@@ -64,7 +64,7 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 		//record all succesful fingerprints if forcing all handshakes
 		if ForceAllHandshakes() && packet.hasData() {
 			packet.syncHandshakeNum( handshakeNum )
-			writingQueue <- *packet
+			writingQueue <- packet
 		}
 
 		packet.updatePacketFlow()

@@ -24,13 +24,13 @@ import (
 
 func SendAck( opts *options, synack  *packet_metadata, ipMeta * pState,
 timeoutQueue  chan *packet_metadata, retransmitQueue chan *packet_metadata,
-writingQueue  chan packet_metadata, toACK bool, toPUSH bool, expectedResponse string ) {
+writingQueue  chan *packet_metadata, toACK bool, toPUSH bool, expectedResponse string ) {
 
 
 	if synack.windowZero() {
 		if !(RecordOnlyData()) {
 			//not a real s/a
-			writingQueue <- *synack
+			writingQueue <- synack
 		} else {
 			addToSummary(synack)
 		}

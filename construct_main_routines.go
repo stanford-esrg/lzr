@@ -44,9 +44,9 @@ func InitParams() {
 }
 
 
-func ConstructWritingQueue( workers int ) chan packet_metadata {
+func ConstructWritingQueue( workers int ) chan *packet_metadata {
 
-    writingQueue := make(chan packet_metadata, QUEUE_SIZE)
+    writingQueue := make(chan *packet_metadata, QUEUE_SIZE)
     return writingQueue
 }
 

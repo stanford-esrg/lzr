@@ -21,7 +21,7 @@ import (
 )
 
 
-func closeConnection( packet *packet_metadata, ipMeta * pState, writingQueue chan packet_metadata, write bool, ackingFirewall bool ) {
+func closeConnection( packet *packet_metadata, ipMeta * pState, writingQueue chan *packet_metadata, write bool, ackingFirewall bool ) {
 
 	//close connection
 	rst := constructRST(packet)
@@ -35,7 +35,7 @@ func closeConnection( packet *packet_metadata, ipMeta * pState, writingQueue cha
 		packet.setHyperACKtive(ackingFirewall)
 
         if !(!(packet.hasData()) && RecordOnlyData()){
-             writingQueue <- *packet
+             writingQueue <- packet
         } else {
             addToSummary(packet)
         }
@@ -45,7 +45,7 @@ func closeConnection( packet *packet_metadata, ipMeta * pState, writingQueue cha
 
 
 func HandlePcap( opts *options, packet *packet_metadata, ipMeta * pState, timeoutQueue	chan *packet_metadata,
-	retransmitQueue chan *packet_metadata, writingQueue chan packet_metadata ) {
+	retransmitQueue chan *packet_metadata, writingQueue chan *packet_metadata ) {
 
 
 	//verify

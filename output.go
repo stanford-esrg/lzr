@@ -88,7 +88,7 @@ func addToSummary( packet *packet_metadata ) {
 	}
 }
 
-func ( f *output_file ) Record( packet packet_metadata, handshakes []string ) {
+func ( f *output_file ) Record( packet *packet_metadata, handshakes []string ) {
 
 	packet.fingerprintData()
 
@@ -98,7 +98,7 @@ func ( f *output_file ) Record( packet packet_metadata, handshakes []string ) {
 		}
 	}
 
-	addToSummary( &packet )
+	addToSummary( packet )
 
 	out, _ := json.Marshal( packet )
 	_,err := (f.F).WriteString( string(out) )
