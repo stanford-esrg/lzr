@@ -25,7 +25,7 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 
 	// first close the existing connection unless
 	// its already been terminated
-	if !( packet.RST && !packet.ACK ) {
+	if !( packet.RST && !packet.ACK ) && !(packet.ExpectedRToLZR == SYN_ACK) {
 
 		rst := constructRST( packet )
 		_ = handle.WritePacketData( rst )
@@ -35,9 +35,14 @@ func handleExpired( opts *options, packet * packet_metadata, ipMeta * pState,
 	//grab which handshake
 	handshakeNum := ipMeta.getHandshake( packet )
 
-	//if we are all not trying anymore handshakes, so sad. 
+	//if we are all not trying anymore handshakes, so sad.
+	//because:
+	//1. it was a HAF packet to begin with
+	//2. we have run out of handshakes
+	//3. doesnt synack 
 	//if ( packet.ExpectedRToLZR == SYN_ACK ||
-	if ( packet.HyperACKtive  || (handshakeNum >= (len( opts.Handshakes ) - 1)) ){
+	if ( packet.HyperACKtive  || (handshakeNum >= (len( opts.Handshakes ) - 1)) ||
+		(packet.ExpectedRToLZR == SYN_ACK  && !ForceAllHandshakes() )){
 
 		packet.syncHandshakeNum( handshakeNum )
 
