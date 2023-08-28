@@ -33,7 +33,7 @@ var (
     err          error
     source_mac   string
     dest_mac     string
-	QUEUE_SIZE   int32 = 100000000
+	QUEUE_SIZE   int32 = 200000000
 )
 
 func InitParams() {

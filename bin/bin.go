@@ -69,17 +69,6 @@ func LZRMain() {
 
 	for i := 0; i < options.Workers; i ++ {
         go func( i int ) {
-	        for input := range incoming {
-				if lzr.ReadZMap() {
-					toACK := true
-					toPUSH := false
-					lzr.SendAck( options, input, &ipMeta, timeoutQueue,
-						retransmitQueue, writingQueue, toACK, toPUSH, lzr.ACK)
-				} else {
-					 lzr.SendSyn( input, &ipMeta, timeoutQueue )
-				}
-				ipMeta.FinishProcessing( input )
-            }
             //ExitCondition: incoming channel closed
 			if (i == options.Workers - 1) {
 				// a band-aid has been added to check to see if the number of items
@@ -109,9 +98,21 @@ func LZRMain() {
 					}
 					//slow down to prevent CPU busy looping
 					time.Sleep(1*time.Second)
-					fmt.Fprintln(os.Stderr,"Finishing Last:", ipMeta.Count())
+					fmt.Fprintln(os.Stderr,"Processing:", ipMeta.Count())
 				}
 			}
+
+	        for input := range incoming {
+				if lzr.ReadZMap() {
+					toACK := true
+					toPUSH := false
+					lzr.SendAck( options, input, &ipMeta, timeoutQueue,
+						retransmitQueue, writingQueue, toACK, toPUSH, lzr.ACK)
+				} else {
+					 lzr.SendSyn( input, &ipMeta, timeoutQueue )
+				}
+				ipMeta.FinishProcessing( input )
+            }
 			incomingDone.Done()
 			return
         }(i)
