@@ -1,11 +1,15 @@
 package trueconf
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/stanford-esrg/lzr"
+)
 
 // Handshake implements the lzr.Handshake interface.
 type Handshake struct{}
 
-func (h Handshake) GetData(dst string) []byte {
+func (h Handshake) GetData(_ string) []byte {
 	return []byte("_VS_TRANSPORT_\x00\x00\x99\xef+\x00\x00\x00\x00\x00\x00\x01")
 }
 
@@ -16,4 +20,9 @@ func (h Handshake) Verify(data string) string {
 		}
 	}
 	return ""
+}
+
+func RegisterHandshake() {
+	var h Handshake
+	lzr.AddHandshake("trueconf", &h)
 }
