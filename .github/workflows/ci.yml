@@ -1,0 +1,33 @@
+name: LZR Build
+run-name: "LZR Build by ${{ github.actor }} ${{ github.sha }}"
+on:
+    pull_request:
+        branches:
+            - main
+            - master
+            - releases/**
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Set up Go 1.23.0
+              uses: actions/setup-go@v4
+              with:
+                  go-version: 1.23.0
+
+            - name: Install dependencies
+              run: sudo apt-get update && sudo apt-get install -y libpcap-dev
+
+            - name: Set up Go modules
+              run: go mod tidy
+
+            - name: Get Go dependencies
+              run: |
+                  go get -v gopkg.in/mgo.v2/bson
+                  go get -v github.com/stanford-esrg/lzr
+
+            - name: Build the project
+              run: make lzr
