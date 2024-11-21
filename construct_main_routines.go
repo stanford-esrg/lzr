@@ -50,7 +50,7 @@ func ConstructWritingQueue(workers int) chan *packet_metadata {
 	return writingQueue
 }
 
-/*
+
 func ConstructIncomingRoutine(workers int) chan *packet_metadata {
 	incoming := make(chan *packet_metadata, QUEUE_SIZE)
 
@@ -106,8 +106,8 @@ func ConstructIncomingRoutine(workers int) chan *packet_metadata {
 	}()
 
 	return incoming
-}*/
-
+}
+/*
 func ConstructIncomingRoutine(workers int) chan *packet_metadata {
 	incoming := make(chan *packet_metadata, QUEUE_SIZE)
 
@@ -182,7 +182,7 @@ func ConstructIncomingRoutine(workers int) chan *packet_metadata {
 
 	return incoming
 }
-
+*/
 func ConstructPcapRoutine(workers int) chan *packet_metadata {
 
 	//routine to read in from pcap
