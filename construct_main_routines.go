@@ -50,7 +50,7 @@ func ConstructWritingQueue( workers int ) chan *packet_metadata {
     return writingQueue
 }
 
-/*
+
 func ConstructIncomingRoutine(workers int) chan *packet_metadata {
 	incoming := make(chan *packet_metadata, QUEUE_SIZE)
 	go func() {
@@ -105,34 +105,6 @@ func ConstructIncomingRoutine(workers int) chan *packet_metadata {
 	}()
 
 	return incoming
-}
-/*
-func ConstructIncomingRoutine(workers int) chan *packet_metadata {
-	incoming := make(chan *packet_metadata, QUEUE_SIZE)
-
-	go func() {
-		defer close(incoming)
-		scanner := bufio.NewScanner(os.Stdin)
-		var destIP, destPort string
-		seenTargets := make(map[string]bool)
-
-		for scanner.Scan() {
-			input := scanner.Text()
-			var packet *packet_metadata
-			if ReadZMap () {
-				packet = convertFromZMapToPacket( input )
-			} else {
-				packet = convertFromInputListToPacket( input )
-			}
-            if packet == nil {
-                continue
-            }
-			incoming <- packet
-		}
-
-	}()
-
-    return incoming
 }
 
 func ConstructPcapRoutine( workers int ) chan *packet_metadata {
