@@ -249,7 +249,7 @@ func ReadZMap() bool {
 }
 
 func DryRun() bool {
-	return *dryrun = true
+	return *dryrun == true
 }
 
 func getNumFilters() int {
