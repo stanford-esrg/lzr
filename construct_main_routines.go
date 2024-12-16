@@ -52,7 +52,7 @@ func ConstructWritingQueue( workers int ) chan *packet_metadata {
 }
 
 
-func ConstructIncomingRoutine(workers int) chan *packet_metadata {
+func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
 	incoming := make(chan *packet_metadata, QUEUE_SIZE)
 	go func() {
 		defer close(incoming)
@@ -63,8 +63,8 @@ func ConstructIncomingRoutine(workers int) chan *packet_metadata {
 			input := scanner.Text()
 			var packet *packet_metadata
 
-			if ReadZMap() {
-				packet = convertFromZMapToPacket(input)
+			if ReadZMap () {
+				packet = convertFromZMapToPacket( input )
 			} else if DryRun() {
 				// Process ZMap dry-run output
 				if strings.Contains(input, "daddr:") {
@@ -91,7 +91,7 @@ func ConstructIncomingRoutine(workers int) chan *packet_metadata {
 					}
 				}
 			} else {
-				packet = convertFromInputListToPacket(input)
+				packet = convertFromInputListToPacket( input )
 			}
 
 			if packet != nil {
@@ -105,7 +105,7 @@ func ConstructIncomingRoutine(workers int) chan *packet_metadata {
 		fmt.Fprintln(os.Stderr, "Finished Reading Input")
 	}()
 
-	return incoming
+    return incoming
 }
 
 func ConstructPcapRoutine( workers int ) chan *packet_metadata {
