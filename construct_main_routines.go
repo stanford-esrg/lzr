@@ -20,6 +20,7 @@ import (
     "github.com/google/gopacket/pcap"
     "log"
     "io"
+	"strings"
     "bufio"
     "os"
     "time"
