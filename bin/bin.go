@@ -169,7 +169,7 @@ func LZRMain() {
 	incomingDone.Wait()
 
     for {
-       if done && len(writingQueue) == 0 && !writing {
+       if done && len(writingQueue) == 0 && !writing && len(timeoutQueue) == 0 {
 				if options.MemProfile != "" {
 					f, err := os.Create(options.MemProfile)
 					if err != nil {

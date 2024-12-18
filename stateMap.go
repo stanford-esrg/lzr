@@ -32,7 +32,7 @@ func ConstructPacketStateMap( opts *options ) pState {
 
 
 func constructKey( packet *packet_metadata ) string {
-	return packet.Saddr + ":" + strconv.Itoa(packet.Sport)
+	return packet.Saddr + ":" + strconv.Itoa(packet.Sport) + ":" + strconv.Itoa(packet.Dport)
 }
 
 func constructParentKey( packet *packet_metadata, parentSport int ) string {
