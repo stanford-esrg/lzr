@@ -46,6 +46,7 @@ var (
 	priorityFingerprintArr	[]string
 	handshakeArr			[]string
 	recordOnlyData			*bool
+	dryrun                  *bool
 )
 
 type options struct {
@@ -69,6 +70,7 @@ type options struct {
 	Handshakes			[]string
 	PriorityFingerprint	[]string
 	RecordOnlyData		bool
+	Dryrun              bool
 }
 
 
@@ -94,6 +96,7 @@ func init() {
   handshake = flag.String("handshakes", "http" , "handshakes to scan with")
   priorityFingerprint = flag.String("priorityFingerprint", "" , "fingerprint to prioritize when multiple match")
   recordOnlyData = flag.Bool("onlyDataRecord", false, "record to file only services that send back data")
+  dryrun = flag.Bool("dryrun", false, "use Zmap's dryrun output to sendSYNs (enables sendSYNs)")
 }
 
 
@@ -154,6 +157,7 @@ func Parse() (*options,bool) {
 		Handshakes: make([]string, strings.Count(*handshake,",")+1),
 		PriorityFingerprint: make([]string, strings.Count(*priorityFingerprint,",")+1),
 		RecordOnlyData: *recordOnlyData,
+		Dryrun: *dryrun,
 	}
 
 	success := false
@@ -173,6 +177,10 @@ func Parse() (*options,bool) {
 
 	fmt.Fprintln(os.Stderr,"++Writing results to file:", *filename)
 	fmt.Fprintln(os.Stderr,"++Handshakes:", *handshake)
+	if *dryrun {
+		fmt.Fprintln(os.Stderr, "++Reading from dryrun")
+		*sendSYNs = true
+	}
 	if *sendSYNs {
 		fmt.Fprintln(os.Stderr,"++Sending SYNs")
 	}
@@ -238,6 +246,10 @@ func HyperACKtiveFiltering() bool {
 
 func ReadZMap() bool {
 	return *sendSYNs != true
+}
+
+func DryRun() bool {
+	return *dryrun == true
 }
 
 func getNumFilters() int {

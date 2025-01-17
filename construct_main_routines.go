@@ -19,7 +19,8 @@ import (
     "github.com/google/gopacket"
     "github.com/google/gopacket/pcap"
     "log"
-    "io"
+    //"io"
+	"strings"
     "bufio"
     "os"
     "time"
@@ -50,34 +51,58 @@ func ConstructWritingQueue( workers int ) chan *packet_metadata {
     return writingQueue
 }
 
+
 func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
-
-
-	//routine to read in from ZMap
 	incoming := make(chan *packet_metadata, QUEUE_SIZE)
 	go func() {
-		reader := bufio.NewReader(os.Stdin)
-		for {
+		defer close(incoming)
+		scanner := bufio.NewScanner(os.Stdin)
+		var destIP, destPort string
 
-			//Read from ZMap
-			input, err := reader.ReadString(byte('\n'))
-			if err != nil && err == io.EOF {
-                fmt.Fprintln(os.Stderr,"Finished Reading Input")
-                close(incoming)
-				return
-			}
+		for scanner.Scan() {
+			input := scanner.Text()
 			var packet *packet_metadata
+
 			if ReadZMap () {
 				packet = convertFromZMapToPacket( input )
+			} else if DryRun() {
+				// Process ZMap dry-run output
+				if strings.Contains(input, "daddr:") {
+					parts := strings.Fields(input)
+					for i, part := range parts {
+						if part == "daddr:" && i+1 < len(parts) {
+							destIP = parts[i+1]
+							break
+						}
+					}
+				} else if strings.Contains(input, "dest:") {
+					parts := strings.Fields(input)
+					for i, part := range parts {
+						if part == "dest:" && i+1 < len(parts) {
+							destPort = strings.TrimSuffix(parts[i+1], "|")
+							break
+						}
+					}
+
+					if destIP != "" && destPort != "" {
+						ipPortString := fmt.Sprintf("%s:%s", destIP, destPort)
+						packet = convertFromInputListToPacket(ipPortString)
+						destIP, destPort = "", ""
+					}
+				}
 			} else {
 				packet = convertFromInputListToPacket( input )
 			}
-            if packet == nil {
-                continue
-            }
-			incoming <- packet
+
+			if packet != nil {
+				incoming <- packet
+			}
 		}
 
+		if err := scanner.Err(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error reading input: %v\n", err)
+		}
+		fmt.Fprintln(os.Stderr, "Finished Reading Input")
 	}()
 
     return incoming
