@@ -39,6 +39,7 @@ type pState []*pStateShared
 type pStateShared struct {
 	items        map[string]*packet_state
 	sync.RWMutex // Read Write mutex, guards access to internal map.
+	updated		bool
 }
 
 // Creates a new concurrent map.
@@ -61,6 +62,7 @@ func (m pState) Insert(key string, p * packet_state) {
 	shard.Lock()
 
 	shard.items[key] = p
+	shard.updated = true
 	shard.Unlock()
 }
 
@@ -112,9 +114,33 @@ func (m pState) Remove(key string) {
 	shard := m.GetShard(key)
 	shard.Lock()
 	delete(shard.items, key)
+	shard.updated = true
 	shard.Unlock()
 }
 
+// HasUpdates checks if map has been updated
+func (m pState) HasUpdates() bool {
+    for i := 0; i < SHARD_COUNT; i++ {
+        shard := m[i]
+        shard.RLock()
+        if shard.updated {
+            shard.RUnlock()
+            return true
+        }
+        shard.RUnlock()
+    }
+    return false
+}
+
+// ResetUpdates resets all updates to false
+func (m pState) ResetUpdates() {
+    for i := 0; i < SHARD_COUNT; i++ {
+        shard := m[i]
+        shard.Lock()
+        shard.updated = false
+        shard.Unlock()
+    }
+}
 
 /* FOR PACKET_METADATA */
 //is Processing for goPackets
