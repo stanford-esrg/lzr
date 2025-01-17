@@ -51,6 +51,7 @@ func LZRMain() {
 	incomingDone.Add(options.Workers)
     done := false
 	writing := false
+	timeoutDone := true
 
     // record to file
     go func() {
@@ -167,6 +168,7 @@ func LZRMain() {
                         timeoutIncoming <- input
                         continue
                     }
+		    timeoutDone = false
                     lzr.HandleTimeout( options, input, &ipMeta, timeoutQueue, retransmitQueue, writingQueue )
                     ipMeta.FinishProcessing( input )
 		    }
@@ -189,7 +191,17 @@ func LZRMain() {
 			//closing file
 			f.F.Flush()
 			t := time.Now()
+	       		startTime := time.Now()
+		        timeoutDone = true
+	       		// 5 second repeated check if any services have called handleTimeout
+		    	for time.Since(startTime) < time.Duration(5)*time.Second {
+				if !(timeoutDone) {
+			    		startTime = time.Now()
+			    		timeoutDone = true
+				}
+		    	}
 			elapsed := t.Sub(start)
+	       		
 			lzr.Summarize( elapsed )
             return
        }
