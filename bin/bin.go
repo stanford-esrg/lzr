@@ -81,7 +81,15 @@ func LZRMain() {
 				var intervalLoop = options.Timeout*lzr.NumHandshakes()*2
 				go func() {
 					for {
-						time.Sleep(time.Duration(intervalLoop)*time.Second)
+						startTime := time.Now()
+			                        for time.Since(startTime) < time.Duration(intervalLoop)*time.Second {
+			                            if (ipMeta.HasUpdates()) {
+			                                startTime = time.Now()
+			                                ipMeta.ResetUpdates()
+			                                continue
+			                            }
+			                            time.Sleep(time.Duration(intervalLoop)*time.Millisecond)
+			                        }
 						if (ipMetaSize == ipMeta.Count()) {
 							fmt.Fprintln(os.Stderr,"Infinite Loop, Breaking.")
 							infiniteLoop = true
