@@ -51,6 +51,10 @@ The expected input format of an example services list is:
 2.2.2.2:80
 ```
 
+To scan a sample of IP:Port from ZMap's dryrun option (i.e., ZMap still determines which IP:Port we use but LZR opens the connection):
+```
+sudo zmap --target-port=9002 -O - --source-ip=$source-ip --dryrun | sudo ./lzr --handshakes http -dryrun -sourceIP $source-ip -gatewayMac $gateway
+```
 
 ## Flags
 ```
@@ -86,6 +90,8 @@ Usage of ./lzr:
     	network interface to send packets on (default "ens8")
   -sendSYNs
     	will read input from stdin containing a newline-delimited list of ip:port
+  -dryrun
+      will read output from ZMap's "dryrun" mode (activates sendSYNs by default)
   -sourceIP string
     	source IP to send syn packets with (if using sendSYNs flag)
   -t int

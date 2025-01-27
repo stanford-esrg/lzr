@@ -98,7 +98,7 @@ func init() {
   handshake = flag.String("handshakes", "http" , "handshakes to scan with")
   priorityFingerprint = flag.String("priorityFingerprint", "" , "fingerprint to prioritize when multiple match")
   recordOnlyData = flag.Bool("onlyDataRecord", false, "record to file only services that send back data")
-  dryrun = flag.Bool("dryrun", false, "use Zmap's dryrun output to sendSYNs (enables sendSYNs)")
+  dryrun = flag.Bool("dryrun", false, "will read output from ZMap's 'dryrun' mode (activates sendSYNs by default)")
   rate = flag.Int("rate", 1, "number of IP:ports piped in per second if using sendSYNs")
 }
 
