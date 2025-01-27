@@ -189,7 +189,7 @@ func Parse() (*options,bool) {
 		fmt.Fprintln(os.Stderr,"++Sending SYNs at a rate of: ", *rate)
 	}
 	if *sourceIP != "" {
-		fmt.Fprintln(os.Stderr,"++Using SourceIP:", *sendSYNs)
+		fmt.Fprintln(os.Stderr,"++Using SourceIP:", *sourceIP)
 	}
 	if *device != "ens8" {
 		fmt.Fprintln(os.Stderr,"++Using Sending Interface:", *device)
