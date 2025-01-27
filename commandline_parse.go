@@ -47,6 +47,7 @@ var (
 	handshakeArr			[]string
 	recordOnlyData			*bool
 	dryrun                  *bool
+	rate                    *int
 )
 
 type options struct {
@@ -71,6 +72,7 @@ type options struct {
 	PriorityFingerprint	[]string
 	RecordOnlyData		bool
 	Dryrun              bool
+	Rate                int
 }
 
 
@@ -97,6 +99,7 @@ func init() {
   priorityFingerprint = flag.String("priorityFingerprint", "" , "fingerprint to prioritize when multiple match")
   recordOnlyData = flag.Bool("onlyDataRecord", false, "record to file only services that send back data")
   dryrun = flag.Bool("dryrun", false, "use Zmap's dryrun output to sendSYNs (enables sendSYNs)")
+  rate = flag.Int("rate", 1, "number of IP:ports piped in per second if using sendSYNs")
 }
 
 
@@ -158,6 +161,7 @@ func Parse() (*options,bool) {
 		PriorityFingerprint: make([]string, strings.Count(*priorityFingerprint,",")+1),
 		RecordOnlyData: *recordOnlyData,
 		Dryrun: *dryrun,
+		Rate:   *rate,
 	}
 
 	success := false
@@ -182,7 +186,7 @@ func Parse() (*options,bool) {
 		*sendSYNs = true
 	}
 	if *sendSYNs {
-		fmt.Fprintln(os.Stderr,"++Sending SYNs")
+		fmt.Fprintln(os.Stderr,"++Sending SYNs at a rate of: ", *rate)
 	}
 	if *sourceIP != "" {
 		fmt.Fprintln(os.Stderr,"++Using SourceIP:", *sendSYNs)

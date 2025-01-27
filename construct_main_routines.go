@@ -59,6 +59,11 @@ func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
 		scanner := bufio.NewScanner(os.Stdin)
 		var destIP, destPort string
 
+		var ticker *time.Ticker
+		if !ReadZMap() && !DryRun() {
+			ticker = time.NewTicker(time.Second / time.Duration(*rate))
+			defer ticker.Stop()
+		}
 		for scanner.Scan() {
 			input := scanner.Text()
 			var packet *packet_metadata
@@ -91,6 +96,9 @@ func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
 					}
 				}
 			} else {
+				if ticker != nil {
+					<-ticker.C // Wait for the next tick before processing the line
+				}
 				packet = convertFromInputListToPacket( input )
 			}
 
