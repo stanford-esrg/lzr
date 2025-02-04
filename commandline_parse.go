@@ -71,6 +71,8 @@ type options struct {
 	Handshakes			[]string
 	PriorityFingerprint	[]string
 	RecordOnlyData		bool
+	dryrun              bool
+	rate                int
 }
 
 
@@ -158,6 +160,8 @@ func Parse() (*options,bool) {
 		Handshakes: make([]string, strings.Count(*handshake,",")+1),
 		PriorityFingerprint: make([]string, strings.Count(*priorityFingerprint,",")+1),
 		RecordOnlyData: *recordOnlyData,
+		Dryrun: *dryrun,
+		Rate: *rate,
 	}
 
 	success := false
