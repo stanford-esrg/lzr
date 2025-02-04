@@ -61,9 +61,12 @@ func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
 
 		var ticker *time.Ticker
 		if !ReadZMap() && !DryRun() {
-			ticker = time.NewTicker(time.Second / time.Duration(*rate))
+			ticker = time.NewTicker(time.Second)
 			defer ticker.Stop()
 		}
+
+		buffer := make([]*packet_metadata, 0, *rate)
+
 		for scanner.Scan() {
 			input := scanner.Text()
 			var packet *packet_metadata
@@ -96,17 +99,32 @@ func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
 					}
 				}
 			} else {
-				if ticker != nil {
-					<-ticker.C // Wait for the next tick before processing the line
-				}
+				
 				packet = convertFromInputListToPacket( input )
 			}
 
 			if packet != nil {
-				incoming <- packet
+				buffer = append(buffer, packet)
+			}
+			if ticker != nil && len(buffer) >= *rate {
+				<-ticker.C
+				for _, pkt := range buffer {
+					incoming <- pkt
+				}
+				// Clear buffer after dispatch
+				buffer = buffer[:0]
 			}
 		}
 
+		// Dispatch any remaining packets (if any)
+		if len(buffer) > 0 {
+			if ticker != nil {
+				<-ticker.C
+			}
+			for _, pkt := range buffer {
+				incoming <- pkt
+			}
+		}
 		if err := scanner.Err(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error reading input: %v\n", err)
 		}
