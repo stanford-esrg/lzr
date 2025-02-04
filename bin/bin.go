@@ -51,6 +51,7 @@ func LZRMain() {
 	incomingDone.Add(options.Workers)
     done := false
 	writing := false
+	timeoutDone := true
 
     // record to file
     go func() {
@@ -81,7 +82,15 @@ func LZRMain() {
 				var intervalLoop = options.Timeout*lzr.NumHandshakes()*2
 				go func() {
 					for {
-						time.Sleep(time.Duration(intervalLoop)*time.Second)
+						startTime := time.Now()
+			                        for time.Since(startTime) < time.Duration(intervalLoop)*time.Second {
+			                            if (ipMeta.HasUpdates()) {
+			                                startTime = time.Now()
+			                                ipMeta.ResetUpdates()
+			                                continue
+			                            }
+			                            time.Sleep(time.Duration(intervalLoop)*time.Millisecond)
+			                        }
 						if (ipMetaSize == ipMeta.Count()) {
 							fmt.Fprintln(os.Stderr,"Infinite Loop, Breaking.")
 							infiniteLoop = true
@@ -159,6 +168,7 @@ func LZRMain() {
                         timeoutIncoming <- input
                         continue
                     }
+		    timeoutDone = false
                     lzr.HandleTimeout( options, input, &ipMeta, timeoutQueue, retransmitQueue, writingQueue )
                     ipMeta.FinishProcessing( input )
 		    }
@@ -169,7 +179,7 @@ func LZRMain() {
 	incomingDone.Wait()
 
     for {
-       if done && len(writingQueue) == 0 && !writing {
+       if done && len(writingQueue) == 0 && !writing && len(timeoutQueue) == 0 {
 				if options.MemProfile != "" {
 					f, err := os.Create(options.MemProfile)
 					if err != nil {
@@ -181,7 +191,17 @@ func LZRMain() {
 			//closing file
 			f.F.Flush()
 			t := time.Now()
+	       		startTime := time.Now()
+		        timeoutDone = true
+	       		// 5 second repeated check if any services have called handleTimeout
+		    	for time.Since(startTime) < time.Duration(5)*time.Second {
+				if !(timeoutDone) {
+			    		startTime = time.Now()
+			    		timeoutDone = true
+				}
+		    	}
 			elapsed := t.Sub(start)
+	       		
 			lzr.Summarize( elapsed )
             return
        }
