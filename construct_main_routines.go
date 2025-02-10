@@ -128,7 +128,7 @@ func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
 			}
 		}
 		if ticker != nil {
-			<-ticker.c
+			<-ticker.C
 		}
 		if err := scanner.Err(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error reading input: %v\n", err)
