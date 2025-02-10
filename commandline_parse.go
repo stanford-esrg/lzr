@@ -18,6 +18,7 @@ package lzr
 import (
   "flag"
   "fmt"
+  "log"
   "os"
   "time"
   "strings"
@@ -71,8 +72,8 @@ type options struct {
 	Handshakes			[]string
 	PriorityFingerprint	[]string
 	RecordOnlyData		bool
-	dryrun              bool
-	rate                int
+	Dryrun              bool
+	Rate                int
 }
 
 
@@ -164,6 +165,9 @@ func Parse() (*options,bool) {
 		Rate: *rate,
 	}
 
+	if *rate <= 0 {
+		log.Fatalf("Invalid rate: %d. Must be a positive integer.", *rate)
+	}
 	success := false
 	handshakeArr, success = checkAndParse( handshake, &(opt.Handshakes) )
 	if !success {

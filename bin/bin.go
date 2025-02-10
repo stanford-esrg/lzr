@@ -3,12 +3,13 @@ package bin
 import (
     "time"
     //"context"
+	"fmt"
+	"log"
+	"os"
 	"runtime/pprof"
 	"sync"
-	"os"
-	"log"
+
 	"github.com/stanford-esrg/lzr"
-	"fmt"
 )
 
 
@@ -101,8 +102,12 @@ func LZRMain() {
 					}
 				}()
 				for {
-					if ipMeta.IsEmpty() || infiniteLoop {
+					if ipMeta.IsEmpty() /*|| infiniteLoop*/ {
 						done=true
+						break
+					}
+					if infiniteLoop {
+						done = true
 						break
 					}
 					//slow down to prevent CPU busy looping
@@ -190,7 +195,7 @@ func LZRMain() {
 				}
 			//closing file
 			f.F.Flush()
-			t := time.Now()
+			
 	       		startTime := time.Now()
 		        timeoutDone = true
 	       		// 5 second repeated check if any services have called handleTimeout
@@ -200,6 +205,7 @@ func LZRMain() {
 			    		timeoutDone = true
 				}
 		    	}
+			t := time.Now()
 			elapsed := t.Sub(start)
 	       		
 			lzr.Summarize( elapsed )

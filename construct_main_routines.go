@@ -16,15 +16,17 @@ limitations under the License.
 package lzr
 
 import (
+	"log"
+
     "github.com/google/gopacket"
     "github.com/google/gopacket/pcap"
-    "log"
+
     //"io"
-	"strings"
     "bufio"
+	"fmt"
     "os"
+	"strings"
     "time"
-    "fmt"
 )
 
 var (
@@ -124,6 +126,9 @@ func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
 			for _, pkt := range buffer {
 				incoming <- pkt
 			}
+		}
+		if ticker != nil {
+			<-ticker.c
 		}
 		if err := scanner.Err(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error reading input: %v\n", err)

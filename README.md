@@ -42,9 +42,9 @@ zgrab multiple -c etc/all.ini
 To scan a custom list of IP:Port (i.e., using LZR rather than ZMap to open connections):
 
 ```
-<services_list pv -L$PACKETS_PER_SECOND -l --quiet | sudo ./lzr --handshakes http -sendSYNs -sourceIP $source-ip -gatewayMac $gateway
+sudo ./lzr --handshakes http -sendSYNs -sourceIP $source-ip -gatewayMac $gateway -rate $PACKETS_PER_SECOND <services_list
 ```
-Note that we use [pv](https://linux.die.net/man/1/pv) to control the sending rate (i.e., the number of services fed to lzr per second). </br>
+
 The expected input format of an example services list is:
 ```
 1.1.1.1:1234
@@ -98,6 +98,8 @@ Usage of ./lzr:
     	number of seconds to wait in timeout queue for last retransmission (default 5)
   -w int
     	number of worker threads for each channel (default 1)
+  -rate int
+        number of IP:ports piped in per second if using sendSYNs
 ```
 
 #### Caveats for specific features
