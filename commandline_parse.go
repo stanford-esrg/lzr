@@ -18,6 +18,7 @@ package lzr
 import (
   "flag"
   "fmt"
+  "log"
   "os"
   "time"
   "strings"
@@ -47,6 +48,7 @@ var (
 	handshakeArr			[]string
 	recordOnlyData			*bool
 	dryrun                  *bool
+	rate                    *int
 )
 
 type options struct {
@@ -71,6 +73,7 @@ type options struct {
 	PriorityFingerprint	[]string
 	RecordOnlyData		bool
 	Dryrun              bool
+	Rate                int
 }
 
 
@@ -96,7 +99,8 @@ func init() {
   handshake = flag.String("handshakes", "http" , "handshakes to scan with")
   priorityFingerprint = flag.String("priorityFingerprint", "" , "fingerprint to prioritize when multiple match")
   recordOnlyData = flag.Bool("onlyDataRecord", false, "record to file only services that send back data")
-  dryrun = flag.Bool("dryrun", false, "use Zmap's dryrun output to sendSYNs (enables sendSYNs)")
+  dryrun = flag.Bool("dryrun", false, "will read output from ZMap's 'dryrun' mode (activates sendSYNs by default)")
+  rate = flag.Int("rate", 1, "number of IP:ports piped in per second if using sendSYNs")
 }
 
 
@@ -158,8 +162,12 @@ func Parse() (*options,bool) {
 		PriorityFingerprint: make([]string, strings.Count(*priorityFingerprint,",")+1),
 		RecordOnlyData: *recordOnlyData,
 		Dryrun: *dryrun,
+		Rate: *rate,
 	}
 
+	if *rate <= 0 {
+		log.Fatalf("Invalid rate: %d. Must be a positive integer.", *rate)
+	}
 	success := false
 	handshakeArr, success = checkAndParse( handshake, &(opt.Handshakes) )
 	if !success {
@@ -182,10 +190,10 @@ func Parse() (*options,bool) {
 		*sendSYNs = true
 	}
 	if *sendSYNs {
-		fmt.Fprintln(os.Stderr,"++Sending SYNs")
+		fmt.Fprintln(os.Stderr,"++Sending SYNs at a rate of: ", *rate)
 	}
 	if *sourceIP != "" {
-		fmt.Fprintln(os.Stderr,"++Using SourceIP:", *sendSYNs)
+		fmt.Fprintln(os.Stderr,"++Using SourceIP:", *sourceIP)
 	}
 	if *device != "ens8" {
 		fmt.Fprintln(os.Stderr,"++Using Sending Interface:", *device)

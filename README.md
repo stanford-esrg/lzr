@@ -42,15 +42,19 @@ zgrab multiple -c etc/all.ini
 To scan a custom list of IP:Port (i.e., using LZR rather than ZMap to open connections):
 
 ```
-<services_list pv -L$PACKETS_PER_SECOND -l --quiet | sudo ./lzr --handshakes http -sendSYNs -sourceIP $source-ip -gatewayMac $gateway
+sudo ./lzr --handshakes http -sendSYNs -sourceIP $source-ip -gatewayMac $gateway -rate $PACKETS_PER_SECOND <services_list
 ```
-Note that we use [pv](https://linux.die.net/man/1/pv) to control the sending rate (i.e., the number of services fed to lzr per second). </br>
+
 The expected input format of an example services list is:
 ```
 1.1.1.1:1234
 2.2.2.2:80
 ```
 
+To scan a sample of IP:Port from ZMap's dryrun option (i.e., ZMap still determines which IP:Port we use but LZR opens the connection):
+```
+sudo zmap --target-port=9002 -O - --source-ip=$source-ip --dryrun | sudo ./lzr --handshakes http -dryrun -sourceIP $source-ip -gatewayMac $gateway
+```
 
 ## Flags
 ```
@@ -86,12 +90,16 @@ Usage of ./lzr:
     	network interface to send packets on (default "ens8")
   -sendSYNs
     	will read input from stdin containing a newline-delimited list of ip:port
+  -dryrun
+      will read output from ZMap's "dryrun" mode (activates sendSYNs by default)
   -sourceIP string
     	source IP to send syn packets with (if using sendSYNs flag)
   -t int
     	number of seconds to wait in timeout queue for last retransmission (default 5)
   -w int
     	number of worker threads for each channel (default 1)
+  -rate int
+        number of IP:ports piped in per second if using sendSYNs
 ```
 
 #### Caveats for specific features

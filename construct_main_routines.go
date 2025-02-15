@@ -16,15 +16,17 @@ limitations under the License.
 package lzr
 
 import (
+	"log"
+
     "github.com/google/gopacket"
     "github.com/google/gopacket/pcap"
-    "log"
+
     //"io"
-	"strings"
     "bufio"
+	"fmt"
     "os"
+	"strings"
     "time"
-    "fmt"
 )
 
 var (
@@ -59,6 +61,14 @@ func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
 		scanner := bufio.NewScanner(os.Stdin)
 		var destIP, destPort string
 
+		var ticker *time.Ticker
+		if !ReadZMap() && !DryRun() {
+			ticker = time.NewTicker(time.Second)
+			defer ticker.Stop()
+		}
+
+		buffer := make([]*packet_metadata, 0, *rate)
+
 		for scanner.Scan() {
 			input := scanner.Text()
 			var packet *packet_metadata
@@ -91,14 +101,35 @@ func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
 					}
 				}
 			} else {
+				
 				packet = convertFromInputListToPacket( input )
 			}
 
 			if packet != nil {
-				incoming <- packet
+				buffer = append(buffer, packet)
+			}
+			if ticker != nil && len(buffer) >= *rate {
+				<-ticker.C
+				for _, pkt := range buffer {
+					incoming <- pkt
+				}
+				// Clear buffer after dispatch
+				buffer = buffer[:0]
 			}
 		}
 
+		// Dispatch any remaining packets (if any)
+		if len(buffer) > 0 {
+			if ticker != nil {
+				<-ticker.C
+			}
+			for _, pkt := range buffer {
+				incoming <- pkt
+			}
+		}
+		if ticker != nil {
+			<-ticker.C
+		}
 		if err := scanner.Err(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error reading input: %v\n", err)
 		}
