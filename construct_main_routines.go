@@ -139,7 +139,7 @@ func ConstructIncomingRoutine( workers int ) chan *packet_metadata {
     return incoming
 }
 
-func ConstructPcapRoutine( workers int ) chan *packet_metadata {
+func ConstructPcapRoutine( workers int, useIPv6 bool ) chan *packet_metadata {
 
 	//routine to read in from pcap
 	pcapIncoming := make(chan *packet_metadata, QUEUE_SIZE)
@@ -151,7 +151,11 @@ func ConstructPcapRoutine( workers int ) chan *packet_metadata {
 		log.Fatal(err)
 	}
 	//set to filter out zmap syn packets (just syn) 
-	err := handle.SetBPFFilter("tcp[tcpflags] != tcp-syn")
+	filter := "tcp[tcpflags] != tcp-syn"
+	if useIPv6 == true {
+		filter = "(ip6 proto 6 && (ip6[53] & 4 != 0 || ip6[53] != 2))"
+	}
+	err := handle.SetBPFFilter(filter)
 	if err != nil {
         panic(err)
 		log.Fatal(err)

@@ -41,7 +41,7 @@ func LZRMain() {
 	lzr.InitParams()
 
 	writingQueue := lzr.ConstructWritingQueue(options.Workers)
-	pcapIncoming := lzr.ConstructPcapRoutine(options.Workers)
+	pcapIncoming := lzr.ConstructPcapRoutine(options.Workers, options.IPv6Enabled)
 	timeoutQueue := lzr.ConstructTimeoutQueue(options.Workers)
 	retransmitQueue := lzr.ConstructRetransmitQueue(options.Workers)
 	timeoutIncoming := lzr.PollTimeoutRoutine(
