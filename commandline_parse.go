@@ -104,7 +104,7 @@ func init() {
 	recordOnlyData = flag.Bool("onlyDataRecord", false, "record to file only services that send back data")
 	dryrun = flag.Bool("dryrun", false, "will read output from ZMap's 'dryrun' mode (activates sendSYNs by default)")
 	rate = flag.Int("rate", 1, "number of IP:ports piped in per second if using sendSYNs")
-	ipv6Enabled = flag.Bool("ipv6Enabled", false, "Enable IPv6 support")
+	ipv6Enabled = flag.Bool("ipv6", false, "Enable IPv6 support")
 }
 
 func checkAndParse(handshake *string, optHandshakes *[]string) ([]string, bool) {

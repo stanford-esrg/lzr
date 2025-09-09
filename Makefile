@@ -7,7 +7,11 @@ endif
 GO_FILES = $(shell find . -type f -name '*.go')
 
 all: lzr
-	sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s $(source-ip) -j DROP
+ifeq ($(findstring .,$(source-ip)),.)
+	sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s $(source-ip) -j DROP 
+else
+	sudo ip6tables -A OUTPUT -p tcp --tcp-flags RST RST -s $(source-ip) -j DROP 
+endif
 
 lzr: $(GO_FILES)
 	cd cmd/lzr && go build && cd ../..

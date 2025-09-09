@@ -78,10 +78,42 @@ type packet_metadata struct {
 	HyperACKtive   bool   `json:"ackingFirewall,omitempty"`
 }
 
+func ReadLayersIPv6(ip *layers.IPv6, tcp *layers.TCP, eth *layers.Ethernet) *packet_metadata {
+	packet := &packet_metadata{
+		Smac:         eth.SrcMAC.String(),
+		Dmac:         eth.DstMAC.String(),
+		Saddr:        ip.SrcIP.String(),
+		Daddr:        ip.DstIP.String(),
+		TTL:          ip.HopLimit,
+		Sport:        int(tcp.SrcPort),
+		Dport:        int(tcp.DstPort),
+		Seqnum:       int(tcp.Seq),
+		Acknum:       int(tcp.Ack),
+		Window:       int(tcp.Window),
+		ACK:          tcp.ACK,
+		SYN:          tcp.SYN,
+		RST:          tcp.RST,
+		FIN:          tcp.FIN,
+		PUSH:         tcp.PSH,
+		Data:         string(tcp.Payload),
+		Timestamp:    time.Now(),
+		Counter:      0,
+		Processing:   true,
+		HandshakeNum: 0,
+	}
+	if IPv6Enabled() {
+		packet.Saddr = Explode(ip.SrcIP)
+		packet.Daddr = Explode(ip.DstIP)
+	}
+	return packet
+}
+
 func ReadLayers(ip *layers.IPv4, tcp *layers.TCP, eth *layers.Ethernet) *packet_metadata {
 	packet := &packet_metadata{
 		Smac:         eth.SrcMAC.String(),
 		Dmac:         eth.DstMAC.String(),
+		Saddr:        ip.SrcIP.String(),
+		Daddr:        ip.DstIP.String(),
 		TTL:          ip.TTL,
 		Sport:        int(tcp.SrcPort),
 		Dport:        int(tcp.DstPort),
@@ -103,9 +135,6 @@ func ReadLayers(ip *layers.IPv4, tcp *layers.TCP, eth *layers.Ethernet) *packet_
 	if IPv6Enabled() {
 		packet.Saddr = Explode(ip.SrcIP)
 		packet.Daddr = Explode(ip.DstIP)
-	} else {
-		packet.Saddr = ip.SrcIP.String()
-		packet.Daddr = ip.DstIP.String()
 	}
 
 	return packet
@@ -124,15 +153,29 @@ func convertToPacketM(packet *gopacket.Packet) *packet_metadata {
 	tcpLayer := (*packet).Layer(layers.LayerTypeTCP)
 	if tcpLayer != nil {
 		tcp, _ := tcpLayer.(*layers.TCP)
-		ipLayer := (*packet).Layer(layers.LayerTypeIPv4)
-		if ipLayer != nil {
-			ip, _ := ipLayer.(*layers.IPv4)
+		if IPv6Enabled() {
+			ipLayer := (*packet).Layer(layers.LayerTypeIPv6)
+			if ipLayer != nil {
+				ip, _ := ipLayer.(*layers.IPv6)
 
-			ethLayer := (*packet).Layer(layers.LayerTypeEthernet)
-			if ethLayer != nil {
-				eth, _ := ethLayer.(*layers.Ethernet)
-				metapacket := ReadLayers(ip, tcp, eth)
-				return metapacket
+				ethLayer := (*packet).Layer(layers.LayerTypeEthernet)
+				if ethLayer != nil {
+					eth, _ := ethLayer.(*layers.Ethernet)
+					metapacket := ReadLayersIPv6(ip, tcp, eth)
+					return metapacket
+				}
+			}
+		} else {
+			ipLayer := (*packet).Layer(layers.LayerTypeIPv4)
+			if ipLayer != nil {
+				ip, _ := ipLayer.(*layers.IPv4)
+
+				ethLayer := (*packet).Layer(layers.LayerTypeEthernet)
+				if ethLayer != nil {
+					eth, _ := ethLayer.(*layers.Ethernet)
+					metapacket := ReadLayers(ip, tcp, eth)
+					return metapacket
+				}
 			}
 		}
 	}
@@ -159,7 +202,7 @@ func convertFromInputListToPacket(input string) *packet_metadata {
 	t := time.Now()
 	//expecting ip, port
 	input = strings.TrimSuffix(input, "\n")
-	s := strings.Split(input, ":")
+	s := strings.Split(input, ";")
 	if len(s) != 2 {
 		panic("Error parsing input list")
 	}
@@ -181,6 +224,8 @@ func convertFromInputListToPacket(input string) *packet_metadata {
 	syn := &packet_metadata{
 		Smac:           source_mac,
 		Dmac:           getHostMacAddr(),
+		Saddr:          saddr,
+		Daddr:          getSourceIP(),
 		Dport:          randInt(32768, 61000, t.UnixNano()),
 		Sport:          sport,
 		Seqnum:         int(math.Mod(float64(t.UnixNano()), 65535)),
@@ -193,13 +238,9 @@ func convertFromInputListToPacket(input string) *packet_metadata {
 		HandshakeNum:   0,
 		ExpectedRToLZR: SYN_ACK,
 	}
-
 	if IPv6Enabled() {
 		syn.Saddr = Explode(net.ParseIP(saddr))
 		syn.Daddr = Explode(net.ParseIP(getSourceIP()))
-	} else {
-		syn.Saddr = saddr
-		syn.Daddr = getSourceIP()
 	}
 
 	return syn
