@@ -201,9 +201,7 @@ func convertFromInputListToPacket(input string) *packet_metadata {
 	t := time.Now()
 	//expecting ip, port
 	input = strings.TrimSuffix(input, "\n")
-	// IPV6 ADDITIONS
 	s := strings.Split(input, ";")
-	// END IPV6 ADDITIONS
 	if len(s) != 2 {
 		panic("Error parsing input list")
 	}
