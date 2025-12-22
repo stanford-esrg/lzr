@@ -21,7 +21,7 @@ func (h *HandshakeMod) GetData(dst string) []byte {
 	} else {
 		req.Header.Add("Host", dst)
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 zgrab/0.x")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.3")
 	req.Header.Set("Accept", "*/*")
 	req.Header.Set("Accept-Encoding", "gzip")
 	data, _ := httputil.DumpRequest(req, false)

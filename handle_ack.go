@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,16 +16,13 @@ limitations under the License.
 package lzr
 
 import (
-    "log"
-    //"fmt"
+	"log"
+	//"fmt"
 )
 
-
-
-func SendAck( opts *options, synack  *packet_metadata, ipMeta * pState,
-timeoutQueue  chan *packet_metadata, retransmitQueue chan *packet_metadata,
-writingQueue  chan *packet_metadata, toACK bool, toPUSH bool, expectedResponse string ) {
-
+func SendAck(opts *options, synack *packet_metadata, ipMeta *pState,
+	timeoutQueue chan *packet_metadata, retransmitQueue chan *packet_metadata,
+	writingQueue chan *packet_metadata, toACK bool, toPUSH bool, expectedResponse string) {
 
 	if synack.windowZero() {
 		if !(RecordOnlyData()) {
@@ -39,15 +36,21 @@ writingQueue  chan *packet_metadata, toACK bool, toPUSH bool, expectedResponse s
 
 	//grab which handshake
 	handshakeNum := ipMeta.getHandshake(synack)
-	handshake, _ := GetHandshake( opts.Handshakes[ handshakeNum ] )
+	// If we've already tried all handshakes (perhaps this is a retransmission or follow up packet from the host)
+	// then simply ignore the packet.
+	if handshakeNum >= len(opts.Handshakes) {
+		return
+	}
+	handshake, _ := GetHandshake(opts.Handshakes[handshakeNum])
 
 	//Send Ack with Data
-	ack, payload := constructData( handshake, synack, toACK, toPUSH )//true, false )
+	ack, payload := constructData(handshake, synack, toACK, toPUSH) //true, false )
+
 	//add to map
-	synack.updateResponse( expectedResponse )//ACK )
-	synack.updateResponseL( payload )
+	synack.updateResponse(expectedResponse) //ACK )
+	synack.updateResponseL(payload)
 	synack.updateTimestamp()
-	ipMeta.update( synack )
+	ipMeta.update(synack)
 	err := handle.WritePacketData(ack)
 	if err != nil {
 		log.Fatal(err)
@@ -55,9 +58,7 @@ writingQueue  chan *packet_metadata, toACK bool, toPUSH bool, expectedResponse s
 	}
 
 	synack.updateTimestamp()
-	retransmitQueue <-synack
+	retransmitQueue <- synack
 	return
 
 }
-
-

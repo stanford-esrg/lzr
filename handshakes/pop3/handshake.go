@@ -18,8 +18,14 @@ func (h *HandshakeMod) GetData( dst string ) []byte {
 func (h *HandshakeMod) Verify( data string ) string {
     if data == "" || !isASCII(data) {
         return ""
+    } else if strings.HasPrefix(data, "* OK") || strings.HasPrefix(data, "* BYE") || strings.HasPrefix(data, "* PREAUTH") {
+        // Some IMAP servers include in their banner that they have POP3 capability on another port
+		// so it is necessary to not label these as POP3
+		return ""
+    } else if strings.HasPrefix(data, "+OK") || strings.HasPrefix(data, "-ERR") {
+        return "pop3"
     } else if strings.Contains( ToLower(data), "pop3" ) ||
-		strings.Contains( data, "+OK") || strings.Contains( data, "* OK") {
+		strings.Contains( data, "+OK") {
         return "pop3"
     }
     return ""

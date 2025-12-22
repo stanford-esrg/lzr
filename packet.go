@@ -27,6 +27,7 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+	//"fmt"
 	//"os"
 )
 
@@ -131,12 +132,10 @@ func ReadLayers(ip *layers.IPv4, tcp *layers.TCP, eth *layers.Ethernet) *packet_
 		Processing:   true,
 		HandshakeNum: 0,
 	}
-
 	if IPv6Enabled() {
 		packet.Saddr = Explode(ip.SrcIP)
 		packet.Daddr = Explode(ip.DstIP)
 	}
-
 	return packet
 }
 
@@ -202,7 +201,9 @@ func convertFromInputListToPacket(input string) *packet_metadata {
 	t := time.Now()
 	//expecting ip, port
 	input = strings.TrimSuffix(input, "\n")
+	// IPV6 ADDITIONS
 	s := strings.Split(input, ";")
+	// END IPV6 ADDITIONS
 	if len(s) != 2 {
 		panic("Error parsing input list")
 	}

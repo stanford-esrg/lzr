@@ -30,7 +30,11 @@ func (h *HandshakeMod) Verify( data string ) string {
 		strings.Contains( data[0:3], "530" ) ||
 		strings.Contains( data[0:3], "550" ) ||
 		strings.Contains( data[0:3], "230" ) {
-		return "ftp"
+		if !strings.Contains( ToLower(data), "smtp" ) && !strings.Contains( ToLower(data), "ehlo" ) {
+			// We need an additional check against SMTP because it uses the same status codes.
+			return "ftp"
+		}
+		return ""
 	}
 
     return ""

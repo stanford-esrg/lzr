@@ -41,7 +41,7 @@ func LZRMain() {
 	lzr.InitParams()
 
 	writingQueue := lzr.ConstructWritingQueue(options.Workers)
-	pcapIncoming := lzr.ConstructPcapRoutine(options.Workers, options.IPv6Enabled)
+	pcapIncoming := lzr.ConstructPcapRoutine(options.Workers)
 	timeoutQueue := lzr.ConstructTimeoutQueue(options.Workers)
 	retransmitQueue := lzr.ConstructRetransmitQueue(options.Workers)
 	timeoutIncoming := lzr.PollTimeoutRoutine(
@@ -123,12 +123,17 @@ func LZRMain() {
 				if lzr.ReadZMap() {
 					toACK := true
 					toPUSH := false
-					lzr.SendAck(options, input, &ipMeta, timeoutQueue,
-						retransmitQueue, writingQueue, toACK, toPUSH, lzr.ACK)
+					if !ipMeta.MetaContains(input) {
+						lzr.SendAck(options, input, &ipMeta, timeoutQueue,
+							retransmitQueue, writingQueue, toACK, toPUSH, lzr.ACK)
+						ipMeta.FinishProcessing(input)
+					}
 				} else {
-					lzr.SendSyn(input, &ipMeta, timeoutQueue)
+					if !ipMeta.MetaContains(input) {
+						lzr.SendSyn(input, &ipMeta, timeoutQueue)
+						ipMeta.FinishProcessing(input)
+					}
 				}
-				ipMeta.FinishProcessing(input)
 			}
 			incomingDone.Done()
 			return
