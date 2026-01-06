@@ -51,6 +51,7 @@ var (
 	dryrun                 *bool
 	rate                   *int
 	ipv6Enabled            *bool
+	hafThreshold           *float64
 )
 
 type options struct {
@@ -77,6 +78,7 @@ type options struct {
 	Dryrun              bool
 	Rate                int
 	IPv6Enabled         bool
+	HafThreshold        float64
 }
 
 // Basic flag declarations are available for string, integer, and boolean options.
@@ -105,6 +107,7 @@ func init() {
 	dryrun = flag.Bool("dryrun", false, "will read output from ZMap's 'dryrun' mode (activates sendSYNs by default)")
 	rate = flag.Int("rate", 1, "number of IP:ports piped in per second if using sendSYNs")
 	ipv6Enabled = flag.Bool("ipv6", false, "Enable IPv6 support")
+	hafThreshold = flag.Float64("hafThreshold", 1.0, "weight of active random ephemeral probes required to label ACKing firewalls")
 }
 
 func checkAndParse(handshake *string, optHandshakes *[]string) ([]string, bool) {
@@ -167,10 +170,14 @@ func Parse() (*options, bool) {
 		Dryrun:              *dryrun,
 		Rate:                *rate,
 		IPv6Enabled:         *ipv6Enabled,
+		HafThreshold:        *hafThreshold,
 	}
 
 	if *rate <= 0 {
 		log.Fatalf("Invalid rate: %d. Must be a positive integer.", *rate)
+	}
+	if *hafThreshold < 0.0 || *hafThreshold > 1.0 {
+		log.Fatalf("Invalid HAF Threshold: %f. Must be a floating point number within 0.0 - 1.0 range.", *hafThreshold)
 	}
 	success := false
 	handshakeArr, success = checkAndParse(handshake, &(opt.Handshakes))
@@ -185,6 +192,7 @@ func Parse() (*options, bool) {
 
 	if *forceAllHandshakes {
 		*haf = 0
+		*hafThreshold = 0.0
 	}
 
 	fmt.Fprintln(os.Stderr, "++Writing results to file:", *filename)
@@ -219,6 +227,7 @@ func Parse() (*options, bool) {
 	}
 	if *haf > 0 {
 		fmt.Fprintln(os.Stderr, "++Sending ", *haf, " number of filtering packets")
+		fmt.Fprintln(os.Stderr, "++Requiring ", int(*hafThreshold*float64(*haf)), " number of active filtering packets to label HAF-positive")
 	}
 	if *feedZGrab {
 		fmt.Fprintln(os.Stderr, "++Feeding ZGrab with fingerprints")
@@ -241,12 +250,12 @@ func Parse() (*options, bool) {
 	return opt, true
 }
 
-func DebugOn() bool {
-	return *debug
-}
-
 func IPv6Enabled() bool {
 	return *ipv6Enabled
+}
+
+func DebugOn() bool {
+	return *debug
 }
 
 func RecordOnlyData() bool {
@@ -271,6 +280,10 @@ func DryRun() bool {
 
 func getNumFilters() int {
 	return *haf
+}
+
+func getNumFiltersThreshold() int {
+	return int(*hafThreshold * float64(*haf))
 }
 
 func getSourceIP() string {

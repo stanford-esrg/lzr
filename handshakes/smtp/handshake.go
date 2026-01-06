@@ -21,6 +21,20 @@ func (h *HandshakeMod) Verify( data string ) string {
 	if strings.Contains( dl, "smtp" ) || strings.Contains( dl, "ehlo" ) {
          return "smtp"
 	}
+	if len(data) < 4 {
+		return ""
+	}
+    if strings.Contains( data[0:3], "220" ) ||
+		strings.Contains( data[0:3], "421" ) ||
+		strings.Contains( data[0:3], "530" ) ||
+		strings.Contains( data[0:3], "550" ) ||
+		strings.Contains( data[0:3], "230" ) {
+		if !strings.Contains( ToLower(data), "ftp" ) {
+			// We need an additional check against FTP because it uses the same status codes.
+			return "smtp"
+		}
+		return ""
+	}
     return ""
 }
 

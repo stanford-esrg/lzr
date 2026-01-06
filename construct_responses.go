@@ -205,7 +205,6 @@ func constructData(handshake Handshake, p *packet_metadata, ack bool, push bool)
 			log.Fatal(err)
 		}
 	}
-
 	outPacket := buffer.Bytes()
 	return outPacket, data
 

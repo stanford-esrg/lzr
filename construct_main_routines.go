@@ -137,7 +137,7 @@ func ConstructIncomingRoutine(workers int) chan *packet_metadata {
 	return incoming
 }
 
-func ConstructPcapRoutine(workers int, useIPv6 bool) chan *packet_metadata {
+func ConstructPcapRoutine(workers int) chan *packet_metadata {
 
 	//routine to read in from pcap
 	pcapIncoming := make(chan *packet_metadata, QUEUE_SIZE)

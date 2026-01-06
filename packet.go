@@ -27,6 +27,7 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+	//"fmt"
 	//"os"
 )
 
@@ -131,12 +132,10 @@ func ReadLayers(ip *layers.IPv4, tcp *layers.TCP, eth *layers.Ethernet) *packet_
 		Processing:   true,
 		HandshakeNum: 0,
 	}
-
 	if IPv6Enabled() {
 		packet.Saddr = Explode(ip.SrcIP)
 		packet.Daddr = Explode(ip.DstIP)
 	}
-
 	return packet
 }
 

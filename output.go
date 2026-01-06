@@ -22,6 +22,7 @@ import (
 	"bufio"
 	"time"
 	"fmt"
+	"strconv"
 )
 
 var (
@@ -94,7 +95,7 @@ func ( f *output_file ) Record( packet *packet_metadata, handshakes []string ) {
 
 	if FeedZGrab() {
 		if packet.Fingerprint != "" {
-			fmt.Println( packet.Saddr + ", ," + packet.Fingerprint )
+			fmt.Println(packet.Saddr + ",," + packet.Fingerprint + "," + strconv.Itoa(packet.Sport))
 		}
 	}
 

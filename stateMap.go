@@ -32,7 +32,7 @@ func ConstructPacketStateMap( opts *options ) pState {
 
 
 func constructKey( packet *packet_metadata ) string {
-	return packet.Saddr + ":" + strconv.Itoa(packet.Sport) + ":" + strconv.Itoa(packet.Dport)
+	return packet.Saddr + ":" + strconv.Itoa(packet.Sport) //+ ":" + strconv.Itoa(packet.Dport)
 }
 
 func constructParentKey( packet *packet_metadata, parentSport int ) string {
@@ -45,6 +45,10 @@ func (ipMeta * pState) metaContains( p * packet_metadata ) bool {
 	pKey := constructKey(p)
 	return ipMeta.Has(pKey)
 
+}
+
+func (ipMeta * pState) MetaContains( p * packet_metadata ) bool {
+	return ipMeta.metaContains(p)
 }
 
 

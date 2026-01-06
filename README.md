@@ -17,7 +17,12 @@ $ cd $GOPATH/src/github.com/stanford-esrg/lzr
 
 LZR intercepts connections which ZMap opens; in order to ensure that the kernel does not interfere with LZR, LZR requires a source-ip to be specified for which the kernel drops all RSTs for traffic targeted to the source-ip. The chosen source-ip&mdash;which both ZMap and LZR will use&mdash;should be passed in as a parameter to make, so the appropriate iptables rule can be set.
 ```
-$ make all source-ip=256.256.256.256/32
+$ make all source-ip=256.256.256.256
+```
+
+It works the same for the IPv6 as the script determines whether the source IP is a IPv4 address or not by checking the ``.`` character within the source IP string. If IPv6, it uses ``ip6tables`` rather than ``iptables``.
+```
+$ make all source-ip=ffff:ffff:ffff:ffff::ffff
 ```
 
 ## Usage
@@ -56,6 +61,9 @@ To scan a sample of IP:Port from ZMap's dryrun option (i.e., ZMap still determin
 sudo zmap --target-port=9002 -O - --source-ip=$source-ip --dryrun | sudo ./lzr --handshakes http -dryrun -sourceIP $source-ip -gatewayMac $gateway
 ```
 
+### IPv6
+For IPv6, you could just set the ``--ipv6`` flag, and the LZR will switch to IPv6 mode.
+
 ## Flags
 ```
 $ ./lzr --help
@@ -76,6 +84,8 @@ Usage of ./lzr:
     	number of random ephemeral probes to send to filter ACKing firewalls
   -handshakes string
     	handshakes to scan with (default "http")
+  -ipv6
+		Enable IPv6 support
   -memprofile string
     	write memory profile to this file
   -priorityFingerprint string
